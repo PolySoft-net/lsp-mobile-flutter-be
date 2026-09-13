@@ -49,8 +49,13 @@ class _TalentaScreenState extends State<TalentaScreen> {
   // Map & View mode state
   bool _isMapView = true;
   GoogleMapController? _mapController;
+  bool _isMapReady = false;
+  bool _mapInitFailed = false;
+  int _mapInstanceId = 0;
+  Timer? _mapInitTimer;
   TalentaItem? _selectedMapTalenta;
   static const LatLng _defaultCenter = LatLng(-2.5489, 118.0149);
+  static const Duration _mapInitTimeout = Duration(seconds: 12);
 
   Timer? _searchDebounce;
   bool _isScrollThrottled = false;
@@ -60,6 +65,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
     super.initState();
     _searchController.addListener(_onSearchChanged);
     _scrollController.addListener(_onScroll);
+    _startMapInitWatchdog();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _loadInitialData();
@@ -70,10 +76,54 @@ class _TalentaScreenState extends State<TalentaScreen> {
   @override
   void dispose() {
     _searchDebounce?.cancel();
+    _mapInitTimer?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
-    super.dispose();
     _mapController?.dispose();
+    super.dispose();
+  }
+
+  /// Google Maps SDK yang gagal init (Google Play Services rusak / API key
+  /// ditolak) TIDAK pernah dilaporkan ke sisi Dart oleh plugin
+  /// google_maps_flutter — `onMapCreated` hanya dipanggil saat berhasil.
+  /// Watchdog ini yang mendeteksi kegagalan supaya layar tidak menggantung
+  /// dengan peta kosong tanpa penjelasan.
+  void _startMapInitWatchdog() {
+    _mapInitTimer?.cancel();
+    if (!_isMapView) return;
+    _mapInitTimer = Timer(_mapInitTimeout, () {
+      if (!mounted || _isMapReady) return;
+      setState(() => _mapInitFailed = true);
+    });
+  }
+
+  /// Buang instance GoogleMap yang gagal lalu pasang ulang (platform view baru).
+  void _retryMapInit() {
+    setState(() {
+      _mapInitFailed = false;
+      _isMapReady = false;
+      _mapController = null;
+      _mapInstanceId++;
+    });
+    _startMapInitWatchdog();
+  }
+
+  void _toggleMapView() {
+    setState(() {
+      _isMapView = !_isMapView;
+      _selectedMapTalenta = null;
+      _isMapReady = false;
+      _mapController = null;
+      if (_isMapView) {
+        _mapInitFailed = false;
+        _startMapInitWatchdog();
+      } else {
+        _mapInitTimer?.cancel();
+      }
+    });
+    if (_isMapView) {
+      Future.delayed(const Duration(milliseconds: 250), _fitMapBounds);
+    }
   }
 
   void _onSearchChanged() {
@@ -1495,7 +1545,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
   }
 
   void _fitMapBounds() {
-    if (_mapController == null) return;
+    if (!_isMapReady || _mapController == null) return;
 
     final itemsWithCoords = _talentaList.where((t) => t.hasCoordinates).toList();
     if (itemsWithCoords.isEmpty) {
@@ -1640,6 +1690,63 @@ class _TalentaScreenState extends State<TalentaScreen> {
     );
   }
 
+  /// Fallback saat Maps SDK tidak bisa diinisialisasi. Peta sengaja TIDAK
+  /// dipasang selama fallback aktif: selama platform view GoogleMap hidup,
+  /// Google Play Services terus mencoba ulang koneksinya (loop
+  /// `DEVELOPER_ERROR`), jadi membuangnya adalah satu-satunya cara menghentikan
+  /// error tersebut. "Coba Lagi" memasang ulang peta dengan instance baru.
+  Widget _buildMapUnavailable() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: const Color(0xFFF1F5F9),
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.map_outlined, size: 46, color: Color(0xFF94A3B8)),
+          const SizedBox(height: 12),
+          const Text(
+            'Peta tidak dapat dimuat',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Layanan Google Maps tidak tersedia di perangkat ini. Data talenta tetap lengkap pada mode list.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12.5, color: Color(0xFF64748B), height: 1.4),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _retryMapInit,
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: const Text('Coba Lagi', style: TextStyle(fontSize: 12.5)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF2563EB),
+                  side: const BorderSide(color: Color(0xFF2563EB)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              TextButton.icon(
+                onPressed: _toggleMapView,
+                icon: const Icon(Icons.format_list_bulleted_rounded, size: 16),
+                label: const Text('Mode List', style: TextStyle(fontSize: 12.5)),
+                style: TextButton.styleFrom(foregroundColor: const Color(0xFF334155)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMapView() {
     final LatLng initialCenter = _currentGeo != null
         ? LatLng(_currentGeo!.latitude, _currentGeo!.longitude)
@@ -1651,28 +1758,41 @@ class _TalentaScreenState extends State<TalentaScreen> {
     return Stack(
       children: [
         // 1. Full Google Map
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: initialCenter,
-            zoom: initialZoom,
+        if (_mapInitFailed)
+          _buildMapUnavailable()
+        else
+          GoogleMap(
+            key: ValueKey('talenta-map-$_mapInstanceId'),
+            initialCameraPosition: CameraPosition(
+              target: initialCenter,
+              zoom: initialZoom,
+            ),
+            markers: _buildMapMarkers(),
+            // myLocationEnabled memaksa Maps SDK membuka location source milik
+            // Google Play Services sendiri — persis jalur yang memunculkan
+            // DEVELOPER_ERROR/ANR di perangkat ini. Posisi user sudah digambar
+            // sebagai marker 'user_location' di _buildMapMarkers(), jadi tidak
+            // ada yang hilang secara visual.
+            myLocationEnabled: false,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            mapToolbarEnabled: false,
+            onMapCreated: (controller) {
+              // Sudah jatuh ke fallback: controller ini milik view yang dibuang.
+              if (_mapInitFailed) return;
+              _mapInitTimer?.cancel();
+              _mapController = controller;
+              _isMapReady = true;
+              _fitMapBounds();
+            },
+            onTap: (_) {
+              if (_selectedMapTalenta != null) {
+                setState(() {
+                  _selectedMapTalenta = null;
+                });
+              }
+            },
           ),
-          markers: _buildMapMarkers(),
-          myLocationEnabled: true,
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: false,
-          mapToolbarEnabled: false,
-          onMapCreated: (controller) {
-            _mapController = controller;
-            _fitMapBounds();
-          },
-          onTap: (_) {
-            if (_selectedMapTalenta != null) {
-              setState(() {
-                _selectedMapTalenta = null;
-              });
-            }
-          },
-        ),
 
         // 2. Floating Filter Overlay on top
         Positioned(
@@ -1843,7 +1963,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
           right: 16,
           child: GestureDetector(
             onTap: () {
-              if (_currentGeo != null && _mapController != null) {
+              if (_currentGeo != null && _isMapReady && _mapController != null) {
                 _mapController!.animateCamera(
                   CameraUpdate.newLatLngZoom(
                     LatLng(_currentGeo!.latitude, _currentGeo!.longitude),
@@ -1939,19 +2059,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
       floatingActionButton: _selectedMapTalenta != null
           ? null
           : FloatingActionButton.extended(
-              onPressed: () {
-                setState(() {
-                  _isMapView = !_isMapView;
-                  if (_isMapView) {
-                    _selectedMapTalenta = null;
-                  }
-                });
-                if (_isMapView) {
-                  Future.delayed(const Duration(milliseconds: 250), () {
-                    _fitMapBounds();
-                  });
-                }
-              },
+              onPressed: _toggleMapView,
               backgroundColor: const Color(0xFF0F172A),
               elevation: 4,
               icon: Icon(
@@ -2014,19 +2122,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
                   ],
                   // Switch button: Peta vs List
                   GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isMapView = !_isMapView;
-                        if (_isMapView) {
-                          _selectedMapTalenta = null;
-                        }
-                      });
-                      if (_isMapView) {
-                        Future.delayed(const Duration(milliseconds: 250), () {
-                          _fitMapBounds();
-                        });
-                      }
-                    },
+                    onTap: _toggleMapView,
                     child: Container(
                       width: 32,
                       height: 32,
