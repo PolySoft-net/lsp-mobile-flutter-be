@@ -50,7 +50,7 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
     try {
       final profile = await AsesorService.getProfile();
       final currentPeriod = DateFormatHelper.formatCurrentMonthPeriod();
-      final honor = await AsesorService.getHonorList(currentPeriod);
+      final honor = await AsesorService.getHonorList(currentPeriod, 'semua');
 
       final penugasanCount = await AsesorService.getAssignmentCount();
 
