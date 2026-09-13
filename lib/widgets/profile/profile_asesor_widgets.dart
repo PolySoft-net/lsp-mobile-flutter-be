@@ -6,6 +6,7 @@
 // ============================================================================
 
 import 'package:material_ui/material_ui.dart';
+import '../../utils/date_format_helper.dart';
 
 /// Kartu ringkasan kecil (nilai + label + sublabel).
 class ProfileRingkasanCard extends StatelessWidget {
@@ -203,7 +204,7 @@ class ProfileHonorCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Total Honor (${honorData?["periode"] ?? "Juli 2026"})',
+                    'Total Honor (${honorData?["periode"] ?? DateFormatHelper.formatCurrentMonthPeriod()})',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

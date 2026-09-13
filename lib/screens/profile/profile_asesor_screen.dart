@@ -15,6 +15,7 @@ import '../dashboard/faq_screen.dart';
 import 'public_profile_screen.dart';
 import '../../widgets/profile/profile_asesor_widgets.dart';
 import '../../utils/url_helper.dart';
+import '../../utils/date_format_helper.dart';
 
 class ProfileAsesorScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -48,7 +49,8 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
     });
     try {
       final profile = await AsesorService.getProfile();
-      final honor = await AsesorService.getHonorList('Juli 2026');
+      final currentPeriod = DateFormatHelper.formatCurrentMonthPeriod();
+      final honor = await AsesorService.getHonorList(currentPeriod);
 
       final penugasanCount = await AsesorService.getAssignmentCount();
 

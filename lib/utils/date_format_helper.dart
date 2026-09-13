@@ -160,4 +160,15 @@ class DateFormatHelper {
       return 0;
     }
   }
+
+  /// Format periode bulan ini dalam bahasa Indonesia (MMMM yyyy)
+  /// Contoh: "September 2026"
+  static String formatCurrentMonthPeriod([DateTime? date]) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final target = date ?? DateTime.now();
+    return '${months[target.month - 1]} ${target.year}';
+  }
 }
