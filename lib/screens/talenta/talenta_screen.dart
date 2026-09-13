@@ -2377,7 +2377,6 @@ class _TalentaScreenState extends State<TalentaScreen> {
   }
 
   Widget _buildTalentaCard(TalentaItem item) {
-    final isGuest = AuthRepository.currentUserInstance == null;
     return Container(
       margin: const EdgeInsets.only(bottom: 12.0),
       decoration: BoxDecoration(
@@ -2581,7 +2580,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
 
           // Contact actions if logged in, or hint if guest
           const SizedBox(height: 12),
-          if (!isGuest && item.hasKontak) ...[
+          if (item.hasKontak) ...[
             Row(
               children: [
                 if (item.telp.isNotEmpty) ...[

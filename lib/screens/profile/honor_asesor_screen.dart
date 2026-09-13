@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../services/asesor/asesor_service.dart';
+import '../../services/auth/auth_repository.dart';
+import 'detail_honor_screen.dart';
 import 'detail_tugas_asesor_screen.dart';
 
 
@@ -289,6 +291,33 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
   }
 
   void _navigateToHonorDetail(Map<String, dynamic> item) {
+    final user = AuthRepository.currentUserInstance;
+    final bool isAsesor = user?.role == 'asesor';
+
+    if (isAsesor) {
+      final String status = item['status'] ?? 'Selesai';
+      final String metodePembayaran = item['metode_pembayaran'] ?? 'Transfer Bank';
+      final String tanggalPembayaran =
+          item['tanggal_pembayaran'] ?? item['tanggal'] ?? '';
+      final String noTransfer = item['no_transfer'] ?? '-';
+      final int jumlahAsesmen = item['jumlah_asesi'] ?? item['jumlah_asesmen'] ?? 1;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetailHonorScreen(
+            detail: item,
+            status: status,
+            metodePembayaran: metodePembayaran,
+            tanggalPembayaran: tanggalPembayaran,
+            noTransfer: noTransfer,
+            jumlahAsesmen: jumlahAsesmen,
+          ),
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(

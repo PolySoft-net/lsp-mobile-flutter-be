@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/asesor/asesor_service.dart';
+import '../../services/auth/auth_repository.dart';
 
 class DetailHonorScreen extends StatefulWidget {
   final Map<String, dynamic> detail;
@@ -28,6 +30,11 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
   late String _currentStatus;
   late TextEditingController _catatanController;
   late TextEditingController _buktiUrlController;
+
+  bool get _isAdmin {
+    final role = AuthRepository.currentUserInstance?.role.toLowerCase();
+    return role == 'admin' || role == 'pengelola' || (role != null && role != 'asesor' && role != 'asesi' && role.isNotEmpty);
+  }
 
   @override
   void initState() {
@@ -509,9 +516,47 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        GestureDetector(
-                          onTap: _showStatusPicker,
-                          child: Container(
+                        if (_isAdmin)
+                          GestureDetector(
+                            onTap: _showStatusPicker,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isSelesai ? const Color(0xFFF0FDF4) : const Color(0xFFFFFBEB),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelesai ? const Color(0xFF86EFAC) : const Color(0xFFFDE68A),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isSelesai ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+                                    color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _currentStatus,
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFD97706),
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
                               color: isSelesai ? const Color(0xFFF0FDF4) : const Color(0xFFFFFBEB),
@@ -538,15 +583,9 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                                     ),
                                   ),
                                 ),
-                                Icon(
-                                  Icons.chevron_right_rounded,
-                                  color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                                  size: 20,
-                                ),
                               ],
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -574,27 +613,85 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        TextField(
-                          controller: _buktiUrlController,
-                          keyboardType: TextInputType.url,
-                          style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A)),
-                          decoration: InputDecoration(
-                            hintText: 'Tempel link bukti pembayaran (opsional)',
-                            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-                            isDense: true,
-                            filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                        if (_isAdmin)
+                          TextField(
+                            controller: _buktiUrlController,
+                            keyboardType: TextInputType.url,
+                            style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A)),
+                            decoration: InputDecoration(
+                              hintText: 'Tempel link bukti pembayaran (opsional)',
+                              hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                              isDense: true,
+                              filled: true,
+                              fillColor: const Color(0xFFF8FAFC),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                              ),
                             ),
-                            focusedBorder: OutlineInputBorder(
+                          )
+                        else if (_buktiUrlController.text.trim().isNotEmpty)
+                          InkWell(
+                            onTap: () async {
+                              final uri = Uri.tryParse(_buktiUrlController.text.trim());
+                              if (uri != null) {
+                                try {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                } catch (_) {}
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFBFDBFE)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.link_rounded, size: 18, color: Color(0xFF2563EB)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _buktiUrlController.text.trim(),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF2563EB),
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const Icon(Icons.open_in_new_rounded, size: 16, color: Color(0xFF2563EB)),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: Color(0xFF3B82F6)),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: const Text(
+                              'Belum ada bukti pembayaran yang dilampirkan',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF94A3B8),
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -622,45 +719,70 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              TextField(
-                                controller: _catatanController,
-                                maxLines: 3,
-                                maxLength: 200,
-                                style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A)),
-                                decoration: const InputDecoration(
-                                  hintText: 'Tambah catatan (opsional)...',
-                                  hintStyle: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                  border: InputBorder.none,
-                                  counterText: '',
+                        if (_isAdmin)
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFCBD5E1)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                TextField(
+                                  controller: _catatanController,
+                                  maxLines: 3,
+                                  maxLength: 200,
+                                  style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A)),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Tambah catatan (opsional)...',
+                                    hintStyle: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    border: InputBorder.none,
+                                    counterText: '',
+                                  ),
                                 ),
+                                ValueListenableBuilder<TextEditingValue>(
+                                  valueListenable: _catatanController,
+                                  builder: (context, value, _) {
+                                    return Text(
+                                      '${value.text.length}/200',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Text(
+                              _catatanController.text.trim().isNotEmpty
+                                  ? _catatanController.text.trim()
+                                  : 'Tidak ada catatan tambahan',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _catatanController.text.trim().isNotEmpty
+                                    ? const Color(0xFF0F172A)
+                                    : const Color(0xFF94A3B8),
+                                fontStyle: _catatanController.text.trim().isNotEmpty
+                                    ? FontStyle.normal
+                                    : FontStyle.italic,
                               ),
-                              ValueListenableBuilder<TextEditingValue>(
-                                valueListenable: _catatanController,
-                                builder: (context, value, _) {
-                                  return Text(
-                                    '${value.text.length}/200',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Color(0xFF94A3B8),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -668,57 +790,58 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                   const SizedBox(height: 20),
 
                   // Bottom Action Buttons (Standardized Color)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 42,
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFCBD5E1),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                  if (_isAdmin)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 42,
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFCBD5E1),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
-                            ),
-                            child: const Text(
-                              'Batal',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF475569),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: SizedBox(
-                          height: 42,
-                          child: ElevatedButton(
-                            onPressed: _simpanPerubahan,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3B82F6),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text(
-                              'Simpan Perubahan',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                              child: const Text(
+                                'Batal',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF475569),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SizedBox(
+                            height: 42,
+                            child: ElevatedButton(
+                              onPressed: _simpanPerubahan,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3B82F6),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Simpan Perubahan',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 16),
                 ],
               ),
