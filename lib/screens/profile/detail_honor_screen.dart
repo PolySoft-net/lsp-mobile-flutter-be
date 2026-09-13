@@ -45,9 +45,12 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
     } else {
       _currentStatus = 'Menunggu Pembayaran';
     }
-    _buktiUrlController = TextEditingController(
-      text: widget.detail['link_bukti_pembayaran']?.toString() ?? '',
-    );
+    final initialBukti = widget.detail['link_bukti_pembayaran']?.toString() ??
+        (widget.detail['lampiran_bukti'] is Map
+            ? widget.detail['lampiran_bukti']['file_url']?.toString()
+            : null) ??
+        '';
+    _buktiUrlController = TextEditingController(text: initialBukti);
     final initialCatatan = widget.detail['catatan']?.toString() ?? '';
     _catatanController = TextEditingController(
       text: (initialCatatan.isNotEmpty && initialCatatan != '-') ? initialCatatan : '',
@@ -290,15 +293,15 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
     final String mode = widget.detail['mode'] ?? '[Offline]';
     final String honorAsesmen = _formatHonorValue(
       widget.detail['honor'] ?? widget.detail['honor_asesmen'],
-      fallback: 'Rp 2.250.000',
+      fallback: 'Rp 0',
     );
     final String biayaTransportasi = _formatHonorValue(
       widget.detail['akomodasi'] ?? widget.detail['biaya_transportasi'] ?? widget.detail['transportasi'],
-      fallback: 'Rp 100.000',
+      fallback: 'Rp 0',
     );
     final String potonganPph = _formatHonorValue(
       widget.detail['potongan_pph'] ?? widget.detail['pajak'] ?? widget.detail['pph'],
-      fallback: 'Rp 50.000',
+      fallback: 'Rp 0',
     );
     final dynamic rawBiayaAdmin = widget.detail['biaya_admin_transfer'];
     final String? biayaAdmin = (rawBiayaAdmin != null &&
@@ -307,10 +310,18 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
         ? _formatHonorValue(rawBiayaAdmin)
         : null;
 
-    final String totalHonor = widget.detail['total_honor'] ??
-        widget.detail['total'] ??
-        widget.detail['honor'] ??
-        'Rp 2.300.000';
+    final String? rawTotal = widget.detail['total_honor']?.toString() ?? widget.detail['total']?.toString();
+    final String totalHonor;
+    if (rawTotal != null && rawTotal.trim().isNotEmpty && rawTotal.trim() != '0') {
+      totalHonor = _formatHonorValue(rawTotal);
+    } else {
+      final int h = _parseNumeric(widget.detail['honor'] ?? widget.detail['honor_asesmen']);
+      final int a = _parseNumeric(widget.detail['akomodasi'] ?? widget.detail['biaya_transportasi']);
+      final int p = _parseNumeric(widget.detail['potongan_pph'] ?? widget.detail['pajak'] ?? widget.detail['pph']);
+      final int adm = _parseNumeric(rawBiayaAdmin);
+      final int calc = h + a - p - adm;
+      totalHonor = calc > 0 ? _formatHonorValue(calc) : (h > 0 ? _formatHonorValue(h) : 'Rp 0');
+    }
     final bool isSelesai = _currentStatus == 'Pembayaran Selesai';
 
     return Scaffold(
@@ -457,10 +468,14 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                         const Divider(height: 1, color: Color(0xFFE2E8F0)),
                         const SizedBox(height: 10),
                         _buildRincianRow('Honor Asesmen', honorAsesmen),
-                        const SizedBox(height: 6),
-                        _buildRincianRow('Biaya Transportasi', biayaTransportasi),
-                        const SizedBox(height: 6),
-                        _buildRincianRow('Potongan PPh', potonganPph, isDeduction: true),
+                        if (biayaTransportasi != 'Rp 0' && biayaTransportasi.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          _buildRincianRow('Biaya Transportasi', biayaTransportasi),
+                        ],
+                        if (potonganPph != 'Rp 0' && potonganPph.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          _buildRincianRow('Potongan PPh', potonganPph, isDeduction: true),
+                        ],
                         if (biayaAdmin != null && biayaAdmin.isNotEmpty && biayaAdmin != 'Rp 0') ...[
                           const SizedBox(height: 6),
                           _buildRincianRow('Biaya Admin Transfer', biayaAdmin),
@@ -613,13 +628,13 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        if (_isAdmin)
+                        if (_isAdmin) ...[
                           TextField(
                             controller: _buktiUrlController,
                             keyboardType: TextInputType.url,
                             style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A)),
                             decoration: InputDecoration(
-                              hintText: 'Tempel link bukti pembayaran (opsional)',
+                              hintText: 'Tempel link bukti pembayaran & pajak (opsional)',
                               hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                               isDense: true,
                               filled: true,
@@ -634,64 +649,48 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                                 borderSide: const BorderSide(color: Color(0xFF3B82F6)),
                               ),
                             ),
-                          )
-                        else if (_buktiUrlController.text.trim().isNotEmpty)
-                          InkWell(
-                            onTap: () async {
-                              final uri = Uri.tryParse(_buktiUrlController.text.trim());
-                              if (uri != null) {
-                                try {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                } catch (_) {}
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFFBFDBFE)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.link_rounded, size: 18, color: Color(0xFF2563EB)),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _buktiUrlController.text.trim(),
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF2563EB),
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const Icon(Icons.open_in_new_rounded, size: 16, color: Color(0xFF2563EB)),
-                                ],
-                              ),
-                            ),
-                          )
-                        else
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                            ),
-                            child: const Text(
-                              'Belum ada bukti pembayaran yang dilampirkan',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF94A3B8),
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
                           ),
+                          const SizedBox(height: 12),
+                        ],
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _buktiUrlController,
+                          builder: (context, val, _) {
+                            final link = val.text.trim();
+                            final hasLink = link.isNotEmpty;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 1. Bukti Transfer Pembayaran
+                                _buildLampiranItem(
+                                  icon: Icons.account_balance_wallet_rounded,
+                                  iconColor: const Color(0xFF2563EB),
+                                  iconBg: const Color(0xFFEFF6FF),
+                                  title: 'Bukti Transfer Pembayaran',
+                                  subtitle: hasLink ? link : 'Belum ada bukti transfer',
+                                  hasLink: hasLink,
+                                  link: link,
+                                ),
+                                const SizedBox(height: 10),
+                                // 2. Pajak (Bukti Potong PPh 21)
+                                _buildLampiranItem(
+                                  icon: Icons.receipt_long_rounded,
+                                  iconColor: const Color(0xFF059669),
+                                  iconBg: const Color(0xFFECFDF5),
+                                  title: 'Bukti Potong Pajak (PPh 21)',
+                                  subtitle: hasLink
+                                      ? (potonganPph != 'Rp 0' && potonganPph.isNotEmpty
+                                          ? 'Potongan PPh: $potonganPph • Buka Berkas'
+                                          : link)
+                                      : (potonganPph != 'Rp 0' && potonganPph.isNotEmpty
+                                          ? 'Potongan PPh: $potonganPph (Belum ada berkas)'
+                                          : 'Belum ada bukti potong pajak'),
+                                  hasLink: hasLink,
+                                  link: link,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -851,6 +850,95 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
       ),
     ),
   );
+  }
+
+  int _parseNumeric(dynamic raw) {
+    if (raw == null) return 0;
+    final s = raw.toString().trim().replaceAll('Rp', '').replaceAll('.', '').replaceAll(',', '').replaceAll(' ', '');
+    final d = double.tryParse(s);
+    return d?.toInt() ?? 0;
+  }
+
+  Widget _buildLampiranItem({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String subtitle,
+    required bool hasLink,
+    required String link,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: hasLink
+            ? () async {
+                final uri = Uri.tryParse(link);
+                if (uri != null) {
+                  try {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } catch (_) {}
+                }
+              }
+            : null,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: hasLink ? iconBg.withValues(alpha: 0.35) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: hasLink ? iconColor.withValues(alpha: 0.35) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 18, color: iconColor),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: hasLink ? iconColor : const Color(0xFF94A3B8),
+                        decoration: hasLink ? TextDecoration.underline : TextDecoration.none,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (hasLink) ...[
+                const SizedBox(width: 8),
+                Icon(Icons.open_in_new_rounded, size: 16, color: iconColor),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   String _formatHonorValue(dynamic raw, {String fallback = 'Rp 0'}) {

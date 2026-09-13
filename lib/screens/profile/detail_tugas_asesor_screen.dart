@@ -102,6 +102,7 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
             'akomodasi': task['akomodasi'] ?? task['biaya_transportasi'],
             'potongan_pph': task['potongan_pph'] ?? task['pajak'] ?? task['pph'],
             'biaya_admin_transfer': task['biaya_admin_transfer'],
+            'link_bukti_pembayaran': task['link_bukti_pembayaran'],
             'tanggal': task['waktu'] ?? task['tanggal'],
             'tuk': task['tuk'],
             'status': task['status'],
