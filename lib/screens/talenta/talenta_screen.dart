@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/talenta_models.dart';
@@ -44,6 +46,12 @@ class _TalentaScreenState extends State<TalentaScreen> {
   int _offset = 0;
   static const int _limit = 20;
 
+  // Map & View mode state
+  bool _isMapView = true;
+  GoogleMapController? _mapController;
+  TalentaItem? _selectedMapTalenta;
+  static const LatLng _defaultCenter = LatLng(-2.5489, 118.0149);
+
   Timer? _searchDebounce;
   bool _isScrollThrottled = false;
 
@@ -65,6 +73,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
+    _mapController?.dispose();
   }
 
   void _onSearchChanged() {
@@ -201,6 +210,9 @@ class _TalentaScreenState extends State<TalentaScreen> {
         _isLoading = false;
         _isLoadingMore = false;
       });
+      if (_isMapView && _mapController != null) {
+        _fitMapBounds();
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -1482,6 +1494,440 @@ class _TalentaScreenState extends State<TalentaScreen> {
     );
   }
 
+  void _fitMapBounds() {
+    if (_mapController == null) return;
+
+    final itemsWithCoords = _talentaList.where((t) => t.hasCoordinates).toList();
+    if (itemsWithCoords.isEmpty) {
+      if (_currentGeo != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(
+            LatLng(_currentGeo!.latitude, _currentGeo!.longitude),
+            13.5,
+          ),
+        );
+      }
+      return;
+    }
+
+    double minLat = _currentGeo?.latitude ?? itemsWithCoords.first.latitude!;
+    double maxLat = minLat;
+    double minLng = _currentGeo?.longitude ?? itemsWithCoords.first.longitude!;
+    double maxLng = minLng;
+
+    for (final item in itemsWithCoords) {
+      if (item.latitude! < minLat) minLat = item.latitude!;
+      if (item.latitude! > maxLat) maxLat = item.latitude!;
+      if (item.longitude! < minLng) minLng = item.longitude!;
+      if (item.longitude! > maxLng) maxLng = item.longitude!;
+    }
+
+    if ((maxLat - minLat).abs() < 0.001 && (maxLng - minLng).abs() < 0.001) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(LatLng(minLat, minLng), 14.0),
+      );
+    } else {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat, minLng),
+            northeast: LatLng(maxLat, maxLng),
+          ),
+          60.0,
+        ),
+      );
+    }
+  }
+
+  Set<Marker> _buildMapMarkers() {
+    final Set<Marker> markers = {};
+
+    // User location marker
+    if (_currentGeo != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('user_location'),
+          position: LatLng(_currentGeo!.latitude, _currentGeo!.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
+          zIndexInt: 5,
+          infoWindow: InfoWindow(
+            title: 'Posisi Anda Saat Ini',
+            snippet: _currentLocationName,
+          ),
+        ),
+      );
+    }
+
+    final Map<String, int> coordCounts = {};
+    for (final item in _talentaList) {
+      if (!item.hasCoordinates) continue;
+
+      final key = '${item.latitude!.toStringAsFixed(4)}_${item.longitude!.toStringAsFixed(4)}';
+      final duplicateIndex = coordCounts[key] ?? 0;
+      coordCounts[key] = duplicateIndex + 1;
+
+      double lat = item.latitude!;
+      double lng = item.longitude!;
+      if (duplicateIndex > 0) {
+        final angle = (duplicateIndex * 60) * (math.pi / 180);
+        lat += 0.00015 * duplicateIndex * math.cos(angle);
+        lng += 0.00015 * duplicateIndex * math.sin(angle);
+      }
+
+      final isSelected = _selectedMapTalenta?.id == item.id;
+      final double markerHue = item.statusPencariKerja == 1
+          ? BitmapDescriptor.hueGreen
+          : (item.statusPencariKerja == 2
+              ? BitmapDescriptor.hueAzure
+              : BitmapDescriptor.hueOrange);
+
+      markers.add(
+        Marker(
+          markerId: MarkerId('talenta_${item.id}'),
+          position: LatLng(lat, lng),
+          icon: BitmapDescriptor.defaultMarkerWithHue(markerHue),
+          zIndexInt: isSelected ? 10 : 2,
+          infoWindow: InfoWindow(
+            title: item.pemegang,
+            snippet: '${item.skema}${item.jarakLabel.isNotEmpty ? " • ${item.jarakLabel}" : ""}',
+            onTap: () {
+              setState(() {
+                _selectedMapTalenta = item;
+              });
+            },
+          ),
+          onTap: () {
+            setState(() {
+              _selectedMapTalenta = item;
+            });
+            _mapController?.animateCamera(
+              CameraUpdate.newLatLng(LatLng(lat, lng)),
+            );
+          },
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  Widget _buildMapTalentaPreviewCard(TalentaItem item) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        _buildTalentaCard(item),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedMapTalenta = null;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF64748B)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapView() {
+    final LatLng initialCenter = _currentGeo != null
+        ? LatLng(_currentGeo!.latitude, _currentGeo!.longitude)
+        : _defaultCenter;
+    final double initialZoom = _currentGeo != null ? 13.0 : 5.0;
+
+    final itemsWithCoords = _talentaList.where((t) => t.hasCoordinates).toList();
+
+    return Stack(
+      children: [
+        // 1. Full Google Map
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: initialCenter,
+            zoom: initialZoom,
+          ),
+          markers: _buildMapMarkers(),
+          myLocationEnabled: true,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
+          onMapCreated: (controller) {
+            _mapController = controller;
+            _fitMapBounds();
+          },
+          onTap: (_) {
+            if (_selectedMapTalenta != null) {
+              setState(() {
+                _selectedMapTalenta = null;
+              });
+            }
+          },
+        ),
+
+        // 2. Floating Filter Overlay on top
+        Positioned(
+          top: 10,
+          left: 14,
+          right: 14,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Search bar
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
+                  decoration: InputDecoration(
+                    hintText: 'Cari nama pemegang sertifikat...',
+                    hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear_rounded, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              _fetchTalenta(isRefresh: true);
+                            },
+                          )
+                        : null,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Filter Chips: Skema & Status Kerja
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    // Skema Filter Chip
+                    InkWell(
+                      onTap: _showSkemaPicker,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _selectedSkemaId != null ? const Color(0xFF2563EB) : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _selectedSkemaId != null ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.workspace_premium_rounded,
+                              size: 14,
+                              color: _selectedSkemaId != null ? Colors.white : const Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _selectedSkemaId != null ? _selectedSkemaName : 'Semua Skema',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: _selectedSkemaId != null ? Colors.white : const Color(0xFF334155),
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 16,
+                              color: _selectedSkemaId != null ? Colors.white : const Color(0xFF94A3B8),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildFilterChip(
+                      label: 'Semua',
+                      isSelected: _selectedStatusKerja == null,
+                      onTap: () {
+                        setState(() => _selectedStatusKerja = null);
+                        _fetchTalenta(isRefresh: true);
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    _buildFilterChip(
+                      label: 'Aktif Mencari',
+                      isSelected: _selectedStatusKerja == 1,
+                      onTap: () {
+                        setState(() => _selectedStatusKerja = 1);
+                        _fetchTalenta(isRefresh: true);
+                      },
+                    ),
+                    const SizedBox(width: 6),
+                    _buildFilterChip(
+                      label: 'Bekerja',
+                      isSelected: _selectedStatusKerja == 2,
+                      onTap: () {
+                        setState(() => _selectedStatusKerja = 2);
+                        _fetchTalenta(isRefresh: true);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              if (itemsWithCoords.isEmpty && !_isLoading) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFD97706)),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Belum ada talenta dengan koordinat GPS pada filter ini. Gunakan mode list untuk melihat semua.',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // 3. Floating Re-Center GPS Button
+        Positioned(
+          bottom: _selectedMapTalenta != null ? 175 : 80,
+          right: 16,
+          child: GestureDetector(
+            onTap: () {
+              if (_currentGeo != null && _mapController != null) {
+                _mapController!.animateCamera(
+                  CameraUpdate.newLatLngZoom(
+                    LatLng(_currentGeo!.latitude, _currentGeo!.longitude),
+                    15.0,
+                  ),
+                );
+              } else {
+                _detectLocation();
+              }
+            },
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.my_location_rounded,
+                color: Color(0xFF2563EB),
+                size: 22,
+              ),
+            ),
+          ),
+        ),
+
+        // 4. Floating Talent Preview Card (when a marker is tapped)
+        if (_selectedMapTalenta != null)
+          Positioned(
+            bottom: 8,
+            left: 14,
+            right: 14,
+            child: _buildMapTalentaPreviewCard(_selectedMapTalenta!),
+          ),
+
+        // 5. Loading indicator badge
+        if (_isLoading)
+          Positioned(
+            top: 110,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2563EB)),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Memuat talenta terdekat...',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF334155), fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = AuthRepository.currentUserInstance;
@@ -1489,6 +1935,39 @@ class _TalentaScreenState extends State<TalentaScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: _selectedMapTalenta != null
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () {
+                setState(() {
+                  _isMapView = !_isMapView;
+                  if (_isMapView) {
+                    _selectedMapTalenta = null;
+                  }
+                });
+                if (_isMapView) {
+                  Future.delayed(const Duration(milliseconds: 250), () {
+                    _fitMapBounds();
+                  });
+                }
+              },
+              backgroundColor: const Color(0xFF0F172A),
+              elevation: 4,
+              icon: Icon(
+                _isMapView ? Icons.format_list_bulleted_rounded : Icons.map_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              label: Text(
+                _isMapView ? 'Tampilkan Mode List' : 'Tampilkan Mode Peta',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
       body: SafeArea(
         child: Column(
           children: [
@@ -1533,6 +2012,39 @@ class _TalentaScreenState extends State<TalentaScreen> {
                     ),
                     const SizedBox(width: 8),
                   ],
+                  // Switch button: Peta vs List
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isMapView = !_isMapView;
+                        if (_isMapView) {
+                          _selectedMapTalenta = null;
+                        }
+                      });
+                      if (_isMapView) {
+                        Future.delayed(const Duration(milliseconds: 250), () {
+                          _fitMapBounds();
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: _isMapView ? const Color(0xFF2563EB) : const Color(0xFFEFF6FF),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _isMapView ? const Color(0xFF2563EB) : const Color(0xFFBFDBFE),
+                        ),
+                      ),
+                      child: Icon(
+                        _isMapView ? Icons.format_list_bulleted_rounded : Icons.map_rounded,
+                        color: _isMapView ? Colors.white : const Color(0xFF2563EB),
+                        size: 17,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   GestureDetector(
                     onTap: _showManualLocationPicker,
                     child: Container(
@@ -1554,7 +2066,9 @@ class _TalentaScreenState extends State<TalentaScreen> {
               ),
             ),
             Expanded(
-              child: RefreshIndicator(
+              child: _isMapView
+                  ? _buildMapView()
+                  : RefreshIndicator(
         onRefresh: () => _fetchTalenta(isRefresh: true),
         color: const Color(0xFF2563EB),
         child: CustomScrollView(
@@ -2004,7 +2518,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
                 ),
               ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 76)),
           ],
         ),
       ),
