@@ -339,7 +339,7 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
 
           // Header
           CustomAppBar(
-            title: 'Honor Asessor',
+            title: 'Honor Asesor',
             onBack: () => Navigator.of(context).pop(),
             rightWidget: PopupMenuButton<String>(
               icon: const Icon(Icons.more_horiz_rounded, color: Colors.black, size: 24),
@@ -573,12 +573,20 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
   }
 
   Widget _buildHonorCard(Map<String, dynamic> item) {
+    final user = AuthRepository.currentUserInstance;
+    final bool isAsesor = user?.role == 'asesor';
+
+    // Jika admin, utamakan nama asesor karena list ini adalah rekap per-asesor
+    final String namaAsesor = (item['nama_asesor'] ?? '').toString().trim();
     String namaJadwal = (item['nama_jadwal'] ?? item['judul_asesmen'] ?? item['skema'] ?? '').toString();
     namaJadwal = namaJadwal.replaceAll(RegExp(r'^Uji Kompetensi:\s*', caseSensitive: false), '').trim();
-    if (namaJadwal.isEmpty) {
-      namaJadwal = (item['nama_asesor'] ?? 'Jadwal Asesmen').toString();
-    }
 
+    final String title = isAsesor
+        ? (namaJadwal.isNotEmpty ? namaJadwal : (namaAsesor.isNotEmpty ? namaAsesor : 'Jadwal Asesmen'))
+        : (namaAsesor.isNotEmpty ? namaAsesor : (namaJadwal.isNotEmpty ? namaJadwal : 'Asesor'));
+
+    final String tipeAsesor = (item['tipe_asesor'] ?? '').toString().trim();
+    final String skema = (item['skema'] ?? '').toString().trim();
     final String tuk = (item['tuk'] ?? '-').toString().trim();
     final String tanggal = (item['tanggal'] ?? '').toString().trim();
     final String honor = item['honor'] ?? 'Rp 0';
@@ -619,13 +627,13 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Nama Jadwal & Info TUK + Tanggal
+                // Info Asesor / Jadwal
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        namaJadwal,
+                        title,
                         style: const TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.bold,
@@ -634,7 +642,17 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      if (tuk.isNotEmpty && tuk != '-') ...[
+                      if (!isAsesor && tipeAsesor.isNotEmpty) ...[
+                        Text(
+                          tipeAsesor,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                      ] else if (isAsesor && tuk.isNotEmpty && tuk != '-') ...[
                         Row(
                           children: [
                             const Icon(
@@ -659,7 +677,31 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                         ),
                         const SizedBox(height: 2),
                       ],
+                      if (!isAsesor && skema.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.workspace_premium_outlined,
+                              size: 12,
+                              color: Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                skema,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF64748B),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       if (tanggal.isNotEmpty) ...[
+                        const SizedBox(height: 2),
                         Row(
                           children: [
                             const Icon(

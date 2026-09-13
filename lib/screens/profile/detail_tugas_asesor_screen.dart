@@ -135,7 +135,7 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
 
           // Header
           CustomAppBar(
-            title: 'Detail Tugas Asessor',
+            title: 'Detail Honor Asesor',
             onBack: () => Navigator.of(context).pop(),
             rightWidget: PopupMenuButton<String>(
               icon: const Icon(Icons.more_horiz_rounded, color: Colors.black, size: 24),
