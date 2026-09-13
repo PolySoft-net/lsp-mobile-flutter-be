@@ -256,15 +256,20 @@ class _DataDiriScreenState extends State<DataDiriScreen> {
 
     return Scaffold(
       body: SafeArea(
+        top: false,
         bottom: true,
         child: Column(
           children: [
           // Blue Header Container
           Container(
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: blueColor,
-              borderRadius: const BorderRadius.only(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF5B9FD8), Color(0xFF4FA8E8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -281,35 +286,43 @@ class _DataDiriScreenState extends State<DataDiriScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFF1E293B),
-                              width: 1.5,
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      Navigator.pop(context);
+                    },
+                    child: SizedBox(
+                      height: 48,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFF1E293B),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.chevron_left_rounded,
+                              color: Color(0xFF1E293B),
+                              size: 16,
                             ),
                           ),
-                          child: const Icon(
-                            Icons.chevron_left_rounded,
-                            color: Color(0xFF1E293B),
-                            size: 16,
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Data Diri',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Data Diri',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -812,6 +825,7 @@ class _DataDiriScreenState extends State<DataDiriScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),

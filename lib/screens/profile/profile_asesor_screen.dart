@@ -679,7 +679,9 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 24 + MediaQuery.of(context).padding.bottom,
+                  ),
                 ],
               ),
             ),
