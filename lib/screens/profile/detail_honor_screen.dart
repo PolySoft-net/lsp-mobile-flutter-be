@@ -28,7 +28,6 @@ class DetailHonorScreen extends StatefulWidget {
 
 class _DetailHonorScreenState extends State<DetailHonorScreen> {
   late String _currentStatus;
-  late TextEditingController _catatanController;
   late TextEditingController _buktiUrlController;
 
   bool get _isAdmin {
@@ -51,15 +50,10 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
             : null) ??
         '';
     _buktiUrlController = TextEditingController(text: initialBukti);
-    final initialCatatan = widget.detail['catatan']?.toString() ?? '';
-    _catatanController = TextEditingController(
-      text: (initialCatatan.isNotEmpty && initialCatatan != '-') ? initialCatatan : '',
-    );
   }
 
   @override
   void dispose() {
-    _catatanController.dispose();
     _buktiUrlController.dispose();
     super.dispose();
   }
@@ -691,97 +685,6 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                             );
                           },
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // 5. Catatan Card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Catatan',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        if (_isAdmin)
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFCBD5E1)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                TextField(
-                                  controller: _catatanController,
-                                  maxLines: 3,
-                                  maxLength: 200,
-                                  style: const TextStyle(fontSize: 12.5, color: Color(0xFF0F172A)),
-                                  decoration: const InputDecoration(
-                                    hintText: 'Tambah catatan (opsional)...',
-                                    hintStyle: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    border: InputBorder.none,
-                                    counterText: '',
-                                  ),
-                                ),
-                                ValueListenableBuilder<TextEditingValue>(
-                                  valueListenable: _catatanController,
-                                  builder: (context, value, _) {
-                                    return Text(
-                                      '${value.text.length}/200',
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: Color(0xFF94A3B8),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                            ),
-                            child: Text(
-                              _catatanController.text.trim().isNotEmpty
-                                  ? _catatanController.text.trim()
-                                  : 'Tidak ada catatan tambahan',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _catatanController.text.trim().isNotEmpty
-                                    ? const Color(0xFF0F172A)
-                                    : const Color(0xFF94A3B8),
-                                fontStyle: _catatanController.text.trim().isNotEmpty
-                                    ? FontStyle.normal
-                                    : FontStyle.italic,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
