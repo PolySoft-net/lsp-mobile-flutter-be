@@ -34,7 +34,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
       if (files.isNotEmpty) {
         for (var file in files) {
           if (!_uploadedFiles.any((f) => f['name'] == file.name)) {
-            final fileLength = await file.length();
+            final fileLength = (await file.length()) ?? 0;
             final double kb = fileLength / 1024;
             final double mb = kb / 1024;
             final String sizeStr = mb >= 1

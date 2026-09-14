@@ -242,7 +242,7 @@ class _TukStatistikScreenState extends State<TukStatistikScreen> {
               color: const Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(LucideIcons.building_2, color: Color(0xFF2563EB), size: 22),
+            child: const Icon(LucideIcons.building, color: Color(0xFF2563EB), size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
