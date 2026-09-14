@@ -143,7 +143,7 @@ class _TukJadwalListScreenState extends State<TukJadwalListScreen> {
               color: const Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(LucideIcons.building_2, color: Color(0xFF2563EB), size: 20),
+            child: const Icon(LucideIcons.building, color: Color(0xFF2563EB), size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

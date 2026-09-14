@@ -52,7 +52,7 @@ class _PortfolioUploadSheetState extends State<PortfolioUploadSheet> {
         }
         return;
       }
-      final fileLength = await file.length();
+      final fileLength = (await file.length()) ?? 0;
       if (fileLength > 2 * 1024 * 1024) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
