@@ -17,7 +17,7 @@ class DigitalProductBottomBar extends StatelessWidget {
       label: 'Home',
     ),
     _BottomNavItem(
-      icon: LucideIcons.book_marked,
+      icon: LucideIcons.compass,
       label: 'Explore',
     ),
     _BottomNavItem(
