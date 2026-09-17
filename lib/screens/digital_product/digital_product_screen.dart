@@ -126,13 +126,18 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
     });
   }
 
-  void _onBottomNavTap(int index) {
+  Future<void> _onBottomNavTap(int index) async {
     if (index == 4) {
-      Navigator.of(context).push(
+      final targetIndex = await Navigator.of(context).push<int>(
         MaterialPageRoute(
           builder: (_) => const DigitalProductProfileScreen(),
         ),
       );
+      if (targetIndex != null && mounted) {
+        setState(() {
+          _currentBottomNavIndex = targetIndex;
+        });
+      }
       return;
     }
     setState(() {
@@ -204,13 +209,23 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                           final item = products[index];
                           return DigitalProductCard(
                             item: item,
-                            onTap: () {
-                              Navigator.of(context).push(
+                            onTap: () async {
+                              final targetIndex =
+                                  await Navigator.of(context).push<int>(
                                 MaterialPageRoute(
                                   builder: (_) =>
                                       const DigitalProductPortofolioScreen(),
                                 ),
                               );
+                              if (targetIndex != null && mounted) {
+                                if (targetIndex == 4) {
+                                  _onBottomNavTap(4);
+                                } else {
+                                  setState(() {
+                                    _currentBottomNavIndex = targetIndex;
+                                  });
+                                }
+                              }
                             },
                             onFavoriteTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(

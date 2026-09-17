@@ -18,19 +18,16 @@ class DigitalProductProfileScreen extends StatefulWidget {
 
 class _DigitalProductProfileScreenState
     extends State<DigitalProductProfileScreen> {
-  int _currentBottomNavIndex = 4;
+  static const int _currentBottomNavIndex = 4;
 
   void _onBottomNavTap(int index) {
-    if (index == 0) {
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      } else if (widget.onBackToHome != null) {
-        widget.onBackToHome!();
-      }
-    } else {
-      setState(() {
-        _currentBottomNavIndex = index;
-      });
+    if (index == 4) {
+      return;
+    }
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context, index);
+    } else if (widget.onBackToHome != null) {
+      widget.onBackToHome!();
     }
   }
 

@@ -19,24 +19,26 @@ class DigitalProductPortofolioScreen extends StatefulWidget {
 
 class _DigitalProductPortofolioScreenState
     extends State<DigitalProductPortofolioScreen> {
-  int _currentBottomNavIndex = 0;
+  static const int _currentBottomNavIndex = 0;
 
-  void _onBottomNavTap(int index) {
+  Future<void> _onBottomNavTap(int index) async {
     if (index == 4) {
-      Navigator.of(context).push(
+      final targetIndex = await Navigator.of(context).push<int>(
         MaterialPageRoute(
           builder: (_) => const DigitalProductProfileScreen(),
         ),
       );
+      if (targetIndex != null && mounted) {
+        if (targetIndex != 4 && Navigator.canPop(context)) {
+          Navigator.pop(context, targetIndex);
+        }
+      }
       return;
     }
-    setState(() {
-      _currentBottomNavIndex = index;
-    });
-    if (index == 0) {
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context);
-      }
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context, index);
+    } else if (widget.onBackToHome != null) {
+      widget.onBackToHome!();
     }
   }
 
