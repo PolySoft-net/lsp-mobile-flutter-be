@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import '../../widgets/digital_product/digital_product_portofolio_cards.dart';
+import 'digital_product_profile_screen.dart';
 
 class DigitalProductPortofolioScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -21,6 +22,14 @@ class _DigitalProductPortofolioScreenState
   int _currentBottomNavIndex = 0;
 
   void _onBottomNavTap(int index) {
+    if (index == 4) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const DigitalProductProfileScreen(),
+        ),
+      );
+      return;
+    }
     setState(() {
       _currentBottomNavIndex = index;
     });

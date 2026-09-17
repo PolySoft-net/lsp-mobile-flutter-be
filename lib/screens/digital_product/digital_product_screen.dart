@@ -6,6 +6,7 @@ import '../../widgets/digital_product/digital_product_category_chips.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import 'digital_product_portofolio_screen.dart';
+import 'digital_product_profile_screen.dart';
 
 class DigitalProductScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -126,6 +127,14 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   }
 
   void _onBottomNavTap(int index) {
+    if (index == 4) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const DigitalProductProfileScreen(),
+        ),
+      );
+      return;
+    }
     setState(() {
       _currentBottomNavIndex = index;
     });
