@@ -5,6 +5,7 @@ import '../../widgets/digital_product/digital_product_banner.dart';
 import '../../widgets/digital_product/digital_product_category_chips.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
+import 'digital_product_portofolio_screen.dart';
 
 class DigitalProductScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -195,10 +196,10 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                           return DigitalProductCard(
                             item: item,
                             onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Melihat detail: ${item.title}'),
-                                  duration: const Duration(seconds: 1),
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const DigitalProductPortofolioScreen(),
                                 ),
                               );
                             },
