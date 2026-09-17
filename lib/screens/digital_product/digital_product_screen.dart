@@ -197,7 +197,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 12.0,
                         mainAxisSpacing: 12.0,
-                        childAspectRatio: 0.68,
+                        mainAxisExtent: 216.0,
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {

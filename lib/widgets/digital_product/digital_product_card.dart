@@ -41,7 +41,7 @@ class DigitalProductCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               child: SizedBox(
                 width: double.infinity,
-                height: 84,
+                height: 80,
                 child: _buildThumbnail(),
               ),
             ),
@@ -49,7 +49,7 @@ class DigitalProductCard extends StatelessWidget {
 
           // Content
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+            padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -81,7 +81,7 @@ class DigitalProductCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
 
                 // Harga
                 RichText(
@@ -145,7 +145,7 @@ class DigitalProductCard extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
             child: const SizedBox(
               width: double.infinity,
-              height: 32,
+              height: 30,
               child: Center(
                 child: Text(
                   'Lihat',
