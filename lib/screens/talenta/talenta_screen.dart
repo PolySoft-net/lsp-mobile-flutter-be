@@ -10,6 +10,7 @@ import '../../services/common/master_service.dart';
 import '../../services/marketing/location_service.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import 'tawarkan_pekerjaan_screen.dart';
 
 class TalentaScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -2624,6 +2625,15 @@ class _TalentaScreenState extends State<TalentaScreen> {
 ),
 );
   }
+  void _bukaTawarkanPekerjaan(TalentaItem item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TawarkanPekerjaanScreen(talenta: item),
+      ),
+    );
+  }
+
 
   void _showTalentaDetailModal(TalentaItem item) {
     showModalBottomSheet(
@@ -2894,6 +2904,28 @@ class _TalentaScreenState extends State<TalentaScreen> {
                     ),
                 ],
                 const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.work_outline_rounded, size: 17),
+                    label: const Text(
+                      'Tawarkan Pekerjaan / Rekrut',
+                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _bukaTawarkanPekerjaan(item);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Row(
                   children: [
                     if (item.telp.isNotEmpty) ...[
@@ -3210,27 +3242,26 @@ class _TalentaScreenState extends State<TalentaScreen> {
                       onPressed: () => _launchWhatsApp(item.telp, name: item.pemegang),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                 ],
-                if (item.email.isNotEmpty) ...[
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.email_outlined, size: 14, color: Color(0xFF2563EB)),
-                      label: const Text(
-                        'Email',
-                        style: TextStyle(fontSize: 11.5, color: Color(0xFF2563EB), fontWeight: FontWeight.bold),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFBFDBFE)),
-                        backgroundColor: const Color(0xFFEFF6FF),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                      onPressed: () => _launchEmail(item.email, name: item.pemegang),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.work_outline_rounded, size: 14),
+                    label: const Text(
+                      'Tawarkan Kerja',
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
                     ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      elevation: 0,
+                    ),
+                    onPressed: () => _bukaTawarkanPekerjaan(item),
                   ),
-                  const SizedBox(width: 8),
-                ],
+                ),
+                const SizedBox(width: 6),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.visibility_outlined, size: 14, color: Color(0xFF475569)),
                   label: const Text(
@@ -3248,27 +3279,55 @@ class _TalentaScreenState extends State<TalentaScreen> {
               ],
             ),
           ] else ...[
-            SizedBox(
-              width: double.infinity,
-              height: 38,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.visibility_outlined, size: 16, color: Color(0xFF2563EB)),
-                label: const Text(
-                  'Lihat Informasi',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2563EB),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 38,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.visibility_outlined, size: 15, color: Color(0xFF2563EB)),
+                      label: const Text(
+                        'Lihat Informasi',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFBFDBFE)),
+                        backgroundColor: const Color(0xFFEFF6FF),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      onPressed: () => _showTalentaDetailModal(item),
+                    ),
                   ),
                 ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SizedBox(
+                    height: 38,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.work_outline_rounded, size: 15),
+                      label: const Text(
+                        'Tawarkan Kerja',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      onPressed: () => _bukaTawarkanPekerjaan(item),
+                    ),
+                  ),
                 ),
-                onPressed: () => _showTalentaDetailModal(item),
-              ),
+              ],
             ),
           ],
         ],

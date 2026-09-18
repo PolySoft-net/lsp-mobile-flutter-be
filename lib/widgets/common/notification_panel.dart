@@ -8,6 +8,7 @@ import '../../services/common/notification_service.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../screens/jadwal/jadwal_detail_screen.dart';
 import 'notification_card.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NotificationPanel extends StatefulWidget {
   const NotificationPanel({super.key});
@@ -548,8 +549,10 @@ class _AppNotificationCardState extends State<AppNotificationCard> {
     } else if (type == 'sertifikat_terbit') {
       iconData = Icons.workspace_premium_rounded;
       iconColor = const Color(0xFFE0A96D); // Gold
+    } else if (type == 'tawaran_pekerjaan') {
+      iconData = Icons.work_rounded;
+      iconColor = const Color(0xFF2563EB); // Royal Blue
     }
-
     // Mute colors if read
     if (notification.isRead) {
       iconColor = const Color(0xFF94A3B8); // Muted grey
@@ -683,6 +686,103 @@ class _AppNotificationCardState extends State<AppNotificationCard> {
                       ),
                     ],
                   ),
+                  if (_isExpanded && type == 'tawaran_pekerjaan') ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (notification.data['nama_perusahaan'] != null) ...[
+                            Row(
+                              children: [
+                                const Icon(Icons.business_rounded, size: 14, color: Color(0xFF2563EB)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    notification.data['nama_perusahaan'].toString(),
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                          if (notification.data['tipe_pekerjaan'] != null || notification.data['lokasi_kerja'] != null) ...[
+                            Text(
+                              '${notification.data['tipe_pekerjaan'] ?? ''} • ${notification.data['lokasi_kerja'] ?? ''}',
+                              style: const TextStyle(fontSize: 11.5, color: Color(0xFF475569), fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                          if (notification.data['rentang_gaji'] != null && notification.data['rentang_gaji'].toString().isNotEmpty) ...[
+                            Text(
+                              'Perkiraan Gaji: ${notification.data['rentang_gaji']}',
+                              style: const TextStyle(fontSize: 11.5, color: Color(0xFF16A34A), fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                          if (notification.data['deskripsi_pekerjaan'] != null) ...[
+                            const Text('Deskripsi Pekerjaan:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                            const SizedBox(height: 2),
+                            Text(
+                              notification.data['deskripsi_pekerjaan'].toString(),
+                              style: const TextStyle(fontSize: 11.5, color: Color(0xFF334155), height: 1.3),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          if (notification.data['catatan_tambahan'] != null && notification.data['catatan_tambahan'].toString().isNotEmpty) ...[
+                            Text(
+                              'Catatan: ${notification.data['catatan_tambahan']}',
+                              style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Color(0xFF64748B)),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              if (notification.data['kontak_perekrut'] != null && notification.data['kontak_perekrut'].toString().isNotEmpty)
+                                ElevatedButton.icon(
+                                  icon: const Icon(Icons.chat_bubble_outline_rounded, size: 14),
+                                  label: const Text('Hubungi via WhatsApp', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF16A34A),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  onPressed: () => _launchWA(notification.data['kontak_perekrut'].toString()),
+                                ),
+                              if (notification.data['email_perekrut'] != null && notification.data['email_perekrut'].toString().isNotEmpty)
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.email_outlined, size: 14, color: Color(0xFF2563EB)),
+                                  label: const Text('Kirim Email', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Color(0xFFBFDBFE)),
+                                    backgroundColor: const Color(0xFFEFF6FF),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  onPressed: () => _launchMail(
+                                    notification.data['email_perekrut'].toString(),
+                                    notification.data['judul_pekerjaan']?.toString() ?? '',
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   if (_isExpanded && hasAction) ...[
                     const SizedBox(height: 12),
                     const Divider(
@@ -755,6 +855,24 @@ class _AppNotificationCardState extends State<AppNotificationCard> {
       return DateFormatHelper.formatToIndonesian(
         dateTime.toIso8601String().split('T')[0],
       );
+    }
+  }
+
+  Future<void> _launchWA(String phone) async {
+    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    final formattedPhone = cleanPhone.startsWith('0')
+        ? '62${cleanPhone.substring(1)}'
+        : (cleanPhone.startsWith('62') ? cleanPhone : '62$cleanPhone');
+    final uri = Uri.parse('https://wa.me/$formattedPhone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _launchMail(String email, String subject) async {
+    final uri = Uri.parse('mailto:$email?subject=${Uri.encodeComponent("Menanggapi Tawaran: $subject")}');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }
