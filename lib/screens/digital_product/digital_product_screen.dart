@@ -5,7 +5,7 @@ import '../../widgets/digital_product/digital_product_banner.dart';
 import '../../widgets/digital_product/digital_product_category_chips.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
-import 'digital_product_portofolio_screen.dart';
+import 'digital_product_detail_screen.dart';
 import 'digital_product_profile_screen.dart';
 
 class DigitalProductScreen extends StatefulWidget {
@@ -24,97 +24,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   String? _selectedCategory;
   int _currentBottomNavIndex = 0;
 
-  // Sample data matching the designs
-  final List<DigitalProductItem> _allProducts = [
-    const DigitalProductItem(
-      id: '1',
-      title: 'Jasa Pembuatan Website Company Profil',
-      price: 'Rp 400.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Jasa',
-      thumbnailType: 'iot',
-      isFavorite: true,
-    ),
-    const DigitalProductItem(
-      id: '2',
-      title: 'Tamplate Aplikasi E-commers',
-      price: 'Rp 50.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Produk',
-      thumbnailType: 'ecom',
-      isFavorite: true,
-    ),
-    const DigitalProductItem(
-      id: '3',
-      title: 'Jasa Pembuatan Website Company Profil',
-      price: 'Rp 400.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Jasa',
-      thumbnailType: 'iot',
-      isFavorite: true,
-    ),
-    const DigitalProductItem(
-      id: '4',
-      title: 'Tamplate Aplikasi E-commers',
-      price: 'Rp 50.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Produk',
-      thumbnailType: 'ecom',
-      isFavorite: true,
-    ),
-    const DigitalProductItem(
-      id: '5',
-      title: 'Jasa Pembuatan Website Company Profil',
-      price: 'Rp 400.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Jasa',
-      thumbnailType: 'iot',
-      isFavorite: true,
-    ),
-    const DigitalProductItem(
-      id: '6',
-      title: 'Tamplate Aplikasi E-commers',
-      price: 'Rp 50.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Produk',
-      thumbnailType: 'ecom',
-      isFavorite: true,
-    ),
-    const DigitalProductItem(
-      id: '7',
-      title: 'Jasa Pembuatan Website Company Profil',
-      price: 'Rp 400.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Online',
-      thumbnailType: 'iot',
-      isFavorite: true,
-    ),
-    const DigitalProductItem(
-      id: '8',
-      title: 'Tamplate Aplikasi E-commers',
-      price: 'Rp 50.000',
-      priceUnit: '/Nego',
-      author: 'Adriansyah',
-      status: 'Open to hire/ Freelance',
-      category: 'Offline',
-      thumbnailType: 'ecom',
-      isFavorite: true,
-    ),
-  ];
+  final List<DigitalProductItem> _allProducts = digitalProductMockList;
 
   void _onCategorySelected(String category) {
     setState(() {
@@ -173,10 +83,22 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                 slivers: [
                   // Promotional Banner (disembunyikan saat di menu Explore)
                   if (_currentBottomNavIndex != 1)
-                    const SliverToBoxAdapter(
+                    SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.only(top: 4.0),
-                        child: DigitalProductBanner(),
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: DigitalProductBanner(
+                          onTap: () {
+                            if (products.isNotEmpty) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => DigitalProductDetailScreen(
+                                    item: products.first,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
                       ),
                     ),
 
@@ -209,23 +131,14 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                           final item = products[index];
                           return DigitalProductCard(
                             item: item,
-                            onTap: () async {
-                              final targetIndex =
-                                  await Navigator.of(context).push<int>(
+                            onTap: () {
+                              Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      const DigitalProductPortofolioScreen(),
+                                  builder: (_) => DigitalProductDetailScreen(
+                                    item: item,
+                                  ),
                                 ),
                               );
-                              if (targetIndex != null && mounted) {
-                                if (targetIndex == 4) {
-                                  _onBottomNavTap(4);
-                                } else {
-                                  setState(() {
-                                    _currentBottomNavIndex = targetIndex;
-                                  });
-                                }
-                              }
                             },
                             onFavoriteTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
