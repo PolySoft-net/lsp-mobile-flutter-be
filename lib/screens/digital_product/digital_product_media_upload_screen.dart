@@ -501,22 +501,7 @@ class _DigitalProductMediaUploadScreenState
         width: double.infinity,
         height: 46,
         child: ElevatedButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  '${widget.productType} "${widget.productName.isNotEmpty ? widget.productName : 'Baru'}" berhasil dipublikasikan!',
-                ),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-
-            // Pop back to the Produk/Jasa list screen
-            int count = 0;
-            Navigator.of(context).popUntil((route) {
-              return count++ >= 3 || route.isFirst;
-            });
-          },
+          onPressed: _showPublishConfirmationDialog,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFE5E7EB),
             foregroundColor: const Color(0xFF0F172A),
@@ -536,6 +521,316 @@ class _DigitalProductMediaUploadScreenState
       ),
     );
   }
+
+  void _showPublishConfirmationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 44),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Paper plane illustration matching mockup 1
+                const _PaperPlaneIllustration(),
+                const SizedBox(height: 14),
+
+                // Title
+                const Text(
+                  'Siap Dipublikasikan',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // Subtitle
+                const Text(
+                  'Produk/Jasa Anda akan ditampilkan',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Action buttons: Batal & Kirim
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(dialogCtx).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE2E8F0),
+                            foregroundColor: const Color(0xFF0F172A),
+                            elevation: 0,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Batal',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 38,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(dialogCtx).pop();
+                            _showPublishSuccessDialog();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE2E8F0),
+                            foregroundColor: const Color(0xFF0F172A),
+                            elevation: 0,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Kirim',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showPublishSuccessDialog() {
+    bool isClosed = false;
+
+    void closeAndNavigateBack(BuildContext dialogCtx) {
+      if (isClosed) return;
+      isClosed = true;
+
+      Navigator.of(dialogCtx).pop();
+
+      if (mounted) {
+        int count = 0;
+        Navigator.of(context).popUntil((route) {
+          return count++ >= 3 || route.isFirst;
+        });
+      }
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogCtx) {
+        // Auto-dismiss and navigate back after 1.8 seconds
+        Future.delayed(const Duration(milliseconds: 1800), () {
+          if (dialogCtx.mounted) {
+            closeAndNavigateBack(dialogCtx);
+          }
+        });
+
+        return GestureDetector(
+          onTap: () => closeAndNavigateBack(dialogCtx),
+          child: Dialog(
+            backgroundColor: Colors.white,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            insetPadding: const EdgeInsets.symmetric(horizontal: 52),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Green circle with checkmark matching mockup 2
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF4ADE80),
+                        width: 3.5,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.check_rounded,
+                        color: Color(0xFF4ADE80),
+                        size: 34,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Title
+                  const Text(
+                    'Publikasi Berhasil',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+
+                  // Subtitle
+                  const Text(
+                    'Produk/Jasa Anda akan ditampilkan',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ).then((_) {
+      // If dialog was closed by tapping barrier
+      if (!isClosed && mounted) {
+        isClosed = true;
+        int count = 0;
+        Navigator.of(context).popUntil((route) {
+          return count++ >= 3 || route.isFirst;
+        });
+      }
+    });
+  }
+}
+
+class _PaperPlaneIllustration extends StatelessWidget {
+  const _PaperPlaneIllustration();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 80,
+      height: 70,
+      child: CustomPaint(
+        painter: _PaperPlanePainter(),
+      ),
+    );
+  }
+}
+
+class _PaperPlanePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 1. Soft ground shadow
+    final shadowPaint = Paint()
+      ..color = const Color(0x331E293B)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(size.width * 0.54, size.height - 7),
+        width: 38,
+        height: 7,
+      ),
+      shadowPaint,
+    );
+
+    // 2. Paper airplane coordinates
+    final nose = Offset(size.width * 0.76, size.height * 0.12);
+    final leftTip = Offset(size.width * 0.18, size.height * 0.44);
+    final keel = Offset(size.width * 0.50, size.height * 0.52);
+    final rightTip = Offset(size.width * 0.70, size.height * 0.68);
+    final bottomFin = Offset(size.width * 0.38, size.height * 0.76);
+
+    // Keel underside fold (deepest blue)
+    final keelPath = Path()
+      ..moveTo(keel.dx, keel.dy)
+      ..lineTo(nose.dx, nose.dy)
+      ..lineTo(bottomFin.dx, bottomFin.dy)
+      ..close();
+    final keelPaint = Paint()
+      ..color = const Color(0xFF0369A1)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(keelPath, keelPaint);
+
+    // Right wing (medium blue)
+    final rightWingPath = Path()
+      ..moveTo(keel.dx, keel.dy)
+      ..lineTo(nose.dx, nose.dy)
+      ..lineTo(rightTip.dx, rightTip.dy)
+      ..close();
+    final rightWingPaint = Paint()
+      ..color = const Color(0xFF0284C7)
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(rightWingPath, rightWingPaint);
+
+    // Left main wing (bright cyan with gradient)
+    final leftWingPath = Path()
+      ..moveTo(nose.dx, nose.dy)
+      ..lineTo(leftTip.dx, leftTip.dy)
+      ..lineTo(bottomFin.dx, bottomFin.dy)
+      ..close();
+    final leftWingPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topRight,
+        end: Alignment.bottomLeft,
+        colors: [Color(0xFF67E8F9), Color(0xFF38BDF8)],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(leftWingPath, leftWingPaint);
+
+    // White highlight pill near top edge
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.85)
+      ..style = PaintingStyle.fill;
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(size.width * 0.40, size.height * 0.32),
+        width: 14,
+        height: 4.5,
+      ),
+      const Radius.circular(2.5),
+    );
+    canvas.save();
+    canvas.translate(size.width * 0.40, size.height * 0.32);
+    canvas.rotate(-0.52);
+    canvas.translate(-size.width * 0.40, -size.height * 0.32);
+    canvas.drawRRect(rrect, highlightPaint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _DashedRectPainter extends CustomPainter {
