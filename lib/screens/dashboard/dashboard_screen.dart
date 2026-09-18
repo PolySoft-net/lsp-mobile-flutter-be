@@ -24,6 +24,7 @@ import '../profile/profile_asesor_screen.dart';
 import '../blanko/admin_pengajuan_blanko_screen.dart';
 import '../../utils/url_helper.dart';
 import '../../widgets/dashboard/asesi_timeline_section.dart';
+import '../../widgets/dashboard/asesi_talenta_status_card.dart';
 import '../../widgets/dashboard/menu_bulat_section.dart';
 import '../talenta/talenta_screen.dart';
 import '../sertifikat/skema_sertifikasi_screen.dart';
@@ -668,6 +669,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
+              ),
+
+            // 1.35. Form Status Pencari Kerja & Lokasi Domisili (Peta Talenta) — Khusus Asesi
+            if (isAsesi)
+              AsesiTalentaStatusCard(
+                onUpdated: _loadAllData,
               ),
 
             // 1.4. Linimasa Uji Terakhir Section — Khusus untuk Asesi
