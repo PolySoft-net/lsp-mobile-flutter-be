@@ -103,4 +103,18 @@ class TalentaService {
       return false;
     }
   }
+
+  /// Submit job offer to a talent / asesi
+  static Future<bool> tawarkanPekerjaan(Map<String, dynamic> body) async {
+    try {
+      final response = await _dio.post(
+        '/api/talenta/tawaran-pekerjaan',
+        data: body,
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('🔴 Error submitting job offer: $e');
+      return false;
+    }
+  }
 }

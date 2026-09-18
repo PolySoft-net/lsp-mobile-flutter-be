@@ -10,6 +10,7 @@ import '../../services/common/master_service.dart';
 import '../../services/marketing/location_service.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import 'tawarkan_pekerjaan_screen.dart';
 
 class TalentaScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -35,6 +36,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
   String _selectedSkemaName = 'Semua Skema';
   List<MasterSkema> _skemaList = [];
   int? _selectedStatusKerja;
+  double? _selectedRadiusKm;
 
   // Data state
   List<TalentaItem> _talentaList = [];
@@ -240,6 +242,7 @@ class _TalentaScreenState extends State<TalentaScreen> {
       final res = await TalentaService.getTalenta(
         lat: _currentGeo?.latitude,
         lng: _currentGeo?.longitude,
+        radiusKm: _selectedRadiusKm,
         skemaId: _selectedSkemaId,
         statusPencariKerja: _selectedStatusKerja,
         search: _searchController.text.trim(),
@@ -1560,18 +1563,42 @@ class _TalentaScreenState extends State<TalentaScreen> {
       return;
     }
 
-    double minLat = _currentGeo?.latitude ?? itemsWithCoords.first.latitude!;
+    // Filter hanya talenta dalam radius terdekat (misal <= 75 km dari user),
+    // agar data outlier yang sangat jauh (misal di pulau lain / ribuan km)
+    // tidak membuat peta zoom-out ekstrem ke seluruh nusantara.
+    List<TalentaItem> boundsItems = itemsWithCoords;
+    if (_currentGeo != null) {
+      final nearby = itemsWithCoords.where((t) {
+        final distKm = LocationService.distanceBetween(
+          _currentGeo!.latitude,
+          _currentGeo!.longitude,
+          t.latitude!,
+          t.longitude!,
+        );
+        return distKm <= 75.0;
+      }).toList();
+
+      if (nearby.isNotEmpty) {
+        boundsItems = nearby;
+      } else {
+        // Jika tidak ada dalam 75 km, ambil 1 talenta paling terdekat
+        final sorted = List<TalentaItem>.from(itemsWithCoords)
+          ..sort((a, b) => (a.jarakKm ?? 999999.0).compareTo(b.jarakKm ?? 999999.0));
+        boundsItems = sorted.take(1).toList();
+      }
+    }
+
+    double minLat = _currentGeo?.latitude ?? boundsItems.first.latitude!;
     double maxLat = minLat;
-    double minLng = _currentGeo?.longitude ?? itemsWithCoords.first.longitude!;
+    double minLng = _currentGeo?.longitude ?? boundsItems.first.longitude!;
     double maxLng = minLng;
 
-    for (final item in itemsWithCoords) {
+    for (final item in boundsItems) {
       if (item.latitude! < minLat) minLat = item.latitude!;
       if (item.latitude! > maxLat) maxLat = item.latitude!;
       if (item.longitude! < minLng) minLng = item.longitude!;
       if (item.longitude! > maxLng) maxLng = item.longitude!;
     }
-
     if ((maxLat - minLat).abs() < 0.001 && (maxLng - minLng).abs() < 0.001) {
       _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(LatLng(minLat, minLng), 14.0),
@@ -1919,6 +1946,8 @@ class _TalentaScreenState extends State<TalentaScreen> {
                         _fetchTalenta(isRefresh: true);
                       },
                     ),
+                    const SizedBox(width: 6),
+                    _buildRadiusChip(),
                   ],
                 ),
               ),
@@ -2506,6 +2535,8 @@ class _TalentaScreenState extends State<TalentaScreen> {
                               _fetchTalenta(isRefresh: true);
                             },
                           ),
+                          const SizedBox(width: 8),
+                          _buildRadiusChip(),
                         ],
                       ),
                     ),
@@ -2624,6 +2655,15 @@ class _TalentaScreenState extends State<TalentaScreen> {
 ),
 );
   }
+  void _bukaTawarkanPekerjaan(TalentaItem item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TawarkanPekerjaanScreen(talenta: item),
+      ),
+    );
+  }
+
 
   void _showTalentaDetailModal(TalentaItem item) {
     showModalBottomSheet(
@@ -2894,6 +2934,28 @@ class _TalentaScreenState extends State<TalentaScreen> {
                     ),
                 ],
                 const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.work_outline_rounded, size: 17),
+                    label: const Text(
+                      'Tawarkan Pekerjaan / Rekrut',
+                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _bukaTawarkanPekerjaan(item);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Row(
                   children: [
                     if (item.telp.isNotEmpty) ...[
@@ -3210,27 +3272,26 @@ class _TalentaScreenState extends State<TalentaScreen> {
                       onPressed: () => _launchWhatsApp(item.telp, name: item.pemegang),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                 ],
-                if (item.email.isNotEmpty) ...[
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.email_outlined, size: 14, color: Color(0xFF2563EB)),
-                      label: const Text(
-                        'Email',
-                        style: TextStyle(fontSize: 11.5, color: Color(0xFF2563EB), fontWeight: FontWeight.bold),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFBFDBFE)),
-                        backgroundColor: const Color(0xFFEFF6FF),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                      ),
-                      onPressed: () => _launchEmail(item.email, name: item.pemegang),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.work_outline_rounded, size: 14),
+                    label: const Text(
+                      'Tawarkan Kerja',
+                      style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
                     ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      elevation: 0,
+                    ),
+                    onPressed: () => _bukaTawarkanPekerjaan(item),
                   ),
-                  const SizedBox(width: 8),
-                ],
+                ),
+                const SizedBox(width: 6),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.visibility_outlined, size: 14, color: Color(0xFF475569)),
                   label: const Text(
@@ -3248,27 +3309,55 @@ class _TalentaScreenState extends State<TalentaScreen> {
               ],
             ),
           ] else ...[
-            SizedBox(
-              width: double.infinity,
-              height: 38,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.visibility_outlined, size: 16, color: Color(0xFF2563EB)),
-                label: const Text(
-                  'Lihat Informasi',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2563EB),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 38,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.visibility_outlined, size: 15, color: Color(0xFF2563EB)),
+                      label: const Text(
+                        'Lihat Informasi',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFBFDBFE)),
+                        backgroundColor: const Color(0xFFEFF6FF),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      onPressed: () => _showTalentaDetailModal(item),
+                    ),
                   ),
                 ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFBFDBFE)),
-                  backgroundColor: const Color(0xFFEFF6FF),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SizedBox(
+                    height: 38,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.work_outline_rounded, size: 15),
+                      label: const Text(
+                        'Tawarkan Kerja',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 0,
+                      ),
+                      onPressed: () => _bukaTawarkanPekerjaan(item),
+                    ),
+                  ),
                 ),
-                onPressed: () => _showTalentaDetailModal(item),
-              ),
+              ],
             ),
           ],
         ],
@@ -3278,6 +3367,84 @@ class _TalentaScreenState extends State<TalentaScreen> {
 ),
 );
   }
+  Widget _buildRadiusChip() {
+    final hasRadius = _selectedRadiusKm != null;
+    final label = hasRadius ? '< ${_selectedRadiusKm!.toInt()} km' : 'Jarak: Semua';
+
+    return PopupMenuButton<double?>(
+      initialValue: _selectedRadiusKm,
+      tooltip: 'Filter Jarak',
+      onSelected: (val) {
+        setState(() => _selectedRadiusKm = val);
+        _fetchTalenta(isRefresh: true);
+      },
+      itemBuilder: (ctx) => [
+        const PopupMenuItem<double?>(
+          value: null,
+          child: Text('Semua Jarak', style: TextStyle(fontSize: 12.5)),
+        ),
+        const PopupMenuItem<double?>(
+          value: 10.0,
+          child: Text('Dalam 10 km', style: TextStyle(fontSize: 12.5)),
+        ),
+        const PopupMenuItem<double?>(
+          value: 25.0,
+          child: Text('Dalam 25 km', style: TextStyle(fontSize: 12.5)),
+        ),
+        const PopupMenuItem<double?>(
+          value: 50.0,
+          child: Text('Dalam 50 km', style: TextStyle(fontSize: 12.5)),
+        ),
+        const PopupMenuItem<double?>(
+          value: 100.0,
+          child: Text('Dalam 100 km', style: TextStyle(fontSize: 12.5)),
+        ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: hasRadius ? const Color(0xFF2563EB) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: hasRadius ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.near_me_rounded,
+              size: 13,
+              color: hasRadius ? Colors.white : const Color(0xFF64748B),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.bold,
+                color: hasRadius ? Colors.white : const Color(0xFF334155),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 16,
+              color: hasRadius ? Colors.white : const Color(0xFF94A3B8),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFilterChip({
     required String label,
     required bool isSelected,
