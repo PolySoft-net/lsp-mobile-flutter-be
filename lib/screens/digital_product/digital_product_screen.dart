@@ -6,6 +6,7 @@ import '../../widgets/digital_product/digital_product_category_chips.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import 'digital_product_detail_screen.dart';
+import 'digital_product_favorit_screen.dart';
 import 'digital_product_profile_screen.dart';
 
 class DigitalProductScreen extends StatefulWidget {
@@ -37,6 +38,19 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   }
 
   Future<void> _onBottomNavTap(int index) async {
+    if (index == 3) {
+      final targetIndex = await Navigator.of(context).push<int>(
+        MaterialPageRoute(
+          builder: (_) => const DigitalProductFavoritScreen(),
+        ),
+      );
+      if (targetIndex != null && mounted) {
+        setState(() {
+          _currentBottomNavIndex = targetIndex;
+        });
+      }
+      return;
+    }
     if (index == 4) {
       final targetIndex = await Navigator.of(context).push<int>(
         MaterialPageRoute(
@@ -75,7 +89,15 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
         child: Column(
           children: [
             // Pinned Top Header
-            const DigitalProductHeader(),
+            DigitalProductHeader(
+              onFavoriteTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DigitalProductFavoritScreen(),
+                  ),
+                );
+              },
+            ),
 
             // Scrollable Virtualized Content
             Expanded(

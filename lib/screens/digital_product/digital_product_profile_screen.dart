@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
+import 'digital_product_favorit_screen.dart';
 import 'digital_product_pengaturan_profil_screen.dart';
+import 'digital_product_produk_jasa_screen.dart';
 
 class DigitalProductProfileScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -249,13 +251,25 @@ class _DigitalProductProfileScreenState
           _buildMenuItem(
             icon: Icons.bookmark_border_rounded,
             title: 'Koleksi',
-            onTap: () => _showComingSoon('Koleksi'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DigitalProductFavoritScreen(),
+                ),
+              );
+            },
           ),
           const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
           _buildMenuItem(
             icon: Icons.group_work_outlined,
             title: 'Produk/Jasa',
-            onTap: () => _showComingSoon('Produk/Jasa'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DigitalProductProdukJasaScreen(),
+                ),
+              );
+            },
           ),
           const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
           _buildMenuItem(
