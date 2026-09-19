@@ -61,14 +61,15 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDR3yIbOH_ZDn7_E9sHDEYCf6lsYR3dxeQ',
-    appId: '1:113874406807:ios:676c4689a16158c5e77e06',
+    apiKey: 'AIzaSyCcviD--Jf7GdgN0G2aH1ZXLHgltYMm_Qc',
+    appId: '1:113874406807:ios:79c36d9f4e3fb96f3ec8d2',
     messagingSenderId: '113874406807',
     projectId: 'lsp-digital-mobile',
     storageBucket: 'lsp-digital-mobile.firebasestorage.app',
-    iosBundleId: 'com.example.lspDigitalMobile',
+    androidClientId: '113874406807-21ioa5117c4eb8p533rneeaqpkhohke5.apps.googleusercontent.com',
+    iosClientId: '113874406807-vql1q4r6hdk4tme971cr2v37pugu8ln2.apps.googleusercontent.com',
+    iosBundleId: 'id.lspdigital.mobile',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDR3yIbOH_ZDn7_E9sHDEYCf6lsYR3dxeQ',
     appId: '1:113874406807:ios:676c4689a16158c5e77e06',
