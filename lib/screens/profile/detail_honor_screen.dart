@@ -278,6 +278,8 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final String namaAsesor = (widget.detail['nama_asesor'] ?? widget.detail['asesor'] ?? '').toString().trim();
+    final String tipeAsesor = (widget.detail['tipe_asesor'] ?? '').toString().trim();
     final String judul = widget.detail['judul_asesmen'] ?? widget.detail['judul'] ?? 'Junior Web Developer';
     final String tuk = widget.detail['tuk'] ?? 'SMA 5 Semarang';
     final String rawWaktu = widget.detail['waktu'] ?? widget.detail['tanggal'] ?? '20/05/2026';
@@ -389,6 +391,27 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (namaAsesor.isNotEmpty) ...[
+                                Row(
+                                  children: [
+                                    const Icon(Icons.person_outline_rounded, size: 13, color: Color(0xFF3B82F6)),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        namaAsesor + (tipeAsesor.isNotEmpty ? ' ($tipeAsesor)' : ''),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF3B82F6),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                              ],
                               Text(
                                 judul,
                                 style: const TextStyle(
