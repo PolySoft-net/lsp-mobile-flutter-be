@@ -4,6 +4,7 @@ import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import 'digital_product_favorit_screen.dart';
 import 'digital_product_pengaturan_profil_screen.dart';
 import 'digital_product_produk_jasa_screen.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
 
 class DigitalProductProfileScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -253,8 +254,8 @@ class _DigitalProductProfileScreenState
             title: 'Koleksi',
             onTap: () async {
               final targetIndex = await Navigator.of(context).push<int>(
-                MaterialPageRoute(
-                  builder: (_) => const DigitalProductFavoritScreen(),
+                FadePageRoute(
+                  page: const DigitalProductFavoritScreen(),
                 ),
               );
               if (targetIndex != null && mounted) {
@@ -268,8 +269,8 @@ class _DigitalProductProfileScreenState
             title: 'Produk/Jasa',
             onTap: () async {
               final targetIndex = await Navigator.of(context).push<int>(
-                MaterialPageRoute(
-                  builder: (_) => const DigitalProductProdukJasaScreen(),
+                FadePageRoute(
+                  page: const DigitalProductProdukJasaScreen(),
                 ),
               );
               if (targetIndex != null && mounted) {

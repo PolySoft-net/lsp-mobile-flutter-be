@@ -8,6 +8,7 @@ import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import 'digital_product_detail_screen.dart';
 import 'digital_product_favorit_screen.dart';
 import 'digital_product_profile_screen.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
 
 class DigitalProductScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -40,8 +41,8 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   Future<void> _onBottomNavTap(int index) async {
     if (index == 3) {
       final targetIndex = await Navigator.of(context).push<int>(
-        MaterialPageRoute(
-          builder: (_) => const DigitalProductFavoritScreen(),
+        FadePageRoute(
+          page: const DigitalProductFavoritScreen(),
         ),
       );
       if (targetIndex != null && mounted) {
@@ -53,8 +54,8 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
     }
     if (index == 4) {
       final targetIndex = await Navigator.of(context).push<int>(
-        MaterialPageRoute(
-          builder: (_) => const DigitalProductProfileScreen(),
+        FadePageRoute(
+          page: const DigitalProductProfileScreen(),
         ),
       );
       if (targetIndex != null && mounted) {
@@ -92,8 +93,8 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
             DigitalProductHeader(
               onFavoriteTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const DigitalProductFavoritScreen(),
+                  FadePageRoute(
+                    page: const DigitalProductFavoritScreen(),
                   ),
                 );
               },

@@ -3,6 +3,7 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import '../../widgets/digital_product/digital_product_portofolio_cards.dart';
 import 'digital_product_profile_screen.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
 
 class DigitalProductPortofolioScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -24,8 +25,8 @@ class _DigitalProductPortofolioScreenState
   Future<void> _onBottomNavTap(int index) async {
     if (index == 4) {
       final targetIndex = await Navigator.of(context).push<int>(
-        MaterialPageRoute(
-          builder: (_) => const DigitalProductProfileScreen(),
+        FadePageRoute(
+          page: const DigitalProductProfileScreen(),
         ),
       );
       if (targetIndex != null && mounted) {

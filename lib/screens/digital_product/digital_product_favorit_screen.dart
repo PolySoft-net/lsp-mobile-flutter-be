@@ -4,6 +4,7 @@ import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import 'digital_product_detail_screen.dart';
 import 'digital_product_profile_screen.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
 
 class DigitalProductFavoritScreen extends StatefulWidget {
   const DigitalProductFavoritScreen({super.key});
@@ -43,8 +44,8 @@ class _DigitalProductFavoritScreenState
 
     if (index == 4) {
       final targetIndex = await Navigator.of(context).push<int>(
-        MaterialPageRoute(
-          builder: (_) => const DigitalProductProfileScreen(),
+        FadePageRoute(
+          page: const DigitalProductProfileScreen(),
         ),
       );
       if (targetIndex != null && mounted) {
