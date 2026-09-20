@@ -478,7 +478,7 @@ class PortofolioLainnyaCard extends StatelessWidget {
                 if (isFavorite)
                   const Icon(
                     Icons.favorite,
-                    size: 13,
+                    size: 18,
                     color: Color(0xFF0F172A),
                   ),
               ],

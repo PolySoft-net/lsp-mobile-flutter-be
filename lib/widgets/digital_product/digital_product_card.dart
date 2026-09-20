@@ -73,10 +73,14 @@ class DigitalProductCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     GestureDetector(
                       onTap: onFavoriteTap,
-                      child: const Icon(
-                        Icons.favorite,
-                        size: 13,
-                        color: Color(0xFF0F172A),
+                      behavior: HitTestBehavior.opaque,
+                      child: const Padding(
+                        padding: EdgeInsets.all(2.0),
+                        child: Icon(
+                          Icons.favorite,
+                          size: 18,
+                          color: Color(0xFF0F172A),
+                        ),
                       ),
                     ),
                   ],

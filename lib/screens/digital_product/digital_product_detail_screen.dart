@@ -198,7 +198,7 @@ class _DigitalProductDetailScreenState
                 },
                 child: Icon(
                   _isFavorite ? Icons.favorite : Icons.favorite_border,
-                  size: 16,
+                  size: 20,
                   color: const Color(0xFF0F172A),
                 ),
               ),

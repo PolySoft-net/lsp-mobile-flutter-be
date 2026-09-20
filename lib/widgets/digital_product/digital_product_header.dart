@@ -30,8 +30,8 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
             onTap: onFavoriteTap,
             borderRadius: BorderRadius.circular(20),
             child: Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -42,7 +42,7 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
               child: const Center(
                 child: Icon(
                   LucideIcons.heart,
-                  size: 18,
+                  size: 20,
                   color: Color(0xFF1E293B),
                 ),
               ),
