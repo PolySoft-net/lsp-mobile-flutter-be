@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../services/asesor/asesor_service.dart';
 import 'detail_honor_screen.dart';
+import '../../utils/url_helper.dart';
 
 class DetailTugasAsesorScreen extends StatefulWidget {
   final Map<String, dynamic> asesorData;
@@ -174,6 +175,10 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
         widget.asesorData['is_dibayar_tuk'] == true ||
         totalHonor.toLowerCase().contains('tuk');
 
+    final String? noInvoice = (_jadwalInfo?['no_invoice'] ?? widget.asesorData['no_invoice'])?.toString();
+    final String? nominalInvoice = (_jadwalInfo?['nominal_invoice'] ?? widget.asesorData['nominal_invoice'])?.toString();
+    final String? tglPelunasan = (_jadwalInfo?['tgl_pelunasan'] ?? widget.asesorData['tgl_pelunasan'])?.toString();
+    final String? linkBuktiInvoice = (_jadwalInfo?['link_bukti_invoice'] ?? widget.asesorData['link_bukti_invoice'])?.toString();
     // Backend sudah memfilter sesuai status tab — jangan difilter ulang di FE.
     final currentTasks = _loadedTasks;
 
@@ -360,6 +365,62 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
                             ),
                           ],
                         ),
+                        if (noInvoice != null && noInvoice.isNotEmpty && noInvoice != '-') ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('No. Invoice', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
+                                    Text(noInvoice, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                                  ],
+                                ),
+                                if (nominalInvoice != null && nominalInvoice.isNotEmpty && nominalInvoice != '0') ...[
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Nominal Invoice', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
+                                      Text(_formatNominal(nominalInvoice), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0F172A))),
+                                    ],
+                                  ),
+                                ],
+                                if (tglPelunasan != null && tglPelunasan.isNotEmpty && tglPelunasan != '1970-01-01') ...[
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Tgl Pelunasan', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
+                                      Text(tglPelunasan, style: const TextStyle(fontSize: 11.5, color: Color(0xFF475569))),
+                                    ],
+                                  ),
+                                ],
+                                if (linkBuktiInvoice != null && linkBuktiInvoice.isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text('Bukti Invoice', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
+                                      InkWell(
+                                        onTap: () => UrlHelper.launchURL(context, linkBuktiInvoice),
+                                        child: const Text('Lihat Bukti', style: TextStyle(fontSize: 11.5, color: Color(0xFF2563EB), fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -654,5 +715,15 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
         ),
       ),
     );
+  }
+
+  String _formatNominal(String raw) {
+    if (raw.toLowerCase().startsWith('rp')) return raw;
+    final numVal = double.tryParse(raw.replaceAll(',', ''));
+    if (numVal != null) {
+      final intVal = numVal.toInt();
+      return 'Rp ${intVal.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+    }
+    return 'Rp $raw';
   }
 }
