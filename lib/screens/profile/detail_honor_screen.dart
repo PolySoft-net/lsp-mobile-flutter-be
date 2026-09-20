@@ -185,7 +185,7 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isSelected ? activeColor.withOpacity(0.15) : const Color(0xFFF1F5F9),
+                    color: isSelected ? activeColor.withValues(alpha: 0.15) : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(

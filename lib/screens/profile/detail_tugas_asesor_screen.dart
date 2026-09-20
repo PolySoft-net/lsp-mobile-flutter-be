@@ -623,7 +623,7 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
                           width: 42,
                           height: 42,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Center(
+                          errorBuilder: (_, _, _) => const Center(
                             child: Icon(
                               Icons.person_rounded,
                               color: Color(0xFF3B82F6),
