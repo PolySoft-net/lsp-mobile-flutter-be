@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Aplikasi ini menggunakan lokasi Anda untuk mengisi otomatis alamat pada profil/formulir pendaftaran serta menampilkan lead marketing dan talenta terdekat di peta.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Aplikasi ini menggunakan lokasi Anda untuk mengisi otomatis alamat pada profil/formulir pendaftaran serta menampilkan lead marketing dan talenta terdekat di peta.</string>
 	<key>UIApplicationSceneManifest</key>
@@ -58,15 +60,14 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 </dict>
 </plist>
