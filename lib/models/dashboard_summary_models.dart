@@ -63,7 +63,6 @@ class DashboardSummary {
       totalAsesor: 0,
       totalTuk: 0,
       totalJadwal: 0,
-      totalAsesmen: 0,
       jadwalBelumTerkonfirmasi: 0,
       suratTugasMenungguPengiriman: 0,
       pendaftaranAsesiBaru: 0,
