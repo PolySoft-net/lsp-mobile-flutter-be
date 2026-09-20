@@ -414,7 +414,7 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
                                     children: [
                                       const Text('Bukti Invoice', style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
                                       InkWell(
-                                        onTap: () => UrlHelper.launchURL(context, linkBuktiInvoice),
+                                        onTap: () => UrlHelper.launchURL(linkBuktiInvoice),
                                         child: const Text('Lihat Bukti', style: TextStyle(fontSize: 11.5, color: Color(0xFF2563EB), fontWeight: FontWeight.bold)),
                                       ),
                                     ],
