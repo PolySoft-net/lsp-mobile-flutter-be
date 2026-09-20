@@ -31,6 +31,7 @@ import '../sertifikat/skema_sertifikasi_screen.dart';
 import '../sertifikat/validasi_sertifikat_screen.dart';
 import 'berita_screen.dart';
 import '../ai/asesor_ai_screen.dart';
+import '../digital_product/digital_product_screen.dart';
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToJadwal;
   final Function(int tabIndex)? onNavigateToTab;
@@ -935,11 +936,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         } else if (value == 'digital_product') {
-          _showComingSoonDialog(
+          Navigator.push(
             context,
-            'Digital Product',
-            Icons.shopping_bag_outlined,
-            const Color(0xFF0D9488),
+            MaterialPageRoute(
+              builder: (context) => const DigitalProductScreen(),
+            ),
           );
         } else if (value == 'career_expo') {
           _showComingSoonDialog(
@@ -977,7 +978,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.shopping_bag_outlined,
           iconColor: const Color(0xFF0D9488),
           title: 'Digital Product',
-          badgeText: 'Segera Hadir',
         ),
         _buildHeaderDropdownItem(
           value: 'career_expo',
