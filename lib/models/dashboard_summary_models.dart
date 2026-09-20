@@ -28,6 +28,7 @@ class DashboardSummary {
   final int honorAsesorBelumDibayar;
   final int pengajuanBlankoBelumSelesai;
   final int pengajuanBlankoPending;
+  final int totalJadwal;
 
   const DashboardSummary({
     required this.totalAsesmen,
@@ -41,6 +42,7 @@ class DashboardSummary {
     this.honorAsesorBelumDibayar = 0,
     this.pengajuanBlankoBelumSelesai = 0,
     this.pengajuanBlankoPending = 0,
+    this.totalJadwal = 0,
     this.trendAsesmen = '+0%',
     this.trendPemegangSertifikat = '+0%',
     this.trendAsesor = '+0%',
@@ -60,7 +62,7 @@ class DashboardSummary {
       totalPemegangSertifikat: 0,
       totalAsesor: 0,
       totalTuk: 0,
-      totalAsesi: 0,
+      totalJadwal: 0,
       jadwalBelumTerkonfirmasi: 0,
       suratTugasMenungguPengiriman: 0,
       pendaftaranAsesiBaru: 0,

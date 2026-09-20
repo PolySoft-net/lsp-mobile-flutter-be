@@ -34,6 +34,25 @@ class UrlHelper {
     }
   }
 
+  /// Safely launches any raw URL string (resolves first if relative).
+  /// Supports both [UrlHelper.launchURL(url)] and [UrlHelper.launchURL(context, url)].
+  static Future<bool> launchURL(dynamic first, [String? second]) async {
+    final String? rawUrl = second ?? (first is String ? first : null);
+    if (rawUrl == null || rawUrl.trim().isEmpty) return false;
+    final resolved = resolveUrl(rawUrl);
+    final uri = Uri.tryParse(resolved);
+    if (uri == null) return false;
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        return true;
+      }
+      return await launchUrl(uri, mode: LaunchMode.platformDefault);
+    } catch (e) {
+      if (kDebugMode) debugPrint('Could not launch URL: $e');
+      return false;
+    }
+  }
+
   /// Resolves any raw URL/path into a fully-qualified URL string.
   ///
   /// Priority / Rules:

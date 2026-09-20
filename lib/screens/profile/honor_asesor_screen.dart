@@ -55,7 +55,9 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
     });
     try {
       final String tabStatus = statusOverride ??
-          (_selectedTabIndex == 1 ? 'selesai' : 'semua');
+          (_selectedTabIndex == 1
+              ? 'selesai'
+              : (_selectedTabIndex == 2 ? 'semua' : 'menunggu'));
       // 1. Try Admin endpoint first (/api/admin/honor-asesor)
       final resAdmin = await AsesorService.getAdminHonorAsesorList(
         status: tabStatus,
@@ -74,7 +76,7 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
               ...map,
               'id': map['id'] ?? map['asesor_id'],
               'nama_asesor': map['nama_asesor'] ?? 'Asesor',
-              'tipe_asesor': map['tipe_asesor'] ?? 'Asesor Internal',
+              'tipe_asesor': map['tipe_asesor'] ?? 'Internal',
               'judul_asesmen': rawJudul,
               'nama_jadwal': rawJudul,
               'skema': map['skema'] ?? rawJudul,
@@ -82,6 +84,12 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
               'tanggal': map['tanggal_pelaksanaan'] ?? map['tanggal_jadwal'] ?? map['tanggal'] ?? '',
               'honor': map['honor'] ?? 'Rp 0',
               'status': map['status'] ?? 'Selesai',
+              'no_invoice': map['no_invoice'],
+              'nominal_invoice': map['nominal_invoice'],
+              'tgl_invoice': map['tgl_invoice'],
+              'tgl_pelunasan': map['tgl_pelunasan'],
+              'pembayaran_ke_mitra': map['pembayaran_ke_mitra'],
+              'link_bukti_invoice': map['link_bukti_invoice'],
             };
           }).toList();
           _updateFilteredItems();
@@ -106,7 +114,7 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
               ...map,
               'id': map['id'] ?? map['asesor_id'] ?? map['tugas_id'] ?? map['id_detail'],
               'nama_asesor': map['nama_asesor'] ?? rawJudul,
-              'tipe_asesor': map['tipe_asesor'] ?? 'Asesor Internal',
+              'tipe_asesor': map['tipe_asesor'] ?? 'Internal',
               'judul_asesmen': rawJudul,
               'nama_jadwal': rawJudul,
               'skema': map['skema'] ?? rawJudul,
@@ -283,7 +291,8 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
         final nama = (item['nama_jadwal'] ?? item['judul_asesmen'] ?? item['nama_asesor'] ?? '').toString().toLowerCase();
         final tuk = (item['tuk'] ?? '').toString().toLowerCase();
         final tgl = (item['tanggal'] ?? '').toString().toLowerCase();
-        return nama.contains(q) || tuk.contains(q) || tgl.contains(q);
+        final inv = (item['no_invoice'] ?? '').toString().toLowerCase();
+        return nama.contains(q) || tuk.contains(q) || tgl.contains(q) || inv.contains(q);
       }).toList();
     }
 
@@ -439,9 +448,11 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          _buildPillTab(index: 0, label: 'Semua'),
+          _buildPillTab(index: 0, label: 'Belum Lunas'),
           const SizedBox(width: 8),
           _buildPillTab(index: 1, label: 'Selesai'),
+          const SizedBox(width: 8),
+          _buildPillTab(index: 2, label: 'Semua'),
         ],
       ),
     );
@@ -455,7 +466,12 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          final String nextStatus = index == 1 ? 'selesai' : 'semua';
+          String nextStatus = 'menunggu';
+          if (index == 1) {
+            nextStatus = 'selesai';
+          } else if (index == 2) {
+            nextStatus = 'semua';
+          }
           setState(() {
             _selectedTabIndex = index;
           });
@@ -506,7 +522,7 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                 },
                 style: const TextStyle(fontSize: 12),
                 decoration: InputDecoration(
-                  hintText: 'Cari nama asesor/skema',
+                  hintText: 'Cari jadwal/asesor/skema',
                   hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
                   prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
                   suffixIcon: _searchController.text.isNotEmpty
@@ -576,22 +592,22 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
     final user = AuthRepository.currentUserInstance;
     final bool isAsesor = user?.role == 'asesor';
 
-    // Jika admin, utamakan nama asesor karena list ini adalah rekap per-asesor
     final String namaAsesor = (item['nama_asesor'] ?? '').toString().trim();
     String namaJadwal = (item['nama_jadwal'] ?? item['judul_asesmen'] ?? item['skema'] ?? '').toString();
     namaJadwal = namaJadwal.replaceAll(RegExp(r'^Uji Kompetensi:\s*', caseSensitive: false), '').trim();
 
-    final String title = isAsesor
-        ? (namaJadwal.isNotEmpty ? namaJadwal : (namaAsesor.isNotEmpty ? namaAsesor : 'Jadwal Asesmen'))
-        : (namaAsesor.isNotEmpty ? namaAsesor : (namaJadwal.isNotEmpty ? namaJadwal : 'Asesor'));
+    // Utamakan nama jadwal sebagai judul kartu rekap
+    final String title = namaJadwal.isNotEmpty
+        ? namaJadwal
+        : (namaAsesor.isNotEmpty ? namaAsesor : 'Jadwal Asesmen');
 
-    final String tipeAsesor = (item['tipe_asesor'] ?? '').toString().trim();
     final String skema = (item['skema'] ?? '').toString().trim();
     final String tuk = (item['tuk'] ?? '-').toString().trim();
     final String tanggal = (item['tanggal'] ?? '').toString().trim();
     final String honor = item['honor'] ?? 'Rp 0';
     final String status = item['status'] ?? 'Selesai';
     final bool isSelesai = status.toLowerCase() == 'selesai' || status.toLowerCase() == 'complete';
+    final bool isDibayarTUK = item['is_dibayar_tuk'] == true || honor.toLowerCase().contains('tuk');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -610,7 +626,7 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar Box
+                // Icon Box (Jadwal/Event Icon)
                 Container(
                   width: 40,
                   height: 40,
@@ -618,10 +634,10 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                     color: const Color(0xFFDBEAFE),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
-                      Icons.person_rounded,
-                      color: Color(0xFF3B82F6),
+                      isAsesor ? Icons.person_rounded : Icons.event_note_rounded,
+                      color: const Color(0xFF3B82F6),
                       size: 22,
                     ),
                   ),
@@ -642,17 +658,7 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                         ),
                       ),
                       const SizedBox(height: 5),
-                      if (!isAsesor && tipeAsesor.isNotEmpty) ...[
-                        Text(
-                          tipeAsesor,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                      ] else if (isAsesor && tuk.isNotEmpty && tuk != '-') ...[
+                      if (tuk.isNotEmpty && tuk != '-') ...[
                         Row(
                           children: [
                             const Icon(
@@ -677,7 +683,32 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                         ),
                         const SizedBox(height: 2),
                       ],
-                      if (!isAsesor && skema.isNotEmpty) ...[
+                      if (!isAsesor && namaAsesor.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.people_outline_rounded,
+                              size: 12,
+                              color: Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                namaAsesor,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF475569),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                      ],
+                      if (skema.isNotEmpty && skema != '-') ...[
                         Row(
                           children: [
                             const Icon(
@@ -699,9 +730,34 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                             ),
                           ],
                         ),
+                        const SizedBox(height: 2),
+                      ],
+                      if (item['no_invoice'] != null && (item['no_invoice'] as String).isNotEmpty && item['no_invoice'] != '-') ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.receipt_long_outlined,
+                              size: 12,
+                              color: Color(0xFF2563EB),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Inv: ${item['no_invoice']}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF2563EB),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
                       ],
                       if (tanggal.isNotEmpty) ...[
-                        const SizedBox(height: 2),
                         Row(
                           children: [
                             const Icon(
@@ -740,15 +796,21 @@ class _HonorAsesorScreenState extends State<HonorAsesorScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: isSelesai ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7),
+                        color: isDibayarTUK
+                            ? const Color(0xFFE0F2FE)
+                            : (isSelesai ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7)),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        isSelesai ? 'Selesai' : 'Menunggu',
+                        isDibayarTUK
+                            ? 'Dibayar TUK'
+                            : (isSelesai ? 'Selesai' : 'Menunggu'),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFD97706),
+                          color: isDibayarTUK
+                              ? const Color(0xFF0284C7)
+                              : (isSelesai ? const Color(0xFF10B981) : const Color(0xFFD97706)),
                         ),
                       ),
                     ),

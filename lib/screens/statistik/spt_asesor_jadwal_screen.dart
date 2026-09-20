@@ -586,6 +586,11 @@ class _SptAsesorJadwalScreenState extends State<SptAsesorJadwalScreen> {
       }
     }
 
+    final String rawWaktu = item.waktu.trim();
+    final String waktuText = (rawWaktu.isEmpty || rawWaktu == '0' || rawWaktu == '00:00' || rawWaktu == '00:00:00')
+        ? '08:00 WIB'
+        : (rawWaktu.toLowerCase().contains('wib') ? rawWaktu : '$rawWaktu WIB');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -633,16 +638,14 @@ class _SptAsesorJadwalScreenState extends State<SptAsesorJadwalScreen> {
                         color: Color(0xFF1E293B),
                       ),
                     ),
-                    if (item.waktu.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        item.waktu,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
-                        ),
+                    const SizedBox(height: 2),
+                    Text(
+                      waktuText,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF64748B),
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
