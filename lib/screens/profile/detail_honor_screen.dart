@@ -68,21 +68,45 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Pilih Status Pembayaran',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Pilih Status Pembayaran',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Pilih status pembayaran honor untuk penugasan ini',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, size: 20, color: Color(0xFF64748B)),
@@ -90,39 +114,24 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                       ),
                     ],
                   ),
-                  const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                  const SizedBox(height: 8),
-                  ListTile(
-                    leading: const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981)),
-                    title: const Text(
-                      'Pembayaran Selesai',
-                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
-                    ),
-                    trailing: _currentStatus == 'Pembayaran Selesai'
-                        ? const Icon(Icons.check, color: Color(0xFF10B981))
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        _currentStatus = 'Pembayaran Selesai';
-                      });
-                      Navigator.pop(context);
-                    },
+                  const SizedBox(height: 16),
+                  _buildStatusSelectOption(
+                    sheetContext: context,
+                    statusValue: 'Pembayaran Selesai',
+                    title: 'Pembayaran Selesai',
+                    description: 'Honor telah ditransfer dan diverifikasi lunas',
+                    icon: Icons.check_circle_rounded,
+                    activeColor: const Color(0xFF10B981),
+                    activeBgColor: const Color(0xFFECFDF5),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.error_outline_rounded, color: Color(0xFFF59E0B)),
-                    title: const Text(
-                      'Menunggu Pembayaran',
-                      style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Color(0xFFD97706)),
-                    ),
-                    trailing: _currentStatus == 'Menunggu Pembayaran'
-                        ? const Icon(Icons.check, color: Color(0xFFD97706))
-                        : null,
-                    onTap: () {
-                      setState(() {
-                        _currentStatus = 'Menunggu Pembayaran';
-                      });
-                      Navigator.pop(context);
-                    },
+                  _buildStatusSelectOption(
+                    sheetContext: context,
+                    statusValue: 'Menunggu Pembayaran',
+                    title: 'Menunggu Pembayaran',
+                    description: 'Honor belum ditransfer / masih dalam antrean',
+                    icon: Icons.hourglass_top_rounded,
+                    activeColor: const Color(0xFFD97706),
+                    activeBgColor: const Color(0xFFFFFBEB),
                   ),
                 ],
               ),
@@ -130,6 +139,92 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildStatusSelectOption({
+    required BuildContext sheetContext,
+    required String statusValue,
+    required String title,
+    required String description,
+    required IconData icon,
+    required Color activeColor,
+    required Color activeBgColor,
+  }) {
+    final bool isSelected = _currentStatus == statusValue;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isSelected ? activeBgColor : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? activeColor : const Color(0xFFE2E8F0),
+          width: isSelected ? 1.8 : 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            setState(() {
+              _currentStatus = statusValue;
+            });
+            Navigator.pop(sheetContext);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                  color: isSelected ? activeColor : const Color(0xFF94A3B8),
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? activeColor.withOpacity(0.15) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected ? activeColor : const Color(0xFF64748B),
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? activeColor : const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Icon(Icons.check_rounded, color: activeColor, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -553,36 +648,52 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
                           GestureDetector(
                             onTap: _showStatusPicker,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              height: 48,
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
                               decoration: BoxDecoration(
-                                color: isSelesai ? const Color(0xFFF0FDF4) : const Color(0xFFFFFBEB),
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: isSelesai ? const Color(0xFF86EFAC) : const Color(0xFFFDE68A),
+                                  color: const Color(0xFFCBD5E1),
+                                  width: 1.2,
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(
-                                    isSelesai ? Icons.check_circle_rounded : Icons.error_outline_rounded,
-                                    color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      _currentStatus,
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFD97706),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: isSelesai ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: isSelesai ? const Color(0xFF86EFAC) : const Color(0xFFFDE68A),
                                       ),
                                     ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isSelesai ? Icons.check_circle_rounded : Icons.hourglass_top_rounded,
+                                          color: isSelesai ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+                                          size: 15,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _currentStatus,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: isSelesai ? const Color(0xFF15803D) : const Color(0xFFB45309),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  Icon(
-                                    Icons.chevron_right_rounded,
-                                    color: isSelesai ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-                                    size: 20,
+                                  const Spacer(),
+                                  const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: Color(0xFF64748B),
+                                    size: 24,
                                   ),
                                 ],
                               ),
