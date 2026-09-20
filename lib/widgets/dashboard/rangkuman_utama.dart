@@ -77,18 +77,20 @@ class _RangkumanUtamaState extends State<RangkumanUtama> {
         ? '...'
         : NumberFormatHelper.formatWithDots(data.totalAsesi);
             
+    final int rawTotalJadwal = data.totalJadwal > 0
+        ? data.totalJadwal
+        : (data.totalAsesmen > 0 ? data.totalAsesmen : data.jadwalBelumTerkonfirmasi);
     final jadwalValue = isLoading
         ? '...'
-        : NumberFormatHelper.formatWithDots(data.jadwalBelumTerkonfirmasi);
+        : NumberFormatHelper.formatWithDots(rawTotalJadwal);
             
     final asesorValue = isLoading
         ? '...'
         : NumberFormatHelper.formatWithDots(data.totalAsesor);
 
-    final suratTugasValue = isLoading
+    final tukValue = isLoading
         ? '...'
-        : NumberFormatHelper.formatWithDots(data.suratTugasMenungguPengiriman);
-
+        : NumberFormatHelper.formatWithDots(data.totalTuk);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -179,8 +181,8 @@ class _RangkumanUtamaState extends State<RangkumanUtama> {
               NewSummaryCard(
                 title: 'Jadwal',
                 value: jadwalValue,
-                subtitle: 'Jadwal belum terkonfirmasi',
-                icon: Icons.pending_actions_rounded,
+                subtitle: 'Jadwal Terdaftar',
+                icon: Icons.event_note_rounded,
                 onTap: widget.onNavigateToJadwal,
               ),
               NewSummaryCard(
@@ -190,18 +192,10 @@ class _RangkumanUtamaState extends State<RangkumanUtama> {
                 icon: Icons.person_search_rounded,
               ),
               NewSummaryCard(
-                title: 'Surat Tugas',
-                value: suratTugasValue,
-                subtitle: 'Menunggu Pengiriman',
-                icon: Icons.assignment_turned_in_rounded,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PelaporanScreen(),
-                    ),
-                  );
-                },
+                title: 'TUK',
+                value: tukValue,
+                subtitle: 'TUK Terdaftar',
+                icon: Icons.apartment_rounded,
               ),
             ],
           ),

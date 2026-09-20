@@ -633,7 +633,7 @@ class _SptAsesorJadwalScreenState extends State<SptAsesorJadwalScreen> {
                         color: Color(0xFF1E293B),
                       ),
                     ),
-                    if (item.waktu.isNotEmpty) ...[
+                    if (item.waktu.isNotEmpty && item.waktu.trim() != '0' && item.waktu.trim() != '00:00' && item.waktu.trim() != '00:00:00') ...[
                       const SizedBox(height: 2),
                       Text(
                         item.waktu,
