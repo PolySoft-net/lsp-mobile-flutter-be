@@ -1,16 +1,19 @@
 import 'package:material_ui/material_ui.dart';
 import '../../models/digital_product_models.dart';
+import 'interactive_favorite_button.dart';
 
 class DigitalProductCard extends StatelessWidget {
   final DigitalProductItem item;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteTap;
+  final ValueChanged<bool>? onFavoriteChanged;
 
   const DigitalProductCard({
     super.key,
     required this.item,
     this.onTap,
     this.onFavoriteTap,
+    this.onFavoriteChanged,
   });
 
   @override
@@ -71,17 +74,13 @@ class DigitalProductCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: onFavoriteTap,
-                      behavior: HitTestBehavior.opaque,
-                      child: const Padding(
-                        padding: EdgeInsets.all(2.0),
-                        child: Icon(
-                          Icons.favorite,
-                          size: 18,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
+                    InteractiveFavoriteButton(
+                      initialIsFavorite: item.isFavorite,
+                      size: 18,
+                      onFavoriteChanged: (isFav) {
+                        onFavoriteChanged?.call(isFav);
+                        onFavoriteTap?.call();
+                      },
                     ),
                   ],
                 ),

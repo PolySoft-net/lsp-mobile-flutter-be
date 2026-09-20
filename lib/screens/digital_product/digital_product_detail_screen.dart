@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../models/digital_product_models.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
+import '../../widgets/digital_product/interactive_favorite_button.dart';
 import 'digital_product_portofolio_screen.dart';
 
 class DigitalProductDetailScreen extends StatefulWidget {
@@ -180,27 +181,14 @@ class _DigitalProductDetailScreenState
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
+              InteractiveFavoriteButton(
+                initialIsFavorite: _isFavorite,
+                size: 22,
+                onFavoriteChanged: (isFav) {
                   setState(() {
-                    _isFavorite = !_isFavorite;
+                    _isFavorite = isFav;
                   });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        _isFavorite
-                            ? 'Ditambahkan ke favorit'
-                            : 'Dihapus dari favorit',
-                      ),
-                      duration: const Duration(milliseconds: 700),
-                    ),
-                  );
                 },
-                child: Icon(
-                  _isFavorite ? Icons.favorite : Icons.favorite_border,
-                  size: 20,
-                  color: const Color(0xFF0F172A),
-                ),
               ),
             ],
           ),
@@ -805,14 +793,6 @@ class _DigitalProductDetailScreenState
                       Navigator.pop(context, targetIndex);
                     }
                   }
-                },
-                onFavoriteTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Favorit: ${recItem.title}'),
-                      duration: const Duration(milliseconds: 700),
-                    ),
-                  );
                 },
               );
             },

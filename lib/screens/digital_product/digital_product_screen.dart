@@ -170,14 +170,6 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                                 _onBottomNavTap(targetIndex);
                               }
                             },
-                            onFavoriteTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Favorit: ${item.title}'),
-                                  duration: const Duration(milliseconds: 800),
-                                ),
-                              );
-                            },
                           );
                         },
                         childCount: products.length,

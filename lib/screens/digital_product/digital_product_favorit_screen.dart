@@ -129,16 +129,6 @@ class _DigitalProductFavoritScreenState
                                        _onBottomNavTap(targetIndex);
                                      }
                                    },
-                                  onFavoriteTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Favorit: ${item.title}'),
-                                        duration: const Duration(
-                                          milliseconds: 700,
-                                        ),
-                                      ),
-                                    );
-                                  },
                                 );
                               },
                               childCount: products.length,

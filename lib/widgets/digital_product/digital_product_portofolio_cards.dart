@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'interactive_favorite_button.dart';
 
 class PortofolioHighlightCard extends StatelessWidget {
   const PortofolioHighlightCard({super.key});
@@ -296,12 +297,13 @@ class _CategoryTag extends StatelessWidget {
   }
 }
 
-class PortofolioLainnyaCard extends StatelessWidget {
+class PortofolioLainnyaCard extends StatefulWidget {
   final String title;
   final String price;
   final String type;
   final bool isFavorite;
   final VoidCallback? onTap;
+  final VoidCallback? onFavoriteTap;
 
   const PortofolioLainnyaCard({
     super.key,
@@ -310,7 +312,29 @@ class PortofolioLainnyaCard extends StatelessWidget {
     this.type = '/Online',
     this.isFavorite = true,
     this.onTap,
+    this.onFavoriteTap,
   });
+
+  @override
+  State<PortofolioLainnyaCard> createState() => _PortofolioLainnyaCardState();
+}
+
+class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
+  late bool _isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = widget.isFavorite;
+  }
+
+  @override
+  void didUpdateWidget(covariant PortofolioLainnyaCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isFavorite != widget.isFavorite) {
+      _isFavorite = widget.isFavorite;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -333,7 +357,7 @@ class PortofolioLainnyaCard extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        onTap: onTap,
+        onTap: widget.onTap,
         borderRadius: BorderRadius.circular(10),
         child: Column(
           children: [
@@ -458,7 +482,7 @@ class PortofolioLainnyaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      widget.title,
                       style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
@@ -467,7 +491,7 @@ class PortofolioLainnyaCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$price  $type',
+                      '${widget.price}  ${widget.type}',
                       style: const TextStyle(
                         fontSize: 10.5,
                         color: Color(0xFF64748B),
@@ -475,12 +499,16 @@ class PortofolioLainnyaCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (isFavorite)
-                  const Icon(
-                    Icons.favorite,
-                    size: 18,
-                    color: Color(0xFF0F172A),
-                  ),
+                InteractiveFavoriteButton(
+                  initialIsFavorite: _isFavorite,
+                  size: 18,
+                  onFavoriteChanged: (isFav) {
+                    setState(() {
+                      _isFavorite = isFav;
+                    });
+                    widget.onFavoriteTap?.call();
+                  },
+                ),
               ],
             ),
           ],
