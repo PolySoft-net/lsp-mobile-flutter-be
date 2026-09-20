@@ -113,6 +113,9 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
             'potongan_pph': task['potongan_pph'] ?? task['pajak'] ?? task['pph'],
             'biaya_admin_transfer': task['biaya_admin_transfer'],
             'link_bukti_pembayaran': task['link_bukti_pembayaran'],
+            'jumlah_asesi': task['jumlah_asesi'],
+            'total_honor': task['total_honor'],
+            'avatar_url': task['avatar_url'],
             'tanggal': task['waktu'] ??
                 task['tanggal'] ??
                 _jadwalInfo?['tanggal'] ??
@@ -563,25 +566,31 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
   Widget _buildTaskCard(Map<String, dynamic> task) {
     final String namaAsesor = (task['nama_asesor'] ?? '').toString().trim();
     final String tipeAsesor = (task['tipe_asesor'] ?? '').toString().trim();
+    String tipeAsesorClean = tipeAsesor.replaceAll(RegExp(r'^Asesor\s*', caseSensitive: false), '').trim();
+    if (tipeAsesorClean.isEmpty) tipeAsesorClean = 'Internal';
+
     final String judul = (task['judul'] ?? task['judul_asesmen'] ?? '').toString().trim();
     final String tuk = (task['tuk'] ?? '').toString().trim();
-    final String rawWaktu = (task['waktu'] ?? task['tanggal'] ?? '').toString().trim();
-    String sWaktu = rawWaktu.replaceAll(RegExp(r'\s*wib', caseSensitive: false), '').trim();
-    sWaktu = sWaktu.replaceAll(RegExp(r'\s+\d{1,2}(?::\d{2})*.*$'), '').trim();
-    final String waktu = sWaktu == '0' ? '' : sWaktu;
-    final String mode = task['mode'] ?? '';
+    final int jumlahAsesi = task['jumlah_asesi'] is int
+        ? task['jumlah_asesi']
+        : int.tryParse(task['jumlah_asesi']?.toString() ?? '') ?? 0;
 
-    // Utamakan Nama Asesor sebagai judul kartu tugas di dalam jadwal
+    final String rawAvatar = (task['avatar_url'] ?? task['foto_user'] ?? '').toString().trim();
+    final String avatarUrl = rawAvatar.isNotEmpty ? UrlHelper.resolveUrl(rawAvatar) : '';
+
     final bool hasAsesor = namaAsesor.isNotEmpty;
     final String cardTitle = hasAsesor ? namaAsesor : (judul.isNotEmpty ? judul : 'Asesor');
 
-    final String honor = task['honor'] ?? task['total_diterima'] ?? 'Rp 0';
+    final String rawPph = (task['potongan_pph'] ?? task['pph'] ?? '0').toString().trim();
+    final String pphFormatted = _formatNominal(rawPph);
+    final bool hasPph = rawPph.isNotEmpty && rawPph != '0' && rawPph != '-';
+    final String totalHonorTask = task['total_honor'] ?? task['honor'] ?? 'Rp 0';
+
     final String status = task['status'] ?? 'Selesai';
     final bool isSelesai = status.toLowerCase() == 'selesai' ||
         status.toLowerCase() == 'sudah ditransfer' ||
         status.toLowerCase() == 'complete' ||
         status.toLowerCase() == 'lunas';
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -599,20 +608,36 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Icon Box
+                // Avatar / Profile Picture
                 Container(
-                  width: 38,
-                  height: 38,
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
                     color: const Color(0xFFDBEAFE),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Center(
-                    child: Icon(
-                      hasAsesor ? Icons.person_rounded : Icons.description_rounded,
-                      color: const Color(0xFF3B82F6),
-                      size: 20,
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: avatarUrl.isNotEmpty
+                      ? Image.network(
+                          avatarUrl,
+                          width: 42,
+                          height: 42,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(
+                              Icons.person_rounded,
+                              color: Color(0xFF3B82F6),
+                              size: 22,
+                            ),
+                          ),
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.person_rounded,
+                            color: Color(0xFF3B82F6),
+                            size: 22,
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 12),
 
@@ -632,9 +657,9 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
-                      if (hasAsesor && tipeAsesor.isNotEmpty) ...[
+                      if (hasAsesor) ...[
                         Text(
-                          'Asesor $tipeAsesor',
+                          tipeAsesorClean,
                           style: const TextStyle(
                             fontSize: 11,
                             color: Color(0xFF64748B),
@@ -653,26 +678,24 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
                         ),
                         const SizedBox(height: 2),
                       ],
-                      if (waktu.isNotEmpty) ...[
-                        Text(
-                          waktu,
-                          style: const TextStyle(
-                            fontSize: 10.5,
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.groups_outlined,
+                            size: 13,
                             color: Color(0xFF64748B),
                           ),
-                        ),
-                      ],
-                      if (mode.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          mode,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w600,
-                            color: mode.contains('Online') ? const Color(0xFF10B981) : const Color(0xFF3B82F6),
+                          const SizedBox(width: 4),
+                          Text(
+                            jumlahAsesi > 0 ? '$jumlahAsesi Asesi yang diuji' : 'Jumlah Asesi: -',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF475569),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -684,13 +707,24 @@ class _DetailTugasAsesorScreenState extends State<DetailTugasAsesorScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      honor,
+                      totalHonorTask,
                       style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),
                       ),
                     ),
+                    if (hasPph) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'PPh: -$pphFormatted',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFFDC2626),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
