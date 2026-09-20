@@ -109,15 +109,19 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: DigitalProductBanner(
-                          onTap: () {
+                          onTap: () async {
                             if (products.isNotEmpty) {
-                              Navigator.of(context).push(
+                              final targetIndex =
+                                  await Navigator.of(context).push<int>(
                                 MaterialPageRoute(
                                   builder: (_) => DigitalProductDetailScreen(
                                     item: products.first,
                                   ),
                                 ),
                               );
+                              if (targetIndex != null && mounted) {
+                                _onBottomNavTap(targetIndex);
+                              }
                             }
                           },
                         ),
@@ -153,14 +157,18 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                           final item = products[index];
                           return DigitalProductCard(
                             item: item,
-                            onTap: () {
-                              Navigator.of(context).push(
+                            onTap: () async {
+                              final targetIndex =
+                                  await Navigator.of(context).push<int>(
                                 MaterialPageRoute(
                                   builder: (_) => DigitalProductDetailScreen(
                                     item: item,
                                   ),
                                 ),
                               );
+                              if (targetIndex != null && mounted) {
+                                _onBottomNavTap(targetIndex);
+                              }
                             },
                             onFavoriteTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(

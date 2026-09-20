@@ -115,16 +115,20 @@ class _DigitalProductFavoritScreenState
                                 final item = products[index];
                                 return DigitalProductCard(
                                   item: item,
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            DigitalProductDetailScreen(
-                                          item: item,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                   onTap: () async {
+                                     final targetIndex =
+                                         await Navigator.of(context).push<int>(
+                                       MaterialPageRoute(
+                                         builder: (_) =>
+                                             DigitalProductDetailScreen(
+                                           item: item,
+                                         ),
+                                       ),
+                                     );
+                                     if (targetIndex != null && mounted) {
+                                       _onBottomNavTap(targetIndex);
+                                     }
+                                   },
                                   onFavoriteTap: () {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(

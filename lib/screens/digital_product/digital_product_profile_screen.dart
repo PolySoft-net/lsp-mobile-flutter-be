@@ -251,24 +251,30 @@ class _DigitalProductProfileScreenState
           _buildMenuItem(
             icon: Icons.bookmark_border_rounded,
             title: 'Koleksi',
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              final targetIndex = await Navigator.of(context).push<int>(
                 MaterialPageRoute(
                   builder: (_) => const DigitalProductFavoritScreen(),
                 ),
               );
+              if (targetIndex != null && mounted) {
+                _onBottomNavTap(targetIndex);
+              }
             },
           ),
           const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
           _buildMenuItem(
             icon: Icons.group_work_outlined,
             title: 'Produk/Jasa',
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              final targetIndex = await Navigator.of(context).push<int>(
                 MaterialPageRoute(
                   builder: (_) => const DigitalProductProdukJasaScreen(),
                 ),
               );
+              if (targetIndex != null && mounted) {
+                _onBottomNavTap(targetIndex);
+              }
             },
           ),
           const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),

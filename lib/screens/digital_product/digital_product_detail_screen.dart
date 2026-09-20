@@ -512,12 +512,17 @@ class _DigitalProductDetailScreenState
         ],
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
+        onTap: () async {
+          final targetIndex = await Navigator.of(context).push<int>(
             MaterialPageRoute(
               builder: (_) => const DigitalProductPortofolioScreen(),
             ),
           );
+          if (targetIndex != null && context.mounted) {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context, targetIndex);
+            }
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -787,14 +792,19 @@ class _DigitalProductDetailScreenState
               final recItem = recommendations[index];
               return DigitalProductCard(
                 item: recItem,
-                onTap: () {
-                  Navigator.of(context).push(
+                onTap: () async {
+                  final targetIndex = await Navigator.of(context).push<int>(
                     MaterialPageRoute(
                       builder: (_) => DigitalProductDetailScreen(
                         item: recItem,
                       ),
                     ),
                   );
+                  if (targetIndex != null && context.mounted) {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context, targetIndex);
+                    }
+                  }
                 },
                 onFavoriteTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(

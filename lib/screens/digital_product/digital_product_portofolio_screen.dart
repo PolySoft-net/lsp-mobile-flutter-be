@@ -19,7 +19,7 @@ class DigitalProductPortofolioScreen extends StatefulWidget {
 
 class _DigitalProductPortofolioScreenState
     extends State<DigitalProductPortofolioScreen> {
-  static const int _currentBottomNavIndex = 0;
+  static const int _currentBottomNavIndex = -1;
 
   Future<void> _onBottomNavTap(int index) async {
     if (index == 4) {

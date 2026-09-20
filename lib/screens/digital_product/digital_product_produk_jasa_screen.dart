@@ -113,8 +113,10 @@ class _DigitalProductProdukJasaScreenState
                                     final item = products[index];
                                     return DigitalProductCard(
                                       item: item,
-                                      onTap: () {
-                                        Navigator.of(context).push(
+                                      onTap: () async {
+                                        final targetIndex =
+                                            await Navigator.of(context)
+                                                .push<int>(
                                           MaterialPageRoute(
                                             builder: (_) =>
                                                 DigitalProductDetailScreen(
@@ -122,6 +124,9 @@ class _DigitalProductProdukJasaScreenState
                                             ),
                                           ),
                                         );
+                                        if (targetIndex != null && mounted) {
+                                          _onBottomNavTap(targetIndex);
+                                        }
                                       },
                                       onFavoriteTap: () {
                                         ScaffoldMessenger.of(context)
