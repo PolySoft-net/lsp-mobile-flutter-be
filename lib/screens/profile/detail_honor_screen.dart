@@ -279,7 +279,8 @@ class _DetailHonorScreenState extends State<DetailHonorScreen> {
   @override
   Widget build(BuildContext context) {
     final String namaAsesor = (widget.detail['nama_asesor'] ?? widget.detail['asesor'] ?? '').toString().trim();
-    final String tipeAsesor = (widget.detail['tipe_asesor'] ?? '').toString().trim();
+    final String rawTipeAsesor = (widget.detail['tipe_asesor'] ?? '').toString().trim();
+    final String tipeAsesor = rawTipeAsesor.replaceAll(RegExp(r'^Asesor\s*', caseSensitive: false), '').trim();
     final String judul = widget.detail['judul_asesmen'] ?? widget.detail['judul'] ?? 'Junior Web Developer';
     final String tuk = widget.detail['tuk'] ?? 'SMA 5 Semarang';
     final String rawWaktu = widget.detail['waktu'] ?? widget.detail['tanggal'] ?? '20/05/2026';
