@@ -50,6 +50,57 @@ class DigitalProductService {
     );
   }
 
+  static Future<Map<String, dynamic>> updateProfile({
+    required String name,
+    required String phone,
+    required String email,
+    String? photoPath,
+  }) async {
+    Response response;
+    if (photoPath != null && photoPath.isNotEmpty) {
+      final formData = FormData.fromMap({
+        'name': name,
+        'phone': phone,
+        'email': email,
+        '_method': 'PUT',
+        'profile_photo': await MultipartFile.fromFile(
+          photoPath,
+          filename: _fileName(photoPath),
+        ),
+      });
+      response = await _dio.post(
+        ApiRoutes.digitalProductProfile,
+        data: formData,
+      );
+    } else {
+      try {
+        response = await _dio.put(
+          ApiRoutes.digitalProductProfile,
+          data: {
+            'name': name,
+            'phone': phone,
+            'email': email,
+          },
+        );
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 405) {
+          response = await _dio.post(
+            ApiRoutes.digitalProductProfile,
+            data: {
+              'name': name,
+              'phone': phone,
+              'email': email,
+            },
+          );
+        } else {
+          rethrow;
+        }
+      }
+    }
+    return Map<String, dynamic>.from(
+      response.data is Map ? response.data as Map : const {},
+    );
+  }
   static Future<void> setFavorite(String id, bool favorite) async {
     final route = ApiRoutes.digitalProductFavorite(id);
     if (favorite) {

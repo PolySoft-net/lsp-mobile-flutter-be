@@ -237,11 +237,14 @@ class _DigitalProductProfileScreenState
           _menuItem(
             Icons.account_circle_outlined,
             'Pengaturan Profil',
-            () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const DigitalProductPengaturanProfilScreen(),
-              ),
-            ),
+            () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DigitalProductPengaturanProfilScreen(),
+                ),
+              );
+              if (mounted) _load();
+            },
           ),
           const Divider(height: 1),
           _menuItem(
