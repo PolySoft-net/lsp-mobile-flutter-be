@@ -1,4 +1,5 @@
 import Flutter
+import GoogleMaps
 import UIKit
 
 @main
@@ -7,6 +8,15 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    if let mapsApiKey = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY") as? String,
+      !mapsApiKey.isEmpty
+    {
+      GMSServices.provideAPIKey(mapsApiKey)
+    } else {
+      assertionFailure(
+        "GOOGLE_MAPS_API_KEY is missing. Copy ios/Flutter/Secrets.example.xcconfig to Secrets.xcconfig and fill in the key."
+      )
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
