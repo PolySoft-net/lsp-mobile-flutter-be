@@ -1,10 +1,13 @@
 import 'package:material_ui/material_ui.dart';
+
 import '../../models/digital_product_models.dart';
-import '../../widgets/digital_product/digital_product_card.dart';
+import '../../services/digital_product_service.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
+import '../../widgets/digital_product/digital_product_card.dart';
+import '../../widgets/digital_product/digital_product_category_chips.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
 import 'digital_product_detail_screen.dart';
 import 'digital_product_profile_screen.dart';
-import '../../widgets/digital_product/fade_page_route.dart';
 
 class DigitalProductFavoritScreen extends StatefulWidget {
   const DigitalProductFavoritScreen({super.key});
@@ -16,129 +19,83 @@ class DigitalProductFavoritScreen extends StatefulWidget {
 
 class _DigitalProductFavoritScreenState
     extends State<DigitalProductFavoritScreen> {
+  List<DigitalProductItem> _products = const [];
   String? _selectedCategory;
+  bool _loading = true;
+  String _error = '';
   static const int _currentBottomNavIndex = 3;
 
-  static const List<String> _categories = [
-    'Online',
-    'Offline',
-    'Jasa',
-    'Produk',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
-  void _onCategorySelected(String category) {
+  Future<void> _load() async {
     setState(() {
-      if (_selectedCategory == category) {
-        _selectedCategory = null;
-      } else {
-        _selectedCategory = category;
-      }
+      _loading = true;
+      _error = '';
     });
+    try {
+      final products = await DigitalProductService.getFavorites(
+        filter: _selectedCategory ?? '',
+      );
+      if (mounted) setState(() => _products = products);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Favorit belum dapat dimuat');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _selectCategory(String category) {
+    setState(() {
+      _selectedCategory = _selectedCategory == category ? null : category;
+    });
+    _load();
+  }
+
+  Future<void> _removeFavorite(DigitalProductItem item) async {
+    final previous = _products;
+    setState(
+      () => _products = _products.where((p) => p.id != item.id).toList(),
+    );
+    try {
+      await DigitalProductService.setFavorite(item.id, false);
+    } catch (_) {
+      if (mounted) setState(() => _products = previous);
+    }
   }
 
   Future<void> _onBottomNavTap(int index) async {
-    if (index == 3) {
-      // Sudah berada di menu Favorit/Save
-      return;
-    }
-
+    if (index == 3) return;
     if (index == 4) {
-      final targetIndex = await Navigator.of(context).push<int>(
-        FadePageRoute(
-          page: const DigitalProductProfileScreen(),
-        ),
-      );
-      if (targetIndex != null && mounted) {
-        if (targetIndex != 3 && Navigator.canPop(context)) {
-          Navigator.pop(context, targetIndex);
-        }
+      final targetIndex = await Navigator.of(
+        context,
+      ).push<int>(FadePageRoute(page: const DigitalProductProfileScreen()));
+      if (targetIndex != null && mounted && targetIndex != 3) {
+        Navigator.pop(context, targetIndex);
       }
       return;
     }
-
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context, index);
-    }
-  }
-
-  List<DigitalProductItem> get _favoriteProducts {
-    List<DigitalProductItem> list =
-        digitalProductMockList.where((item) => item.isFavorite).toList();
-
-    if (_selectedCategory != null) {
-      list = list.where((item) {
-        return item.category.toLowerCase() == _selectedCategory!.toLowerCase();
-      }).toList();
-    }
-
-    return list;
+    if (Navigator.canPop(context)) Navigator.pop(context, index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final products = _favoriteProducts;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            // Top App Bar: "< Favorit"
-            _buildAppBar(context),
-
-            // Category Tabs Bar with Divider
-            _buildCategoryChips(),
-
-            // Product Grid
-            Expanded(
-              child: products.isEmpty
-                  ? _buildEmptyState()
-                  : CustomScrollView(
-                      slivers: [
-                        SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(
-                            16.0,
-                            12.0,
-                            16.0,
-                            24.0,
-                          ),
-                          sliver: SliverGrid(
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12.0,
-                              mainAxisSpacing: 12.0,
-                              mainAxisExtent: 216.0,
-                            ),
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final item = products[index];
-                                return DigitalProductCard(
-                                  item: item,
-                                   onTap: () async {
-                                     final targetIndex =
-                                         await Navigator.of(context).push<int>(
-                                       MaterialPageRoute(
-                                         builder: (_) =>
-                                             DigitalProductDetailScreen(
-                                           item: item,
-                                         ),
-                                       ),
-                                     );
-                                     if (targetIndex != null && mounted) {
-                                       _onBottomNavTap(targetIndex);
-                                     }
-                                   },
-                                );
-                              },
-                              childCount: products.length,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+            _buildAppBar(),
+            DigitalProductCategoryChips(
+              selectedCategory: _selectedCategory,
+              onCategorySelected: _selectCategory,
             ),
+            const Divider(height: 1),
+            Expanded(child: _buildContent()),
           ],
         ),
       ),
@@ -149,33 +106,65 @@ class _DigitalProductFavoritScreenState
     );
   }
 
-  Widget _buildAppBar(BuildContext context) {
+  Widget _buildContent() {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error.isNotEmpty) {
+      return Center(
+        child: TextButton(onPressed: _load, child: Text('$_error. Coba lagi')),
+      );
+    }
+    if (_products.isEmpty) {
+      return const Center(child: Text('Belum ada produk favorit'));
+    }
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: GridView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          mainAxisExtent: 216,
+        ),
+        itemCount: _products.length,
+        itemBuilder: (context, index) {
+          final item = _products[index];
+          return DigitalProductCard(
+            item: item,
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DigitalProductDetailScreen(item: item),
+                ),
+              );
+              if (mounted) _load();
+            },
+            onFavoriteChanged: (favorite) {
+              if (!favorite) _removeFavorite(item);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       alignment: Alignment.centerLeft,
       child: InkWell(
         onTap: () => Navigator.of(context).pop(),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+        child: const Padding(
+          padding: EdgeInsets.all(4),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: Color(0xFF0F172A),
-              ),
+            children: [
+              Icon(Icons.chevron_left_rounded, size: 24),
               SizedBox(width: 4),
               Text(
                 'Favorit',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                  letterSpacing: -0.2,
-                ),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -183,93 +172,4 @@ class _DigitalProductFavoritScreenState
       ),
     );
   }
-
-  Widget _buildCategoryChips() {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Row(
-              children: _categories.map((category) {
-                final isSelected = _selectedCategory == category;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: InkWell(
-                      onTap: () => _onCategorySelected(category),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFFBFDBFE)
-                              : const Color(0xFFE0EDFB),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF2563EB)
-                                : Colors.transparent,
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            category,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? const Color(0xFF1E3A8A)
-                                  : const Color(0xFF1E293B),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const Divider(
-            height: 1,
-            thickness: 0.8,
-            color: Color(0xFFE2E8F0),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(
-            Icons.favorite_border,
-            size: 48,
-            color: Color(0xFF94A3B8),
-          ),
-          SizedBox(height: 12),
-          Text(
-            'Belum ada produk favorit',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
-

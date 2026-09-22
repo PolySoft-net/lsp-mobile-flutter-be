@@ -1,18 +1,17 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_lucide/flutter_lucide.dart';
+
+import '../../models/digital_product_models.dart';
+import '../../services/digital_product_service.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
 import 'digital_product_favorit_screen.dart';
 import 'digital_product_pengaturan_profil_screen.dart';
 import 'digital_product_produk_jasa_screen.dart';
-import '../../widgets/digital_product/fade_page_route.dart';
 
 class DigitalProductProfileScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
 
-  const DigitalProductProfileScreen({
-    super.key,
-    this.onBackToHome,
-  });
+  const DigitalProductProfileScreen({super.key, this.onBackToHome});
 
   @override
   State<DigitalProductProfileScreen> createState() =>
@@ -21,26 +20,39 @@ class DigitalProductProfileScreen extends StatefulWidget {
 
 class _DigitalProductProfileScreenState
     extends State<DigitalProductProfileScreen> {
+  DigitalProductProfile? _profile;
+  bool _loading = true;
+  String _error = '';
   static const int _currentBottomNavIndex = 4;
 
-  void _onBottomNavTap(int index) {
-    if (index == 4) {
-      return;
-    }
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context, index);
-    } else if (widget.onBackToHome != null) {
-      widget.onBackToHome!();
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
+    try {
+      final profile = await DigitalProductService.getProfile();
+      if (mounted) setState(() => _profile = profile);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Profil belum dapat dimuat');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _showComingSoon(String title) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Menu $title segera hadir'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+  void _onBottomNavTap(int index) {
+    if (index == 4) return;
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context, index);
+    } else {
+      widget.onBackToHome?.call();
+    }
   }
 
   @override
@@ -51,46 +63,30 @@ class _DigitalProductProfileScreenState
         bottom: false,
         child: Column(
           children: [
-            // Top App Bar
             _buildAppBar(),
-
-            // Content
             Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Profile Header Card
-                    _buildProfileHeaderCard(),
-
-                    const SizedBox(height: 12),
-
-                    // Section: Informasi
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        'Informasi',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error.isNotEmpty
+                  ? Center(
+                      child: TextButton(
+                        onPressed: _load,
+                        child: Text('$_error. Coba lagi'),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _load,
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        children: [
+                          _buildProfileCard(),
+                          const SizedBox(height: 12),
+                          _buildCompetencyCard(),
+                          const SizedBox(height: 12),
+                          _buildMenuCard(),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-
-                    // Menu Card
-                    _buildMenuCard(),
-
-                    const SizedBox(height: 16),
-
-                    // Logout Button
-                    _buildLogoutButton(),
-
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -105,102 +101,73 @@ class _DigitalProductProfileScreenState
   Widget _buildAppBar() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
-          InkWell(
-            onTap: () {
+          IconButton(
+            onPressed: () {
               if (Navigator.canPop(context)) {
                 Navigator.pop(context);
-              } else if (widget.onBackToHome != null) {
-                widget.onBackToHome!();
+              } else {
+                widget.onBackToHome?.call();
               }
             },
-            borderRadius: BorderRadius.circular(8),
-            child: const Padding(
-              padding: EdgeInsets.all(4.0),
-              child: Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: Color(0xFF0F172A),
-              ),
-            ),
+            icon: const Icon(Icons.chevron_left_rounded),
           ),
-          const SizedBox(width: 8),
           const Text(
             'Profil',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
-              letterSpacing: -0.2,
-            ),
-          ),
-          const Spacer(),
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(8),
-            child: const Padding(
-              padding: EdgeInsets.all(4.0),
-              child: Icon(
-                LucideIcons.sliders_horizontal,
-                size: 20,
-                color: Color(0xFF0F172A),
-              ),
-            ),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProfileHeaderCard() {
+  Widget _buildProfileCard() {
+    final seller = _profile?.seller ?? DigitalProductSeller.empty;
+    final photo = DigitalProductService.absoluteUrl(seller.profilePhoto);
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      padding: const EdgeInsets.all(14.0),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFE0EDFB),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          // Avatar
-          ClipOval(
-            child: Image.network(
-              'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&auto=format&fit=crop&q=80',
-              width: 68,
-              height: 68,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 68,
-                height: 68,
-                color: const Color(0xFF94A3B8),
-                child: const Icon(Icons.pets, color: Colors.white, size: 34),
-              ),
-            ),
+          CircleAvatar(
+            radius: 34,
+            backgroundColor: const Color(0xFF94A3B8),
+            backgroundImage: photo.isEmpty ? null : NetworkImage(photo),
+            child: photo.isEmpty
+                ? const Icon(Icons.person, color: Colors.white, size: 34)
+                : null,
           ),
           const SizedBox(width: 14),
-
-          // Name and Email
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Jendela_Website',
-                  style: TextStyle(
+                  seller.name.isEmpty ? 'Asesi' : seller.name,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
-                  'Jendelawebsite@gmial.com',
-                  style: TextStyle(
+                  seller.email,
+                  style: const TextStyle(
                     fontSize: 11.5,
                     color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '${_profile?.products.length ?? 0} Produk/Jasa',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -211,154 +178,98 @@ class _DigitalProductProfileScreenState
     );
   }
 
-  Widget _buildMenuCard() {
+  Widget _buildCompetencyCard() {
+    final certificates =
+        _profile?.certificates ?? const <DigitalProductCertificate>[];
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildMenuItem(
-            icon: Icons.account_circle_outlined,
-            title: 'Pengaturan Profil',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const DigitalProductPengaturanProfilScreen(),
+          const Text(
+            'Sertifikasi Kompetensi',
+            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (certificates.isEmpty)
+            const Text(
+              'Belum ada sertifikasi kompetensi',
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+            )
+          else
+            ...certificates.map(
+              (certificate) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.verified_outlined, size: 20),
+                title: Text(
+                  certificate.schemeName,
+                  style: const TextStyle(fontSize: 12),
                 ),
-              );
-            },
-          ),
-          const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
-          _buildMenuItem(
-            icon: Icons.notifications_none_rounded,
-            title: 'Notifikasi',
-            onTap: () => _showComingSoon('Notifikasi'),
-          ),
-          const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
-          _buildMenuItem(
-            icon: Icons.bookmark_border_rounded,
-            title: 'Koleksi',
-            onTap: () async {
-              final targetIndex = await Navigator.of(context).push<int>(
-                FadePageRoute(
-                  page: const DigitalProductFavoritScreen(),
-                ),
-              );
-              if (targetIndex != null && mounted) {
-                _onBottomNavTap(targetIndex);
-              }
-            },
-          ),
-          const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
-          _buildMenuItem(
-            icon: Icons.group_work_outlined,
-            title: 'Produk/Jasa',
-            onTap: () async {
-              final targetIndex = await Navigator.of(context).push<int>(
-                FadePageRoute(
-                  page: const DigitalProductProdukJasaScreen(),
-                ),
-              );
-              if (targetIndex != null && mounted) {
-                _onBottomNavTap(targetIndex);
-              }
-            },
-          ),
-          const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
-          _buildMenuItem(
-            icon: Icons.settings_outlined,
-            title: 'Bantuan',
-            onTap: () => _showComingSoon('Bantuan'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: const Color(0xFF0F172A)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF0F172A),
+                subtitle: Text(
+                  [
+                    certificate.schemeCode,
+                    certificate.competencyStatus,
+                  ].where((value) => value.isNotEmpty).join(' · '),
+                  style: const TextStyle(fontSize: 10.5),
                 ),
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: Color(0xFF64748B),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildMenuCard() {
     return Container(
-      width: double.infinity,
-      height: 42,
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: ElevatedButton.icon(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Berhasil keluar dari sesi'),
-              duration: Duration(seconds: 1),
-            ),
-          );
-        },
-        icon: const Icon(
-          LucideIcons.log_out,
-          size: 16,
-          color: Color(0xFF0F172A),
-        ),
-        label: const Text(
-          'Keluar',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF0F172A),
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFE2E8F0),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
+      child: Column(
+        children: [
+          _menuItem(
+            Icons.account_circle_outlined,
+            'Pengaturan Profil',
+            () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const DigitalProductPengaturanProfilScreen(),
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          _menuItem(
+            Icons.bookmark_border_rounded,
+            'Koleksi',
+            () => Navigator.of(
+              context,
+            ).push(FadePageRoute(page: const DigitalProductFavoritScreen())),
+          ),
+          const Divider(height: 1),
+          _menuItem(
+            Icons.group_work_outlined,
+            'Produk/Jasa',
+            () => Navigator.of(
+              context,
+            ).push(FadePageRoute(page: const DigitalProductProdukJasaScreen())),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, size: 20),
+      title: Text(title, style: const TextStyle(fontSize: 13)),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: onTap,
     );
   }
 }
-

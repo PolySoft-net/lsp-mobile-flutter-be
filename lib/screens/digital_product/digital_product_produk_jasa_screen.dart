@@ -1,12 +1,15 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../../models/digital_product_models.dart';
-import '../../widgets/digital_product/digital_product_card.dart';
+import '../../services/digital_product_service.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
-import 'digital_product_detail_screen.dart';
-import 'digital_product_create_screen.dart';
-import 'digital_product_profile_screen.dart';
+import '../../widgets/digital_product/digital_product_card.dart';
+import '../../widgets/digital_product/digital_product_category_chips.dart';
 import '../../widgets/digital_product/fade_page_route.dart';
+import 'digital_product_create_screen.dart';
+import 'digital_product_detail_screen.dart';
+import 'digital_product_profile_screen.dart';
 
 class DigitalProductProdukJasaScreen extends StatefulWidget {
   const DigitalProductProdukJasaScreen({super.key});
@@ -18,62 +21,51 @@ class DigitalProductProdukJasaScreen extends StatefulWidget {
 
 class _DigitalProductProdukJasaScreenState
     extends State<DigitalProductProdukJasaScreen> {
+  List<DigitalProductItem> _products = const [];
   String? _selectedCategory;
+  bool _loading = true;
+  String _error = '';
   static const int _currentBottomNavIndex = 0;
 
-  static const List<String> _categories = [
-    'Online',
-    'Offline',
-    'Jasa',
-    'Produk',
-  ];
-
-  void _onCategorySelected(String category) {
-    setState(() {
-      if (_selectedCategory == category) {
-        _selectedCategory = null;
-      } else {
-        _selectedCategory = category;
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    _load();
   }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
+    try {
+      final products = await DigitalProductService.getMine();
+      if (mounted) setState(() => _products = products);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Produk/Jasa belum dapat dimuat');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  List<DigitalProductItem> get _filtered =>
+      _products.where((item) => item.matchesFilter(_selectedCategory)).toList();
 
   Future<void> _onBottomNavTap(int index) async {
     if (index == 4) {
-      final targetIndex = await Navigator.of(context).push<int>(
-        FadePageRoute(
-          page: const DigitalProductProfileScreen(),
-        ),
-      );
-      if (targetIndex != null && mounted) {
-        if (targetIndex != 4 && Navigator.canPop(context)) {
-          Navigator.pop(context, targetIndex);
-        }
+      final targetIndex = await Navigator.of(
+        context,
+      ).push<int>(FadePageRoute(page: const DigitalProductProfileScreen()));
+      if (targetIndex != null && mounted && Navigator.canPop(context)) {
+        Navigator.pop(context, targetIndex);
       }
       return;
     }
-
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context, index);
-    }
-  }
-
-  List<DigitalProductItem> get _filteredProducts {
-    List<DigitalProductItem> list = digitalProductMockList;
-
-    if (_selectedCategory != null) {
-      list = list.where((item) {
-        return item.category.toLowerCase() == _selectedCategory!.toLowerCase();
-      }).toList();
-    }
-
-    return list;
+    if (Navigator.canPop(context)) Navigator.pop(context, index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final products = _filteredProducts;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
@@ -82,102 +74,43 @@ class _DigitalProductProdukJasaScreenState
           children: [
             Column(
               children: [
-                // Top App Bar: "< Produk/Jasa"
-                _buildAppBar(context, 'Produk/Jasa'),
-
-                // Category Tabs Bar with Divider
-                _buildCategoryChips(),
-
-                // Product Grid (Virtual scrollable)
-                Expanded(
-                  child: products.isEmpty
-                      ? _buildEmptyState()
-                      : CustomScrollView(
-                          slivers: [
-                            SliverPadding(
-                              padding: const EdgeInsets.fromLTRB(
-                                16.0,
-                                12.0,
-                                16.0,
-                                80.0,
-                              ),
-                              sliver: SliverGrid(
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 12.0,
-                                  mainAxisSpacing: 12.0,
-                                  mainAxisExtent: 216.0,
-                                ),
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final item = products[index];
-                                    return DigitalProductCard(
-                                      item: item,
-                                      onTap: () async {
-                                        final targetIndex =
-                                            await Navigator.of(context)
-                                                .push<int>(
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                DigitalProductDetailScreen(
-                                              item: item,
-                                            ),
-                                          ),
-                                        );
-                                        if (targetIndex != null && mounted) {
-                                          _onBottomNavTap(targetIndex);
-                                        }
-                                      },
-                                    );
-                                  },
-                                  childCount: products.length,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                _buildAppBar(),
+                DigitalProductCategoryChips(
+                  selectedCategory: _selectedCategory,
+                  onCategorySelected: (category) => setState(() {
+                    _selectedCategory = _selectedCategory == category
+                        ? null
+                        : category;
+                  }),
                 ),
+                const Divider(height: 1),
+                Expanded(child: _buildContent()),
               ],
             ),
-
-            // Floating Action Button (+) for creating Produk/Jasa
             Positioned(
               right: 20,
               bottom: 16,
               child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const DigitalProductCreateScreen(),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(26),
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDBEAFE),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.18),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const DigitalProductCreateScreen(),
                     ),
-                    child: const Center(
-                      child: Icon(
-                        LucideIcons.plus,
-                        size: 26,
-                        color: Color(0xFF1E3A8A),
-                      ),
-                    ),
+                  );
+                  if (mounted) _load();
+                },
+                borderRadius: BorderRadius.circular(26),
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDBEAFE),
+                    shape: BoxShape.circle,
                   ),
+                  child: const Icon(LucideIcons.plus, color: Color(0xFF1E3A8A)),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -188,33 +121,57 @@ class _DigitalProductProdukJasaScreenState
     );
   }
 
-  Widget _buildAppBar(BuildContext context, String title) {
+  Widget _buildContent() {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error.isNotEmpty) {
+      return Center(
+        child: TextButton(onPressed: _load, child: Text('$_error. Coba lagi')),
+      );
+    }
+    final products = _filtered;
+    if (products.isEmpty) {
+      return const Center(child: Text('Belum ada produk/jasa'));
+    }
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: GridView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          mainAxisExtent: 216,
+        ),
+        itemCount: products.length,
+        itemBuilder: (context, index) => DigitalProductCard(
+          item: products[index],
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => DigitalProductDetailScreen(item: products[index]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       alignment: Alignment.centerLeft,
       child: InkWell(
         onTap: () => Navigator.of(context).pop(),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+        child: const Padding(
+          padding: EdgeInsets.all(4),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: Color(0xFF0F172A),
-              ),
-              const SizedBox(width: 4),
+              Icon(Icons.chevron_left_rounded, size: 24),
+              SizedBox(width: 4),
               Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                  letterSpacing: -0.2,
-                ),
+                'Produk/Jasa',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -222,93 +179,4 @@ class _DigitalProductProdukJasaScreenState
       ),
     );
   }
-
-  Widget _buildCategoryChips() {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
-            ),
-            child: Row(
-              children: _categories.map((category) {
-                final isSelected = _selectedCategory == category;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: InkWell(
-                      onTap: () => _onCategorySelected(category),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFFBFDBFE)
-                              : const Color(0xFFE0EDFB),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF2563EB)
-                                : Colors.transparent,
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            category,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? const Color(0xFF1E3A8A)
-                                  : const Color(0xFF1E293B),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const Divider(
-            height: 1,
-            thickness: 0.8,
-            color: Color(0xFFE2E8F0),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(
-            LucideIcons.package,
-            size: 48,
-            color: Color(0xFF94A3B8),
-          ),
-          SizedBox(height: 12),
-          Text(
-            'Tidak ada produk ditemukan',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
-

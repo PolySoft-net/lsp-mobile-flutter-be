@@ -1,196 +1,222 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+
 import '../../models/digital_product_models.dart';
-import '../../widgets/digital_product/digital_product_header.dart';
+import '../../services/digital_product_service.dart';
 import '../../widgets/digital_product/digital_product_banner.dart';
-import '../../widgets/digital_product/digital_product_category_chips.dart';
-import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_bottom_bar.dart';
+import '../../widgets/digital_product/digital_product_card.dart';
+import '../../widgets/digital_product/digital_product_category_chips.dart';
+import '../../widgets/digital_product/digital_product_header.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
 import 'digital_product_detail_screen.dart';
 import 'digital_product_favorit_screen.dart';
 import 'digital_product_profile_screen.dart';
-import '../../widgets/digital_product/fade_page_route.dart';
 
 class DigitalProductScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
 
-  const DigitalProductScreen({
-    super.key,
-    this.onBackToHome,
-  });
+  const DigitalProductScreen({super.key, this.onBackToHome});
 
   @override
   State<DigitalProductScreen> createState() => _DigitalProductScreenState();
 }
 
 class _DigitalProductScreenState extends State<DigitalProductScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<DigitalProductItem> _products = const [];
   String? _selectedCategory;
+  Timer? _searchDebounce;
+  bool _loading = true;
+  String _error = '';
   int _currentBottomNavIndex = 0;
 
-  final List<DigitalProductItem> _allProducts = digitalProductMockList;
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
+    try {
+      final products = await DigitalProductService.getProducts(
+        search: _searchController.text,
+        filter: _selectedCategory ?? '',
+      );
+      if (mounted) setState(() => _products = products);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Produk belum dapat dimuat');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _onSearchChanged(String _) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), _loadProducts);
+  }
 
   void _onCategorySelected(String category) {
     setState(() {
-      if (_selectedCategory == category) {
-        _selectedCategory = null;
-      } else {
-        _selectedCategory = category;
-      }
+      _selectedCategory = _selectedCategory == category ? null : category;
     });
+    _loadProducts();
+  }
+
+  Future<void> _setFavorite(int index, bool favorite) async {
+    final item = _products[index];
+    setState(() => _products[index] = item.copyWith(isFavorite: favorite));
+    try {
+      await DigitalProductService.setFavorite(item.id, favorite);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _products[index] = item);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Silakan login sebagai asesi untuk menyimpan favorit',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _openDetail(DigitalProductItem item) async {
+    final targetIndex = await Navigator.of(context).push<int>(
+      MaterialPageRoute(builder: (_) => DigitalProductDetailScreen(item: item)),
+    );
+    if (targetIndex != null && mounted) {
+      await _onBottomNavTap(targetIndex);
+    } else if (mounted) {
+      await _loadProducts();
+    }
   }
 
   Future<void> _onBottomNavTap(int index) async {
     if (index == 3) {
-      final targetIndex = await Navigator.of(context).push<int>(
-        FadePageRoute(
-          page: const DigitalProductFavoritScreen(),
-        ),
-      );
+      final targetIndex = await Navigator.of(
+        context,
+      ).push<int>(FadePageRoute(page: const DigitalProductFavoritScreen()));
       if (targetIndex != null && mounted) {
-        setState(() {
-          _currentBottomNavIndex = targetIndex;
-        });
+        setState(() => _currentBottomNavIndex = targetIndex);
       }
       return;
     }
     if (index == 4) {
-      final targetIndex = await Navigator.of(context).push<int>(
-        FadePageRoute(
-          page: const DigitalProductProfileScreen(),
-        ),
-      );
+      final targetIndex = await Navigator.of(
+        context,
+      ).push<int>(FadePageRoute(page: const DigitalProductProfileScreen()));
       if (targetIndex != null && mounted) {
-        setState(() {
-          _currentBottomNavIndex = targetIndex;
-        });
+        setState(() => _currentBottomNavIndex = targetIndex);
       }
       return;
     }
-    setState(() {
-      _currentBottomNavIndex = index;
-    });
-  }
-
-  List<DigitalProductItem> get _filteredProducts {
-    if (_selectedCategory == null) {
-      return _allProducts;
-    }
-    return _allProducts.where((item) {
-      return item.category.toLowerCase() == _selectedCategory!.toLowerCase();
-    }).toList();
+    setState(() => _currentBottomNavIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final products = _filteredProducts;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            // Pinned Top Header
             DigitalProductHeader(
-              onFavoriteTap: () {
-                Navigator.of(context).push(
-                  FadePageRoute(
-                    page: const DigitalProductFavoritScreen(),
-                  ),
-                );
-              },
+              searchController: _searchController,
+              onSearchChanged: _onSearchChanged,
+              onFavoriteTap: () => Navigator.of(
+                context,
+              ).push(FadePageRoute(page: const DigitalProductFavoritScreen())),
             ),
-
-            // Scrollable Virtualized Content
-            Expanded(
-              child: CustomScrollView(
-                slivers: [
-                  // Promotional Banner (disembunyikan saat di menu Explore)
-                  if (_currentBottomNavIndex != 1)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: DigitalProductBanner(
-                          onTap: () async {
-                            if (products.isNotEmpty) {
-                              final targetIndex =
-                                  await Navigator.of(context).push<int>(
-                                MaterialPageRoute(
-                                  builder: (_) => DigitalProductDetailScreen(
-                                    item: products.first,
-                                  ),
-                                ),
-                              );
-                              if (targetIndex != null && mounted) {
-                                _onBottomNavTap(targetIndex);
-                              }
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-
-                  // Category Tabs (Online, Offline, Jasa, Produk)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        top: _currentBottomNavIndex == 1 ? 4.0 : 8.0,
-                        bottom: 12.0,
-                      ),
-                      child: DigitalProductCategoryChips(
-                        selectedCategory: _selectedCategory,
-                        onCategorySelected: _onCategorySelected,
-                      ),
-                    ),
-                  ),
-
-                  // Virtual Scrolling Grid
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12.0,
-                        mainAxisSpacing: 12.0,
-                        mainAxisExtent: 216.0,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = products[index];
-                          return DigitalProductCard(
-                            item: item,
-                            onTap: () async {
-                              final targetIndex =
-                                  await Navigator.of(context).push<int>(
-                                MaterialPageRoute(
-                                  builder: (_) => DigitalProductDetailScreen(
-                                    item: item,
-                                  ),
-                                ),
-                              );
-                              if (targetIndex != null && mounted) {
-                                _onBottomNavTap(targetIndex);
-                              }
-                            },
-                          );
-                        },
-                        childCount: products.length,
-                      ),
-                    ),
-                  ),
-
-                  // Bottom padding for scroll clearance
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 24.0),
-                  ),
-                ],
-              ),
-            ),
+            Expanded(child: _buildContent()),
           ],
         ),
       ),
       bottomNavigationBar: DigitalProductBottomBar(
         selectedIndex: _currentBottomNavIndex,
         onTap: _onBottomNavTap,
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error.isNotEmpty) {
+      return Center(
+        child: TextButton(
+          onPressed: _loadProducts,
+          child: Text('$_error. Coba lagi'),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _loadProducts,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          if (_currentBottomNavIndex != 1 && _products.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: DigitalProductBanner(
+                  onTap: () => _openDetail(_products.first),
+                ),
+              ),
+            ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: _currentBottomNavIndex == 1 ? 4 : 8,
+                bottom: 12,
+              ),
+              child: DigitalProductCategoryChips(
+                selectedCategory: _selectedCategory,
+                onCategorySelected: _onCategorySelected,
+              ),
+            ),
+          ),
+          if (_products.isEmpty)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: Text('Belum ada produk pada skema ini')),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  mainAxisExtent: 216,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => DigitalProductCard(
+                    item: _products[index],
+                    onTap: () => _openDetail(_products[index]),
+                    onFavoriteChanged: (favorite) =>
+                        _setFavorite(index, favorite),
+                  ),
+                  childCount: _products.length,
+                ),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+        ],
       ),
     );
   }

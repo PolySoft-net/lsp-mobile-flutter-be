@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import '../../models/digital_product_models.dart';
+import '../../services/digital_product_service.dart';
 import 'interactive_favorite_button.dart';
 
 class DigitalProductCard extends StatelessWidget {
@@ -22,10 +23,7 @@ class DigitalProductCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.0,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -91,7 +89,10 @@ class DigitalProductCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   text: TextSpan(
-                    style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Color(0xFF64748B),
+                    ),
                     children: [
                       const TextSpan(text: 'Harga : '),
                       TextSpan(
@@ -136,16 +137,14 @@ class DigitalProductCard extends StatelessWidget {
           const Spacer(),
 
           // Divider
-          const Divider(
-            height: 1,
-            thickness: 0.8,
-            color: Color(0xFFE2E8F0),
-          ),
+          const Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
 
           // "Lihat" Action Button
           InkWell(
             onTap: onTap,
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(12),
+            ),
             child: const SizedBox(
               width: double.infinity,
               height: 30,
@@ -167,6 +166,16 @@ class DigitalProductCard extends StatelessWidget {
   }
 
   Widget _buildThumbnail() {
+    if (item.thumbnailUrl.isNotEmpty) {
+      return Image.network(
+        DigitalProductService.absoluteUrl(item.thumbnailUrl),
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const ColoredBox(
+          color: Color(0xFFE2E8F0),
+          child: Icon(Icons.image_not_supported_outlined),
+        ),
+      );
+    }
     if (item.thumbnailType == 'ecom') {
       return Container(
         color: const Color(0xFFFFFBEB),
@@ -333,4 +342,3 @@ class DigitalProductCard extends StatelessWidget {
     );
   }
 }
-

@@ -1,45 +1,29 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_lucide/flutter_lucide.dart';
-import '../../widgets/digital_product/digital_product_bottom_bar.dart';
-import '../../widgets/digital_product/digital_product_portofolio_cards.dart';
-import 'digital_product_profile_screen.dart';
-import '../../widgets/digital_product/fade_page_route.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class DigitalProductPortofolioScreen extends StatefulWidget {
-  final VoidCallback? onBackToHome;
+import '../../models/digital_product_models.dart';
+import '../../services/digital_product_service.dart';
+
+class DigitalProductPortofolioScreen extends StatelessWidget {
+  final List<DigitalProductMedia> media;
+  final String sellerName;
+  final String sellerPhone;
 
   const DigitalProductPortofolioScreen({
     super.key,
-    this.onBackToHome,
+    required this.media,
+    required this.sellerName,
+    required this.sellerPhone,
   });
 
-  @override
-  State<DigitalProductPortofolioScreen> createState() =>
-      _DigitalProductPortofolioScreenState();
-}
-
-class _DigitalProductPortofolioScreenState
-    extends State<DigitalProductPortofolioScreen> {
-  static const int _currentBottomNavIndex = -1;
-
-  Future<void> _onBottomNavTap(int index) async {
-    if (index == 4) {
-      final targetIndex = await Navigator.of(context).push<int>(
-        FadePageRoute(
-          page: const DigitalProductProfileScreen(),
-        ),
-      );
-      if (targetIndex != null && mounted) {
-        if (targetIndex != 4 && Navigator.canPop(context)) {
-          Navigator.pop(context, targetIndex);
-        }
+  Future<void> _contactSeller(BuildContext context) async {
+    final phone = sellerPhone.trim();
+    if (phone.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: phone))) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nomor penjual belum tersedia')),
+        );
       }
-      return;
-    }
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context, index);
-    } else if (widget.onBackToHome != null) {
-      widget.onBackToHome!();
     }
   }
 
@@ -47,187 +31,97 @@ class _DigitalProductPortofolioScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Top App Bar
-            _buildAppBar(),
-
-            // Scrollable Content
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Main Highlight Card
-                    const PortofolioHighlightCard(),
-
-                    // "Hubungi Penjual" Button Card
-                    _buildHubungiPenjualButton(),
-
-                    // "Portofolio Produk Lainnya :" Header
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Portofolio Produk Lainnya :',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                          SizedBox(height: 6),
-                          Divider(
-                            height: 1,
-                            thickness: 0.8,
-                            color: Color(0xFFE2E8F0),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Other Portfolio Items
-                    PortofolioLainnyaCard(
-                      title: 'Portofolio Design Aplikasi Motor',
-                      price: 'Rp 400.000',
-                      type: '/Online',
-                      onTap: () {},
-                    ),
-                    PortofolioLainnyaCard(
-                      title: 'Portofolio Prototype Aplikasi Motor',
-                      price: 'Rp 400.000',
-                      type: '/Online',
-                      onTap: () {},
-                    ),
-
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text('Portofolio Produk'),
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
-      bottomNavigationBar: DigitalProductBottomBar(
-        selectedIndex: _currentBottomNavIndex,
-        onTap: _onBottomNavTap,
-      ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-      child: Row(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
         children: [
-          // Back arrow
-          InkWell(
-            onTap: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              } else if (widget.onBackToHome != null) {
-                widget.onBackToHome!();
-              }
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: const Padding(
-              padding: EdgeInsets.all(4.0),
-              child: Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: Color(0xFF0F172A),
-              ),
-            ),
+          Text(
+            sellerName.isEmpty
+                ? 'Portofolio Penjual'
+                : 'Portofolio $sellerName',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 8),
-
-          // Title
-          const Text(
-            'Portofolio',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
-              letterSpacing: -0.2,
-            ),
-          ),
-
-          const Spacer(),
-
-          // Sliders / Filter icon
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(8),
-            child: const Padding(
-              padding: EdgeInsets.all(4.0),
-              child: Icon(
-                LucideIcons.sliders_horizontal,
-                size: 20,
-                color: Color(0xFF0F172A),
+          const SizedBox(height: 12),
+          if (media.isEmpty)
+            const Center(child: Text('Belum ada portofolio yang diunggah'))
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: media.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                mainAxisExtent: 150,
               ),
+              itemBuilder: (context, index) {
+                final item = media[index];
+                final isPdf = item.fileName.toLowerCase().endsWith('.pdf');
+                return InkWell(
+                  onTap: () => launchUrl(
+                    Uri.parse(DigitalProductService.absoluteUrl(item.url)),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: SizedBox.expand(
+                            child: isPdf
+                                ? const ColoredBox(
+                                    color: Color(0xFFF1F5F9),
+                                    child: Icon(
+                                      Icons.picture_as_pdf_outlined,
+                                      size: 42,
+                                    ),
+                                  )
+                                : Image.network(
+                                    DigitalProductService.absoluteUrl(item.url),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => const ColoredBox(
+                                      color: Color(0xFFF1F5F9),
+                                      child: Icon(Icons.broken_image_outlined),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            item.fileName.isEmpty
+                                ? 'Portofolio ${index + 1}'
+                                : item.fileName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 10.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: () => _contactSeller(context),
+            icon: const Icon(Icons.phone_outlined),
+            label: const Text('Hubungi Penjual'),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHubungiPenjualButton() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Menghubungi penjual Jendela_Website...'),
-              duration: Duration(seconds: 1),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-          child: Row(
-            children: const [
-              Icon(
-                Icons.phone,
-                size: 18,
-                color: Color(0xFF0F172A),
-              ),
-              SizedBox(width: 12),
-              Text(
-                'Hubungi Penjual',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 }
-

@@ -1,14 +1,28 @@
-import 'dart:ui';
+import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../../services/digital_product_service.dart';
 
 class DigitalProductMediaUploadScreen extends StatefulWidget {
   final String productType;
   final String productName;
+  final int schemeId;
+  final String category;
+  final String serviceType;
+  final String description;
+  final int price;
+  final bool negotiable;
 
   const DigitalProductMediaUploadScreen({
     super.key,
     this.productType = 'Produk',
     this.productName = '',
+    required this.schemeId,
+    required this.category,
+    required this.serviceType,
+    required this.description,
+    required this.price,
+    required this.negotiable,
   });
 
   @override
@@ -18,861 +32,177 @@ class DigitalProductMediaUploadScreen extends StatefulWidget {
 
 class _DigitalProductMediaUploadScreenState
     extends State<DigitalProductMediaUploadScreen> {
-  @override
-  Widget build(BuildContext context) {
-    final title = 'Buat ${widget.productType}';
+  List<PlatformFile> _portfolioFiles = const [];
+  List<PlatformFile> _productFiles = const [];
+  bool _publishing = false;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top App Bar: "< Buat Produk"
-            _buildAppBar(context, title),
-
-            // Scrollable Upload Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 10.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section 1: Tambahkan Fortofolio
-                    const Text(
-                      'Tambahkan Fortofolio',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Unggah hasil kerja atau contoh proyek untuk mendukung pemasaran produk/jasa.',
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        color: Color(0xFF64748B),
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Dashed Dropzone 1
-                    _buildDashedUploadBox(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Pilih foto/dokumen portofolio'),
-                            duration: Duration(milliseconds: 700),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Pilih foto atau dokumen pendukung minimal 10gb',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Section 2: Daftar Fortofolio
-                    const Text(
-                      'Daftar Fortofolio',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildPortfolioPreviewRow(),
-
-                    const SizedBox(height: 16),
-
-                    // Section 3: Foto Produk
-                    Text(
-                      'Foto ${widget.productType}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Dashed Dropzone 2
-                    _buildDashedUploadBox(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Pilih foto ${widget.productType}'),
-                            duration: const Duration(milliseconds: 700),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Pilih foto atau dokumen pendukung minimal 10gb',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Section 4: Daftar Foto Produk
-                    Text(
-                      'Daftar Foto ${widget.productType}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildProductPhotoPreviewRow(),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            ),
-
-            // Bottom "Publis" Button
-            _buildPublisButton(context),
-          ],
-        ),
-      ),
+  Future<void> _pickFiles({required bool portfolio}) async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: portfolio
+          ? const ['jpg', 'jpeg', 'png', 'webp', 'pdf']
+          : const ['jpg', 'jpeg', 'png', 'webp'],
     );
-  }
-
-  Widget _buildAppBar(BuildContext context, String title) {
-    return Container(
-      color: const Color(0xFFF8FAFC),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      alignment: Alignment.centerLeft,
-      child: InkWell(
-        onTap: () => Navigator.of(context).pop(),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: Color(0xFF0F172A),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                  letterSpacing: -0.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDashedUploadBox({required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: CustomPaint(
-        painter: _DashedRectPainter(
-          color: const Color(0xFF94A3B8),
-          strokeWidth: 1.2,
-          gap: 5.0,
-        ),
-        child: Container(
-          width: double.infinity,
-          height: 120,
-          padding: const EdgeInsets.symmetric(vertical: 14.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.image_outlined,
-                size: 44,
-                color: Color(0xFF94A3B8),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 5.0,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5E7EB),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(
-                      Icons.cloud_upload_outlined,
-                      size: 15,
-                      color: Color(0xFF0F172A),
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Unggah',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPortfolioPreviewRow() {
-    return Row(
-      children: [
-        // Portfolio Thumbnail 1: Retro Art / Web
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFBEB),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    top: 6,
-                    left: 6,
-                    child: Container(
-                      width: 32,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFCD34D),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      width: 28,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6EE7B7),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: 60,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF93C5FD),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.web,
-                          size: 20,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-
-        // Portfolio Thumbnail 2: Typographic Portofolio Card
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF3B82F6),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Text(
-                          'portofolio',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF0F172A),
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF4444),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'DESIGN • PROTOTYPE',
-                      style: TextStyle(
-                        fontSize: 6.5,
-                        letterSpacing: 0.8,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProductPhotoPreviewRow() {
-    return Row(
-      children: [
-        // Photo 1: Collaboration / Team
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF6FF),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFDBEAFE)),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(
-                      Icons.diversity_3_outlined,
-                      size: 26,
-                      color: Color(0xFF2563EB),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'TEAM & TECH',
-                      style: TextStyle(
-                        fontSize: 7.5,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF1E3A8A),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-
-        // Photo 2: IoT Doodle Banner
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: const Color(0xFFA5C0DC),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    top: 4,
-                    left: 6,
-                    child: Icon(
-                      Icons.visibility_outlined,
-                      size: 11,
-                      color: const Color(0xFF1E293B).withValues(alpha: 0.35),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 4,
-                    right: 6,
-                    child: Icon(
-                      Icons.build_outlined,
-                      size: 11,
-                      color: const Color(0xFF1E293B).withValues(alpha: 0.35),
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text(
-                        'INTERNET',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.6,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      Text(
-                        '• OF •',
-                        style: TextStyle(
-                          fontSize: 6.5,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF334155),
-                        ),
-                      ),
-                      Text(
-                        'THINGS',
-                        style: TextStyle(
-                          fontSize: 8.5,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPublisButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 20.0),
-      child: SizedBox(
-        width: double.infinity,
-        height: 46,
-        child: ElevatedButton(
-          onPressed: _showPublishConfirmationDialog,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE5E7EB),
-            foregroundColor: const Color(0xFF0F172A),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text(
-            'Publis',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showPublishConfirmationDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogCtx) {
-        return Dialog(
-          backgroundColor: Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 44),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Paper plane illustration matching mockup 1
-                const _PaperPlaneIllustration(),
-                const SizedBox(height: 14),
-
-                // Title
-                const Text(
-                  'Siap Dipublikasikan',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                // Subtitle
-                const Text(
-                  'Produk/Jasa Anda akan ditampilkan',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Action buttons: Batal & Kirim
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 38,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.of(dialogCtx).pop(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE2E8F0),
-                            foregroundColor: const Color(0xFF0F172A),
-                            elevation: 0,
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            'Batal',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 38,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(dialogCtx).pop();
-                            _showPublishSuccessDialog();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE2E8F0),
-                            foregroundColor: const Color(0xFF0F172A),
-                            elevation: 0,
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            'Kirim',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showPublishSuccessDialog() {
-    bool isClosed = false;
-
-    void closeAndNavigateBack(BuildContext dialogCtx) {
-      if (isClosed) return;
-      isClosed = true;
-
-      Navigator.of(dialogCtx).pop();
-
-      if (mounted) {
-        int count = 0;
-        Navigator.of(context).popUntil((route) {
-          return count++ >= 3 || route.isFirst;
-        });
-      }
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogCtx) {
-        // Auto-dismiss and navigate back after 1.8 seconds
-        Future.delayed(const Duration(milliseconds: 1800), () {
-          if (dialogCtx.mounted) {
-            closeAndNavigateBack(dialogCtx);
-          }
-        });
-
-        return GestureDetector(
-          onTap: () => closeAndNavigateBack(dialogCtx),
-          child: Dialog(
-            backgroundColor: Colors.white,
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            insetPadding: const EdgeInsets.symmetric(horizontal: 52),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Green circle with checkmark matching mockup 2
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF4ADE80),
-                        width: 3.5,
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.check_rounded,
-                        color: Color(0xFF4ADE80),
-                        size: 34,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Title
-                  const Text(
-                    'Publikasi Berhasil',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Subtitle
-                  const Text(
-                    'Produk/Jasa Anda akan ditampilkan',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    ).then((_) {
-      // If dialog was closed by tapping barrier
-      if (!isClosed && mounted) {
-        isClosed = true;
-        int count = 0;
-        Navigator.of(context).popUntil((route) {
-          return count++ >= 3 || route.isFirst;
-        });
+    if (!mounted || result.isEmpty) return;
+    final files = result.where((file) => file.path != null).toList();
+    setState(() {
+      if (portfolio) {
+        _portfolioFiles = [..._portfolioFiles, ...files];
+      } else {
+        _productFiles = [..._productFiles, ...files];
       }
     });
   }
-}
 
-class _PaperPlaneIllustration extends StatelessWidget {
-  const _PaperPlaneIllustration();
+  Future<void> _publish() async {
+    if (_productFiles.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Minimal satu foto produk wajib dipilih')),
+      );
+      return;
+    }
+    setState(() => _publishing = true);
+    try {
+      await DigitalProductService.createProduct(
+        schemeId: widget.schemeId,
+        productType: widget.productType,
+        category: widget.category,
+        serviceType: widget.serviceType,
+        title: widget.productName,
+        description: widget.description,
+        price: widget.price,
+        negotiable: widget.negotiable,
+        productFiles: _productFiles.map((file) => file.path!).toList(),
+        portfolioFiles: _portfolioFiles.map((file) => file.path!).toList(),
+      );
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Publikasi Berhasil'),
+          content: const Text('Produk/Jasa Anda sudah ditampilkan.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Selesai'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      var popped = 0;
+      Navigator.of(context).popUntil((route) => popped++ >= 3 || route.isFirst);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Publikasi gagal. Periksa data dan koneksi Anda.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _publishing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 80,
-      height: 70,
-      child: CustomPaint(
-        painter: _PaperPlanePainter(),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: Text('Buat ${widget.productType}'),
+        backgroundColor: const Color(0xFFF8FAFC),
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(
+            widget.productName,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _uploadSection(
+            title: 'Foto ${widget.productType}',
+            subtitle: 'Wajib. JPG, PNG, atau WEBP maksimal 10MB per file.',
+            files: _productFiles,
+            onAdd: () => _pickFiles(portfolio: false),
+            onRemove: (index) => setState(() => _productFiles.removeAt(index)),
+          ),
+          const SizedBox(height: 16),
+          _uploadSection(
+            title: 'Portofolio',
+            subtitle: 'Opsional. Foto atau PDF maksimal 10MB per file.',
+            files: _portfolioFiles,
+            onAdd: () => _pickFiles(portfolio: true),
+            onRemove: (index) =>
+                setState(() => _portfolioFiles.removeAt(index)),
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _publishing ? null : _publish,
+            child: _publishing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Publikasikan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _uploadSection({
+    required String title,
+    required String subtitle,
+    required List<PlatformFile> files,
+    required VoidCallback onAdd,
+    required ValueChanged<int> onRemove,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            subtitle,
+            style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.upload_file_outlined),
+            label: const Text('Pilih File'),
+          ),
+          for (var index = 0; index < files.length; index++)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.insert_drive_file_outlined, size: 20),
+              title: Text(
+                files[index].name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () => onRemove(index),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
-
-class _PaperPlanePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 1. Soft ground shadow
-    final shadowPaint = Paint()
-      ..color = const Color(0x331E293B)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5);
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(size.width * 0.54, size.height - 7),
-        width: 38,
-        height: 7,
-      ),
-      shadowPaint,
-    );
-
-    // 2. Paper airplane coordinates
-    final nose = Offset(size.width * 0.76, size.height * 0.12);
-    final leftTip = Offset(size.width * 0.18, size.height * 0.44);
-    final keel = Offset(size.width * 0.50, size.height * 0.52);
-    final rightTip = Offset(size.width * 0.70, size.height * 0.68);
-    final bottomFin = Offset(size.width * 0.38, size.height * 0.76);
-
-    // Keel underside fold (deepest blue)
-    final keelPath = Path()
-      ..moveTo(keel.dx, keel.dy)
-      ..lineTo(nose.dx, nose.dy)
-      ..lineTo(bottomFin.dx, bottomFin.dy)
-      ..close();
-    final keelPaint = Paint()
-      ..color = const Color(0xFF0369A1)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(keelPath, keelPaint);
-
-    // Right wing (medium blue)
-    final rightWingPath = Path()
-      ..moveTo(keel.dx, keel.dy)
-      ..lineTo(nose.dx, nose.dy)
-      ..lineTo(rightTip.dx, rightTip.dy)
-      ..close();
-    final rightWingPaint = Paint()
-      ..color = const Color(0xFF0284C7)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(rightWingPath, rightWingPaint);
-
-    // Left main wing (bright cyan with gradient)
-    final leftWingPath = Path()
-      ..moveTo(nose.dx, nose.dy)
-      ..lineTo(leftTip.dx, leftTip.dy)
-      ..lineTo(bottomFin.dx, bottomFin.dy)
-      ..close();
-    final leftWingPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [Color(0xFF67E8F9), Color(0xFF38BDF8)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(leftWingPath, leftWingPaint);
-
-    // White highlight pill near top edge
-    final highlightPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
-      ..style = PaintingStyle.fill;
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(size.width * 0.40, size.height * 0.32),
-        width: 14,
-        height: 4.5,
-      ),
-      const Radius.circular(2.5),
-    );
-    canvas.save();
-    canvas.translate(size.width * 0.40, size.height * 0.32);
-    canvas.rotate(-0.52);
-    canvas.translate(-size.width * 0.40, -size.height * 0.32);
-    canvas.drawRRect(rrect, highlightPaint);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _DashedRectPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double gap;
-
-  _DashedRectPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.gap,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final Path path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        const Radius.circular(8),
-      ));
-
-    final Path dashPath = Path();
-    for (final PathMetric metric in path.computeMetrics()) {
-      double distance = 0.0;
-      while (distance < metric.length) {
-        final double length = gap;
-        dashPath.addPath(
-          metric.extractPath(distance, distance + length),
-          Offset.zero,
-        );
-        distance += length * 2;
-      }
-    }
-    canvas.drawPath(dashPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}
-

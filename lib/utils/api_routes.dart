@@ -216,7 +216,8 @@ class ApiRoutes {
   static const String publicAiChat = '/api/ai/chat';
   static const String asesorLeads = '/api/asesor/leads';
   static const String asesorLeadsStats = '/api/asesor/leads/stats';
-  static const String asesorLeadsRegisteredPlaces = '/api/asesor/leads/registered-places';
+  static const String asesorLeadsRegisteredPlaces =
+      '/api/asesor/leads/registered-places';
   static String asesorLeadDetail(String id) => '/api/asesor/leads/$id';
   static String asesorLeadStatus(String id) => '/api/asesor/leads/$id/status';
 
@@ -245,6 +246,19 @@ class ApiRoutes {
   static String adminBeritaDetail(int id) => '/api/admin/berita/$id';
   static const String adminBeritaUploadFoto = '/api/admin/berita/upload-foto';
   static const String fileSignedUrl = '/api/files/signed-url';
+
+  // ============================================================================
+  // Digital Product Routes
+  // ============================================================================
+
+  static const String digitalProducts = '/api/digital-products';
+  static const String digitalProductFavorites =
+      '/api/digital-products/favorites';
+  static const String digitalProductMine = '/api/digital-products/mine';
+  static const String digitalProductProfile = '/api/digital-products/profile';
+  static String digitalProductDetail(dynamic id) => '/api/digital-products/$id';
+  static String digitalProductFavorite(dynamic id) =>
+      '/api/digital-products/$id/favorite';
 
   // ============================================================================
   // Health Routes

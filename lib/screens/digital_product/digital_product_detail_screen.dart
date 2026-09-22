@@ -1,17 +1,16 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import '../../models/digital_product_models.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../services/digital_product_service.dart';
+import 'digital_product_portofolio_screen.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/interactive_favorite_button.dart';
-import 'digital_product_portofolio_screen.dart';
 
 class DigitalProductDetailScreen extends StatefulWidget {
   final DigitalProductItem item;
 
-  const DigitalProductDetailScreen({
-    super.key,
-    required this.item,
-  });
+  const DigitalProductDetailScreen({super.key, required this.item});
 
   @override
   State<DigitalProductDetailScreen> createState() =>
@@ -21,19 +20,35 @@ class DigitalProductDetailScreen extends StatefulWidget {
 class _DigitalProductDetailScreenState
     extends State<DigitalProductDetailScreen> {
   late bool _isFavorite;
+  DigitalProductDetail? _detail;
+
+  DigitalProductItem get _item => _detail?.product ?? widget.item;
 
   @override
   void initState() {
     super.initState();
     _isFavorite = widget.item.isFavorite;
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    try {
+      final detail = await DigitalProductService.getDetail(widget.item.id);
+      if (mounted) {
+        setState(() {
+          _detail = detail;
+          _isFavorite = detail.product.isFavorite;
+        });
+      }
+    } catch (_) {
+      // Initial list item remains usable when detail refresh fails.
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Filter recommendations (other products)
-    final recommendations = digitalProductMockList
-        .where((p) => p.id != widget.item.id)
-        .toList();
+    final recommendations =
+        _detail?.sellerProducts ?? const <DigitalProductItem>[];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -54,7 +69,8 @@ class _DigitalProductDetailScreenState
                     _buildMainProductCard(context),
 
                     // Portofolio Produk Card
-                    _buildPortofolioPreviewCard(context),
+                    _buildPortfolioCard(context),
+                    _buildSellerCompetencyCard(),
 
                     // "Hubungi Penjual" Button Card
                     _buildHubungiPenjualButton(context),
@@ -107,10 +123,10 @@ class _DigitalProductDetailScreenState
   }
 
   Widget _buildMainProductCard(BuildContext context) {
-    final tags = widget.item.tags ??
-        const ['#Online', '#Produk', '#Website', '#Design'];
-    final description = widget.item.description ??
-        'website ini hanya berupa desain prototype saja. Website ini cocok untuk produk apa saja. Pengerjaan membutuhkan sekitar 2 bulan dan secara online atau daring..';
+    final tags = _item.tags;
+    final description = _item.description.isNotEmpty
+        ? _item.description
+        : 'Belum ada deskripsi produk.';
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 10.0),
@@ -118,10 +134,7 @@ class _DigitalProductDetailScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.0,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -143,7 +156,7 @@ class _DigitalProductDetailScreenState
               ),
               const SizedBox(width: 8),
               Text(
-                widget.item.sellerName ?? 'Jendela_Website',
+                _item.sellerName.isNotEmpty ? _item.sellerName : _item.author,
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.bold,
@@ -171,7 +184,7 @@ class _DigitalProductDetailScreenState
             children: [
               Expanded(
                 child: Text(
-                  widget.item.title,
+                  _item.title,
                   style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.bold,
@@ -184,10 +197,14 @@ class _DigitalProductDetailScreenState
               InteractiveFavoriteButton(
                 initialIsFavorite: _isFavorite,
                 size: 22,
-                onFavoriteChanged: (isFav) {
-                  setState(() {
-                    _isFavorite = isFav;
-                  });
+                onFavoriteChanged: (isFav) async {
+                  final previous = _isFavorite;
+                  setState(() => _isFavorite = isFav);
+                  try {
+                    await DigitalProductService.setFavorite(_item.id, isFav);
+                  } catch (_) {
+                    if (mounted) setState(() => _isFavorite = previous);
+                  }
                 },
               ),
             ],
@@ -200,12 +217,12 @@ class _DigitalProductDetailScreenState
               style: const TextStyle(fontSize: 11, color: Color(0xFF0F172A)),
               children: [
                 TextSpan(
-                  text: widget.item.price,
+                  text: _item.price,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 const TextSpan(text: '  '),
                 TextSpan(
-                  text: widget.item.priceUnit,
+                  text: _item.priceUnit,
                   style: const TextStyle(color: Color(0xFF64748B)),
                 ),
               ],
@@ -215,31 +232,22 @@ class _DigitalProductDetailScreenState
 
           // By Author
           Text(
-            'By : ${widget.item.author}',
-            style: const TextStyle(
-              fontSize: 10,
-              color: Color(0xFF64748B),
-            ),
+            'By : ${_item.author}',
+            style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 2),
 
           // Status
           Text(
-            'Status :  ${widget.item.status}',
-            style: const TextStyle(
-              fontSize: 10,
-              color: Color(0xFF64748B),
-            ),
+            'Status :  ${_item.status}',
+            style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 10),
 
           // Kategori
           const Text(
             'Kategori :',
-            style: TextStyle(
-              fontSize: 10.5,
-              color: Color(0xFF64748B),
-            ),
+            style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 6),
           Wrap(
@@ -247,8 +255,10 @@ class _DigitalProductDetailScreenState
             runSpacing: 6.0,
             children: tags.map((tag) {
               return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10.0, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10.0,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF94A3B8),
                   borderRadius: BorderRadius.circular(4),
@@ -269,10 +279,7 @@ class _DigitalProductDetailScreenState
           // Deskripsi
           const Text(
             'Deskripsi :',
-            style: TextStyle(
-              fontSize: 10.5,
-              color: Color(0xFF64748B),
-            ),
+            style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 4),
           Text(
@@ -302,7 +309,17 @@ class _DigitalProductDetailScreenState
   }
 
   Widget _buildBannerIllustration() {
-    if (widget.item.thumbnailType == 'ecom') {
+    if (_item.thumbnailUrl.isNotEmpty) {
+      return Image.network(
+        DigitalProductService.absoluteUrl(_item.thumbnailUrl),
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const ColoredBox(
+          color: Color(0xFFE2E8F0),
+          child: Icon(Icons.image_not_supported_outlined),
+        ),
+      );
+    }
+    if (_item.thumbnailType == 'ecom') {
       return Container(
         color: const Color(0xFFFFF7ED),
         child: Row(
@@ -481,201 +498,145 @@ class _DigitalProductDetailScreenState
     );
   }
 
-  Widget _buildPortofolioPreviewCard(BuildContext context) {
+  Widget _buildPortfolioCard(BuildContext context) {
+    final media =
+        _detail?.media.where((item) => item.type == 'portofolio').toList() ??
+        const <DigitalProductMedia>[];
     return Container(
-      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 10.0),
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: InkWell(
-        onTap: () async {
-          final targetIndex = await Navigator.of(context).push<int>(
-            MaterialPageRoute(
-              builder: (_) => const DigitalProductPortofolioScreen(),
-            ),
-          );
-          if (targetIndex != null && context.mounted) {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context, targetIndex);
-            }
-          }
-        },
+        onTap: media.isEmpty
+            ? null
+            : () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DigitalProductPortofolioScreen(
+                    media: media,
+                    sellerName: _item.sellerName,
+                    sellerPhone: _item.sellerPhone,
+                  ),
+                ),
+              ),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Text(
                     'Portofolio Produk',
                     style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
                     ),
                   ),
                   Spacer(),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: Color(0xFF0F172A),
-                  ),
+                  Icon(Icons.chevron_right_rounded, size: 20),
                 ],
               ),
               const SizedBox(height: 10),
-
-              // Two Showcase Images
-              Row(
-                children: [
-                  // Scrapbook image
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        height: 96,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F766E),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Positioned(
-                              top: 6,
-                              left: 6,
-                              child: const Icon(
-                                Icons.star_rounded,
-                                size: 14,
-                                color: Color(0xFFFDE047),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF08A),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'PORTFOLIO',
-                                style: TextStyle(
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w900,
-                                  fontStyle: FontStyle.italic,
-                                  color: Color(0xFF1E293B),
+              if (media.isEmpty)
+                const Text(
+                  'Belum ada portofolio yang diunggah.',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                )
+              else
+                SizedBox(
+                  height: 96,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: media.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (_, index) {
+                      final item = media[index];
+                      final isPdf = item.fileName.toLowerCase().endsWith(
+                        '.pdf',
+                      );
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(
+                          width: 132,
+                          child: isPdf
+                              ? const ColoredBox(
+                                  color: Color(0xFFF1F5F9),
+                                  child: Icon(Icons.picture_as_pdf_outlined),
+                                )
+                              : Image.network(
+                                  DigitalProductService.absoluteUrl(item.url),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => const ColoredBox(
+                                    color: Color(0xFFF1F5F9),
+                                    child: Icon(Icons.broken_image_outlined),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ],
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBox(width: 10),
-
-                  // Retro computer image
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        height: 96,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFEF3C7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Positioned(
-                              top: 6,
-                              left: 6,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 1,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF87171),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                                child: const Text(
-                                  'JAN',
-                                  style: TextStyle(
-                                    fontSize: 6.5,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 78,
-                              height: 58,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE2E8F0),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: const Color(0xFFCBD5E1),
-                                  width: 1.2,
-                                ),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 64,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF2563EB),
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        'PORTOFOLIO',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 7.5,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Container(
-                                    width: 20,
-                                    height: 2,
-                                    color: const Color(0xFF94A3B8),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSellerCompetencyCard() {
+    final certificates =
+        _detail?.certificates ?? const <DigitalProductCertificate>[];
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Kompetensi Penjual',
+            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          if (certificates.isEmpty)
+            const Text(
+              'Belum ada data sertifikasi kompetensi.',
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+            )
+          else
+            ...certificates
+                .take(4)
+                .map(
+                  (certificate) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.verified_outlined, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            certificate.schemeCode.isEmpty
+                                ? certificate.schemeName
+                                : '${certificate.schemeCode} - ${certificate.schemeName}',
+                            style: const TextStyle(fontSize: 11.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        ],
       ),
     );
   }
@@ -686,10 +647,7 @@ class _DigitalProductDetailScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.0,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -699,26 +657,23 @@ class _DigitalProductDetailScreenState
         ],
       ),
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Menghubungi penjual ${widget.item.sellerName ?? widget.item.author}...',
-              ),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+        onTap: () async {
+          final phone = _item.sellerPhone.trim();
+          if (phone.isEmpty ||
+              !await launchUrl(Uri(scheme: 'tel', path: phone))) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Nomor penjual belum tersedia')),
+              );
+            }
+          }
         },
         borderRadius: BorderRadius.circular(10),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
           child: Row(
             children: const [
-              Icon(
-                Icons.phone,
-                size: 18,
-                color: Color(0xFF0F172A),
-              ),
+              Icon(Icons.phone, size: 18, color: Color(0xFF0F172A)),
               SizedBox(width: 12),
               Text(
                 'Hubungi Penjual',
@@ -783,9 +738,7 @@ class _DigitalProductDetailScreenState
                 onTap: () async {
                   final targetIndex = await Navigator.of(context).push<int>(
                     MaterialPageRoute(
-                      builder: (_) => DigitalProductDetailScreen(
-                        item: recItem,
-                      ),
+                      builder: (_) => DigitalProductDetailScreen(item: recItem),
                     ),
                   );
                   if (targetIndex != null && context.mounted) {
@@ -802,4 +755,3 @@ class _DigitalProductDetailScreenState
     );
   }
 }
-
