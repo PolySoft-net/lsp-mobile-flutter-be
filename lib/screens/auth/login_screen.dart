@@ -169,17 +169,15 @@ class _LoginScreenState extends State<LoginScreen> {
         if (e is DioException) {
           final serverMessage = e.response?.data is Map
               ? e.response?.data['message']?.toString() ??
-                  e.response?.data['errors']?.toString()
+                    e.response?.data['errors']?.toString()
               : null;
 
           if (serverMessage != null && serverMessage.isNotEmpty) {
             _errorMessage = serverMessage;
           } else if (e.response?.statusCode == 404) {
-            _errorMessage =
-                'Akun Google Anda belum terdaftar di sistem LSP.';
+            _errorMessage = 'Akun Google Anda belum terdaftar di sistem LSP.';
           } else if (e.response?.statusCode == 401) {
-            _errorMessage =
-                'Autentikasi Google gagal atau sudah kedaluwarsa.';
+            _errorMessage = 'Autentikasi Google gagal atau sudah kedaluwarsa.';
           } else {
             _errorMessage = 'Login Google gagal. Coba lagi nanti.';
           }
@@ -203,9 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       mainNavigatorKey = GlobalKey<MainNavigatorState>();
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => MainNavigator(key: mainNavigatorKey),
-        ),
+        MaterialPageRoute(builder: (_) => MainNavigator(key: mainNavigatorKey)),
         (route) => false,
       );
     }
@@ -221,33 +217,36 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                InkWell(
-                  onTap: () => _goToHome(context),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(
-                          Icons.arrow_back_rounded,
-                          size: 18,
+              InkWell(
+                onTap: () => _goToHome(context),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 2,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.arrow_back_rounded,
+                        size: 18,
+                        color: Color(0xFF64748B),
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Kembali ke Beranda',
+                        style: TextStyle(
                           color: Color(0xFF64748B),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
-                        SizedBox(width: 6),
-                        Text(
-                          'Kembali ke Beranda',
-                          style: TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 12),
               // Header: Title + Subtitle and Illustration next to it
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,79 +509,82 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    if (!Platform.isIOS) ...[
+                      const SizedBox(height: 20),
 
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Divider(
-                            color: Color(0xFFE5E7EB),
-                            thickness: 1.0,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: Text(
-                            'Masuk Dengan',
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const Expanded(
-                          child: Divider(
-                            color: Color(0xFFE5E7EB),
-                            thickness: 1.0,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    Center(
-                      child: SizedBox(
-                        width: 140,
-                        height: 36,
-                        child: OutlinedButton(
-                          onPressed: _isLoading ? null : _handleGoogleLogin,
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF9FAFB),
-                            side: const BorderSide(
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Divider(
                               color: Color(0xFFE5E7EB),
-                              width: 1.0,
+                              thickness: 1.0,
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            padding: EdgeInsets.zero,
                           ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image(
-                                image: AssetImage('assets/google_logo.png'),
-                                width: 18,
-                                height: 18,
-                                fit: BoxFit.contain,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Text(
+                              'Masuk Dengan',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Google',
-                                style: TextStyle(
-                                  color: Color(0xFF1E293B),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Expanded(
+                            child: Divider(
+                              color: Color(0xFFE5E7EB),
+                              thickness: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      Center(
+                        child: SizedBox(
+                          width: 140,
+                          height: 36,
+                          child: OutlinedButton(
+                            onPressed: _isLoading ? null : _handleGoogleLogin,
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: const Color(0xFFF9FAFB),
+                              side: const BorderSide(
+                                color: Color(0xFFE5E7EB),
+                                width: 1.0,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              padding: EdgeInsets.zero,
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image(
+                                  image: AssetImage('assets/google_logo.png'),
+                                  width: 18,
+                                  height: 18,
+                                  fit: BoxFit.contain,
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 8),
+                                Text(
+                                  'Google',
+                                  style: TextStyle(
+                                    color: Color(0xFF1E293B),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-
+                    ],
                   ],
                 ),
               ),

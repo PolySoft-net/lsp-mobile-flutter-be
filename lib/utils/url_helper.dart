@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_client.dart';
@@ -18,9 +20,24 @@ class UrlHelper {
   /// Play Store market URI
   static const String marketUrl = 'market://details?id=$appId';
 
-  /// Opens the Google Play Store (app if installed, or web browser)
-  /// for users to rate and review the app.
+  /// App Store review page (iOS).
+  static const String appStoreReviewUrl =
+      'https://apps.apple.com/app/id6813900731?action=write-review';
+
+  /// Opens the store review page for the current platform
+  /// (App Store on iOS, Google Play on Android).
   static Future<bool> openAppReview() async {
+    if (Platform.isIOS) {
+      try {
+        return await launchUrl(
+          Uri.parse(appStoreReviewUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (e) {
+        if (kDebugMode) debugPrint('Could not launch app review: $e');
+        return false;
+      }
+    }
     final marketUri = Uri.parse(marketUrl);
     final webUri = Uri.parse(playStoreUrl);
     try {
