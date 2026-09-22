@@ -613,13 +613,17 @@ class AsesorCategoryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    count,
-                    style: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      height: 1,
+                  Flexible(
+                    child: Text(
+                      count,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        height: 1,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 3),
