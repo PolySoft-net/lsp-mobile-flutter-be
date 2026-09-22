@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/dashboard_models.dart';
 import '../../utils/number_format_helper.dart';
 import '../../services/api_service.dart';
+import '../../screens/digital_product/digital_product_screen.dart';
 
 class RangkumanAsesi extends StatefulWidget {
   final AsesiDashboardSummary? data;
@@ -25,13 +26,28 @@ class _RangkumanAsesiState extends State<RangkumanAsesi> {
   String get _currentDayMonth {
     final now = DateTime.now();
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${now.day} ${months[now.month - 1]}';
   }
 
-  void _showComingSoon(BuildContext context, String title, IconData icon, Color color) {
+  void _showComingSoon(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -64,7 +80,10 @@ class _RangkumanAsesiState extends State<RangkumanAsesi> {
               ),
               const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(20),
@@ -244,7 +263,9 @@ class _RangkumanAsesiState extends State<RangkumanAsesi> {
                 title: 'Asesmen',
                 value: isLoading
                     ? '...'
-                    : NumberFormatHelper.formatWithDots(data.totalJadwalDiikuti),
+                    : NumberFormatHelper.formatWithDots(
+                        data.totalJadwalDiikuti,
+                      ),
                 subtitle: 'Jadwal yang diikuti',
                 icon: Icons.assignment_turned_in_rounded,
                 iconColor: const Color(0xFF1976D2),
@@ -253,17 +274,15 @@ class _RangkumanAsesiState extends State<RangkumanAsesi> {
               ),
               _AsesiSummaryCard(
                 title: 'Product Digital',
-                value: 'Layanan',
-                badgeText: 'Segera Hadir',
-                subtitle: 'Produk digital LSP',
+                value: 'Katalog',
+                subtitle: 'Produk & Jasa asesi',
                 icon: Icons.shopping_bag_outlined,
                 iconColor: const Color(0xFF0D9488),
                 iconBgColor: const Color(0xFFCCFBF1),
-                onTap: () => _showComingSoon(
-                  context,
-                  'Product Digital',
-                  Icons.shopping_bag_outlined,
-                  const Color(0xFF0D9488),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DigitalProductScreen(),
+                  ),
                 ),
               ),
               _AsesiSummaryCard(

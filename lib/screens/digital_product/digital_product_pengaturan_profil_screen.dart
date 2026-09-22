@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter_lucide/flutter_lucide.dart';
+
+import '../../services/auth/token_storage.dart';
+import '../../services/digital_product_service.dart';
 
 class DigitalProductPengaturanProfilScreen extends StatefulWidget {
   const DigitalProductPengaturanProfilScreen({super.key});
@@ -11,12 +13,17 @@ class DigitalProductPengaturanProfilScreen extends StatefulWidget {
 
 class _DigitalProductPengaturanProfilScreenState
     extends State<DigitalProductPengaturanProfilScreen> {
-  final TextEditingController _namaController =
-      TextEditingController(text: 'Adriansyah');
-  final TextEditingController _noHpController =
-      TextEditingController(text: '084768590899');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'Jendelawebsite@gmail.com');
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _noHpController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  String _photoUrl = '';
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
 
   @override
   void dispose() {
@@ -26,6 +33,33 @@ class _DigitalProductPengaturanProfilScreenState
     super.dispose();
   }
 
+  Future<void> _loadUser() async {
+    try {
+      final profile = await DigitalProductService.getProfile();
+      final seller = profile.seller;
+      if (mounted) {
+        setState(() {
+          _namaController.text = seller.name;
+          _emailController.text = seller.email;
+          _noHpController.text = seller.phone;
+          _photoUrl = seller.profilePhoto;
+          _loading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+
+    final user = await TokenStorage.instance.getUserProfile();
+    if (mounted) {
+      setState(() {
+        _namaController.text = user?.name ?? '';
+        _emailController.text = user?.email ?? '';
+        _photoUrl = user?.fotoProfilUrl ?? '';
+        _loading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,117 +67,81 @@ class _DigitalProductPengaturanProfilScreenState
       body: SafeArea(
         child: Column(
           children: [
-            // Top App Bar
             _buildAppBar(),
-
-            // Top Light Blue Banner with Centered Avatar
             _buildAvatarBanner(),
-
-            // Form Fields Container
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 16.0,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFF1F5F9),
-                      width: 1.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Nama
-                      const Text(
-                        'Nama',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFFF1F5F9),
+                            width: 1.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      _buildReadonlyField(_namaController.text),
-                      const SizedBox(height: 14),
-
-                      // No.Hp
-                      const Text(
-                        'No.Hp',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      _buildReadonlyField(_noHpController.text),
-                      const SizedBox(height: 14),
-
-                      // Email
-                      const Text(
-                        'Email',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      _buildReadonlyField(_emailController.text),
-                      const SizedBox(height: 24),
-
-                      // Edit Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 42,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Fitur edit profil dibuka...'),
-                                duration: Duration(seconds: 1),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Nama',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
                               ),
-                            );
-                          },
-                          icon: const Icon(
-                            LucideIcons.square_pen,
-                            size: 16,
-                            color: Color(0xFF0F172A),
-                          ),
-                          label: const Text(
-                            'Edit',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF0F172A),
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE2E8F0),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                            const SizedBox(height: 6),
+                            _buildReadonlyField(
+                              _namaController.text.isNotEmpty
+                                  ? _namaController.text
+                                  : '-',
                             ),
-                          ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'No.Hp',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            _buildReadonlyField(
+                              _noHpController.text.isNotEmpty
+                                  ? _noHpController.text
+                                  : '-',
+                            ),
+                            const SizedBox(height: 14),
+                            const Text(
+                              'Email',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            _buildReadonlyField(
+                              _emailController.text.isNotEmpty
+                                  ? _emailController.text
+                                  : '-',
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
             ),
           ],
         ),
@@ -185,26 +183,19 @@ class _DigitalProductPengaturanProfilScreenState
   }
 
   Widget _buildAvatarBanner() {
+    final photo = DigitalProductService.absoluteUrl(_photoUrl);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 20.0),
-      decoration: const BoxDecoration(
-        color: Color(0xFFE0EDFB),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFFE0EDFB)),
       child: Center(
-        child: ClipOval(
-          child: Image.network(
-            'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=200&auto=format&fit=crop&q=80',
-            width: 72,
-            height: 72,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              width: 72,
-              height: 72,
-              color: const Color(0xFF94A3B8),
-              child: const Icon(Icons.pets, color: Colors.white, size: 36),
-            ),
-          ),
+        child: CircleAvatar(
+          radius: 36,
+          backgroundColor: const Color(0xFF94A3B8),
+          backgroundImage: photo.isNotEmpty ? NetworkImage(photo) : null,
+          child: photo.isEmpty
+              ? const Icon(Icons.person, color: Colors.white, size: 36)
+              : null,
         ),
       ),
     );
@@ -229,4 +220,3 @@ class _DigitalProductPengaturanProfilScreenState
     );
   }
 }
-
