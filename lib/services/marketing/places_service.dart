@@ -31,14 +31,6 @@ class PlacesService {
     if (key != null && key.isNotEmpty) return key;
     return _defaultApiKey;
   }
-  static final Dio _dio = Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 8),
-      sendTimeout: const Duration(seconds: 8),
-    ),
-  );
-
 
   static places_sdk.FlutterGooglePlacesSdk? _sdk;
 
@@ -200,9 +192,7 @@ class PlacesService {
     return results;
   }
 
-  /// Internal single query search with Platform Awareness:
-  /// - iOS: 100% Web-based HTTP (v1 New -> Legacy -> Web Autocomplete)
-  /// - Android/Other: Native SDK Plus -> v1 New -> Legacy -> Web Autocomplete
+  /// Internal single query search with Native SDK -> v1 New -> Legacy cascade
   static Future<List<PlaceResult>> _fetchSingleQuery({
     required String query,
     double? latitude,
@@ -210,31 +200,23 @@ class PlacesService {
     int radius = 12000,
   }) async {
     List<PlaceResult> results = [];
-    final bool isIos = defaultTargetPlatform == TargetPlatform.iOS;
 
-    // 1. Native Google Places SDK Plus (Khusus Android/Non-iOS)
-    if (!isIos) {
-      try {
-        final nativeResults = await _searchGooglePlacesNativeSdk(
-          query: query,
-          latitude: latitude,
-          longitude: longitude,
-          radius: radius,
-        );
-        if (nativeResults.isNotEmpty) {
-          results = nativeResults;
-        }
-      } catch (e) {
-        if (kDebugMode) debugPrint('⚠️ Google Places SDK Plus Error: $e');
+    // 1. Native Google Places SDK Plus
+    try {
+      final nativeResults = await _searchGooglePlacesNativeSdk(
+        query: query,
+        latitude: latitude,
+        longitude: longitude,
+        radius: radius,
+      );
+      if (nativeResults.isNotEmpty) {
+        results = nativeResults;
       }
-    } else {
-      if (kDebugMode) {
-        debugPrint(
-            '🍎 [PlacesService] iOS detected: bypass native SDK, using web-based Google Places API directly.');
-      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('⚠️ Google Places SDK Plus Error: $e');
     }
 
-    // 2. Google Places API (New Text Search v1 - Web based HTTP)
+    // 2. Google Places API (New Text Search v1)
     if (results.isEmpty) {
       try {
         final googleNewResults = await _searchGooglePlacesNew(
@@ -251,37 +233,43 @@ class PlacesService {
       }
     }
 
-    // 3. Google Places API (Legacy Text Search - Web based HTTP)
+    // 3. Google Places API (Legacy Text Search)
     if (results.isEmpty) {
       try {
-        final legacyResults = await _searchGooglePlacesLegacy(
-          query: query,
-          latitude: latitude,
-          longitude: longitude,
-          radius: radius,
+        String url =
+            'https://maps.googleapis.com/maps/api/place/textsearch/json?query=${Uri.encodeComponent(query)}&key=$apiKey';
+
+        if (latitude != null && longitude != null) {
+          url += '&location=$latitude,$longitude&radius=$radius';
+        }
+
+        final dio = Dio();
+        final response = await dio.get(
+          url,
+          options: Options(
+            receiveTimeout: const Duration(seconds: 8),
+            sendTimeout: const Duration(seconds: 8),
+          ),
         );
-        if (legacyResults.isNotEmpty) {
-          results = legacyResults;
+
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> data = response.data is Map<String, dynamic>
+              ? response.data as Map<String, dynamic>
+              : jsonDecode(response.data.toString());
+          final status = data['status']?.toString();
+
+          if (status == 'OK') {
+            final list = data['results'] as List<dynamic>? ?? [];
+            if (list.isNotEmpty) {
+              results = list
+                  .map((e) =>
+                      PlaceResult.fromGoogleJson(e as Map<String, dynamic>))
+                  .toList();
+            }
+          }
         }
       } catch (e) {
         if (kDebugMode) debugPrint('⚠️ Google Places Legacy Error: $e');
-      }
-    }
-
-    // 4. Google Places API (Web Autocomplete + Place Details - Web based HTTP)
-    if (results.isEmpty) {
-      try {
-        final webAutocompleteResults = await _searchGooglePlacesWebAutocomplete(
-          query: query,
-          latitude: latitude,
-          longitude: longitude,
-          radius: radius,
-        );
-        if (webAutocompleteResults.isNotEmpty) {
-          results = webAutocompleteResults;
-        }
-      } catch (e) {
-        if (kDebugMode) debugPrint('⚠️ Google Places Web Autocomplete Error: $e');
       }
     }
 
@@ -295,11 +283,6 @@ class PlacesService {
     double? longitude,
     int radius = 12000,
   }) async {
-    // Khusus iOS: Bypassed — native SDK tidak dipakai
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return [];
-    }
-
     // 1A. SearchByText with pure user keyword
     try {
       final delta = (radius / 100000.0).clamp(0.03, 0.5);
@@ -454,24 +437,21 @@ class PlacesService {
       };
     }
 
-    Response response;
-    try {
-      response = await _dio.post(
-        url,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': apiKey,
-            'X-Goog-FieldMask':
-                'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.types,places.nationalPhoneNumber,places.websiteUri,places.photos',
-          },
-        ),
-        data: body,
-      );
-    } catch (e) {
-      if (kDebugMode) debugPrint('⚠️ Google Places v1 Error: $e');
-      return [];
-    }
+    final dio = Dio();
+    final response = await dio.post(
+      url,
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask':
+              'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.types,places.nationalPhoneNumber,places.websiteUri,places.photos',
+        },
+        receiveTimeout: const Duration(seconds: 8),
+        sendTimeout: const Duration(seconds: 8),
+      ),
+      data: body,
+    );
 
     if (response.statusCode == 200 && response.data != null) {
       final Map<String, dynamic> data = response.data is Map<String, dynamic>
@@ -518,113 +498,6 @@ class PlacesService {
           photoReference: photoRef,
         );
       }).where((p) => p.latitude != 0.0 && p.longitude != 0.0).toList();
-    }
-    return [];
-  }
-
-  /// 3. Google Places API (Legacy Text Search - Web based HTTP)
-  static Future<List<PlaceResult>> _searchGooglePlacesLegacy({
-    required String query,
-    double? latitude,
-    double? longitude,
-    int radius = 12000,
-  }) async {
-    try {
-      String url =
-          'https://maps.googleapis.com/maps/api/place/textsearch/json?query=${Uri.encodeComponent(query)}&language=id&key=$apiKey';
-
-      if (latitude != null && longitude != null) {
-        url += '&location=$latitude,$longitude&radius=$radius';
-      }
-
-      final response = await _dio.get(url);
-
-      if (response.statusCode == 200 && response.data != null) {
-        final Map<String, dynamic> data = response.data is Map<String, dynamic>
-            ? response.data as Map<String, dynamic>
-            : jsonDecode(response.data.toString());
-        final status = data['status']?.toString();
-
-        if (status == 'OK') {
-          final list = data['results'] as List<dynamic>? ?? [];
-          if (list.isNotEmpty) {
-            return list
-                .map((e) =>
-                    PlaceResult.fromGoogleJson(e as Map<String, dynamic>))
-                .where((p) => p.latitude != 0.0 && p.longitude != 0.0)
-                .toList();
-          }
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) debugPrint('⚠️ Google Places Legacy Error: $e');
-    }
-    return [];
-  }
-
-  /// 4. Google Places API (Web Autocomplete + Place Details - Web based HTTP)
-  static Future<List<PlaceResult>> _searchGooglePlacesWebAutocomplete({
-    required String query,
-    double? latitude,
-    double? longitude,
-    int radius = 12000,
-  }) async {
-    try {
-      String url =
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${Uri.encodeComponent(query)}&components=country:id&language=id&key=$apiKey';
-
-      if (latitude != null && longitude != null) {
-        url += '&location=$latitude,$longitude&radius=$radius';
-      }
-
-      final response = await _dio.get(url);
-
-      if (response.statusCode == 200 && response.data != null) {
-        final Map<String, dynamic> data = response.data is Map<String, dynamic>
-            ? response.data as Map<String, dynamic>
-            : jsonDecode(response.data.toString());
-
-        final status = data['status']?.toString();
-        if (status == 'OK') {
-          final predictions = data['predictions'] as List<dynamic>? ?? [];
-          if (predictions.isEmpty) return [];
-
-          final detailFutures = predictions.take(10).map((pred) async {
-            final pId = pred['place_id']?.toString();
-            if (pId == null || pId.isEmpty) return null;
-
-            try {
-              final detailUrl =
-                  'https://maps.googleapis.com/maps/api/place/details/json?place_id=$pId&fields=place_id,name,formatted_address,geometry,rating,user_ratings_total,types,formatted_phone_number,website,photos&language=id&key=$apiKey';
-
-              final detailRes = await _dio.get(detailUrl);
-
-              if (detailRes.statusCode == 200 && detailRes.data != null) {
-                final Map<String, dynamic> detailData =
-                    detailRes.data is Map<String, dynamic>
-                        ? detailRes.data as Map<String, dynamic>
-                        : jsonDecode(detailRes.data.toString());
-
-                if (detailData['status'] == 'OK' &&
-                    detailData['result'] != null) {
-                  return PlaceResult.fromGoogleJson(
-                    detailData['result'] as Map<String, dynamic>,
-                  );
-                }
-              }
-            } catch (_) {}
-            return null;
-          });
-
-          final detailsList = await Future.wait(detailFutures);
-          return detailsList
-              .whereType<PlaceResult>()
-              .where((p) => p.latitude != 0.0 && p.longitude != 0.0)
-              .toList();
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) debugPrint('⚠️ Google Places Web Autocomplete Error: $e');
     }
     return [];
   }
