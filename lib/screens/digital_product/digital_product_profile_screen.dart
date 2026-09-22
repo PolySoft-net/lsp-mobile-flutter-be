@@ -3,8 +3,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/auth_models.dart';
 import '../../models/digital_product_models.dart';
+import '../../services/auth/auth_repository.dart';
 import '../../services/auth/token_storage.dart';
 import '../../services/digital_product_service.dart';
+import '../../utils/url_helper.dart';
 import '../../widgets/common/notification_panel.dart';
 import '../../widgets/digital_product/fade_page_route.dart';
 import '../profile/tiket_bantuan_screen.dart';
@@ -31,13 +33,16 @@ class _DigitalProductProfileScreenState
   @override
   void initState() {
     super.initState();
+    _user = AuthRepository.currentUserInstance;
     _load();
   }
 
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-    });
+    final cachedUser = AuthRepository.currentUserInstance;
+    if (cachedUser != null && mounted) {
+      setState(() => _user = cachedUser);
+    }
+
     try {
       final profile = await DigitalProductService.getProfile();
       if (mounted) setState(() => _profile = profile);
@@ -45,7 +50,7 @@ class _DigitalProductProfileScreenState
 
     try {
       final user = await TokenStorage.instance.getUserProfile();
-      if (mounted) setState(() => _user = user);
+      if (mounted && user != null) setState(() => _user = user);
     } catch (_) {}
 
     if (mounted) {
@@ -76,11 +81,13 @@ class _DigitalProductProfileScreenState
             ? _user!.email!
             : 'Jendelawebsite@gmial.com');
     final rawPhoto = seller.profilePhoto.trim().isNotEmpty
-        ? seller.profilePhoto
-        : (_user?.fotoProfilUrl ?? _user?.fotoProfil ?? '');
-    final photoUrl = rawPhoto.isNotEmpty
-        ? DigitalProductService.absoluteUrl(rawPhoto)
-        : '';
+        ? seller.profilePhoto.trim()
+        : (_user?.fotoProfilUrl?.trim().isNotEmpty == true
+            ? _user!.fotoProfilUrl!.trim()
+            : (_user?.fotoProfil?.trim().isNotEmpty == true
+                ? _user!.fotoProfil!.trim()
+                : ''));
+    final photoUrl = rawPhoto.isNotEmpty ? UrlHelper.resolveUrl(rawPhoto) : '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -186,14 +193,34 @@ class _DigitalProductProfileScreenState
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: const Color(0xFF94A3B8),
-            backgroundImage:
-                photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-            child: photoUrl.isEmpty
-                ? const Icon(LucideIcons.user, color: Colors.white, size: 34)
-                : null,
+          ClipOval(
+            child: photoUrl.isNotEmpty
+                ? Image.network(
+                    photoUrl,
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 72,
+                      height: 72,
+                      color: const Color(0xFF94A3B8),
+                      child: const Icon(
+                        LucideIcons.user,
+                        color: Colors.white,
+                        size: 34,
+                      ),
+                    ),
+                  )
+                : Container(
+                    width: 72,
+                    height: 72,
+                    color: const Color(0xFF94A3B8),
+                    child: const Icon(
+                      LucideIcons.user,
+                      color: Colors.white,
+                      size: 34,
+                    ),
+                  ),
           ),
           const SizedBox(width: 16),
           Expanded(
