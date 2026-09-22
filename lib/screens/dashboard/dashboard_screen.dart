@@ -32,6 +32,7 @@ import '../sertifikat/validasi_sertifikat_screen.dart';
 import 'berita_screen.dart';
 import '../ai/asesor_ai_screen.dart';
 import '../digital_product/digital_product_screen.dart';
+
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToJadwal;
   final Function(int tabIndex)? onNavigateToTab;
@@ -218,7 +219,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Builder(
                               builder: (context) {
                                 final rawPhoto = user.fotoProfilUrl;
-                                final photoUrl = (rawPhoto != null && rawPhoto.isNotEmpty)
+                                final photoUrl =
+                                    (rawPhoto != null && rawPhoto.isNotEmpty)
                                     ? UrlHelper.resolveUrl(rawPhoto)
                                     : null;
                                 return GestureDetector(
@@ -239,13 +241,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.6),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.6,
+                                        ),
                                         width: 2,
                                       ),
                                       color: Colors.white,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.08),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.08,
+                                          ),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         ),
@@ -258,11 +264,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               width: 48,
                                               height: 48,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                                Icons.person_rounded,
-                                                size: 32,
-                                                color: Color(0xFFCBD5E1),
-                                              ),
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => const Icon(
+                                                    Icons.person_rounded,
+                                                    size: 32,
+                                                    color: Color(0xFFCBD5E1),
+                                                  ),
                                             )
                                           : const Icon(
                                               Icons.person_rounded,
@@ -295,8 +306,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     user.name.isNotEmpty
                                         ? user.name
                                         : (isAsesor
-                                            ? 'Muhammad Hanafi'
-                                            : 'Asesi'),
+                                              ? 'Muhammad Hanafi'
+                                              : 'Asesi'),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 20,
@@ -508,7 +519,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF2563EB),
                                     borderRadius: BorderRadius.circular(8),
@@ -534,13 +548,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Rangkuman Utama Card Container (Imported widget)
                 Padding(
                   padding: EdgeInsets.only(
-                    top: statusBarHeight + (isGuest ? 142 : (isAsesor ? 110 : 90)),
+                    top:
+                        statusBarHeight +
+                        (isGuest ? 142 : (isAsesor ? 110 : 90)),
                     left: 16,
                     right: 16,
                     bottom: 12,
                   ),
-                child: isGuest
-                  ? const PublicSertifikatCard()
+                  child: isGuest
+                      ? const PublicSertifikatCard()
                       : (isAsesi
                             ? RangkumanAsesi(
                                 data: _asesiSummaryData,
@@ -579,7 +595,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     label: 'Skema',
                     color: const Color(0xFF0EA5E9),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const SkemaSertifikasiScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const SkemaSertifikasiScreen(),
+                      ),
                     ),
                   ),
                   MenuBulatItem(
@@ -587,7 +605,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     label: 'Validasi',
                     color: const Color(0xFF16A34A),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const ValidasiSertifikatScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const ValidasiSertifikatScreen(),
+                      ),
                     ),
                   ),
                   MenuBulatItem(
@@ -673,10 +693,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
 
             // 1.35. Form Status Pencari Kerja & Lokasi Domisili (Peta Talenta) — Khusus Asesi
-            if (isAsesi)
-              AsesiTalentaStatusCard(
-                onUpdated: _loadAllData,
-              ),
+            if (isAsesi) AsesiTalentaStatusCard(onUpdated: _loadAllData),
 
             // 1.4. Linimasa Uji Terakhir Section — Khusus untuk Asesi
             if (isAsesi)
@@ -699,7 +716,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: MulaiSertifikasiCard(),
               ),
 
-            // 1.6. Berita Terkini Section (2 boxes horizontally under Mulai Skema Sertifikasi) - Tampil di semua role kecuali asesor
+            // 1.6. Berita Terkini Section (2 boxes horizontally under Mulai Skema Sertifikasi) - Tampil di Asesi, Guest, Admin
             if (!isAsesor)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
@@ -710,8 +727,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
 
             // Ringkasan Section (like Asesor) - Only for Admin
-            if (isAdmin)
-              _buildAdminRingkasanSection(),
+            if (isAdmin) _buildAdminRingkasanSection(),
 
             // 2. Tren Asesmen Bulanan Section — hanya untuk Admin/pengguna selain Asesi & Asesor
             if (!isAsesor && !isGuest && !isAsesi)
@@ -744,6 +760,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               )
             else
               const SizedBox(height: 32),
+
+            // 4. Berita Terkini Section Khusus Asesor (Di bawah Tanya Jawab / Bantuan & Informasi)
+            if (isAsesor)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
+                child: BeritaTerkiniSection(
+                  data: _beritaData,
+                  isLoading: _isLoading,
+                ),
+              ),
           ],
         ),
       ),
@@ -753,17 +779,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildAdminRingkasanSection() {
     final approveJadwalCount = _summaryData?.jadwalBelumTerkonfirmasi ?? 10;
     final laporanCount = _summaryData?.suratTugasMenungguPengiriman ?? 4;
-    final pendaftaranCount = _summaryData?.pendaftaranAsesiBaru != 0 && _summaryData?.pendaftaranAsesiBaru != null
+    final pendaftaranCount =
+        _summaryData?.pendaftaranAsesiBaru != 0 &&
+            _summaryData?.pendaftaranAsesiBaru != null
         ? _summaryData!.pendaftaranAsesiBaru
         : 12;
-    final honorCount = _summaryData?.honorAsesorBelumDibayar != 0 && _summaryData?.honorAsesorBelumDibayar != null
+    final honorCount =
+        _summaryData?.honorAsesorBelumDibayar != 0 &&
+            _summaryData?.honorAsesorBelumDibayar != null
         ? _summaryData!.honorAsesorBelumDibayar
         : 4;
-    final blankoCount = (_summaryData?.pengajuanBlankoBelumSelesai != null && _summaryData!.pengajuanBlankoBelumSelesai > 0)
+    final blankoCount =
+        (_summaryData?.pengajuanBlankoBelumSelesai != null &&
+            _summaryData!.pengajuanBlankoBelumSelesai > 0)
         ? _summaryData!.pengajuanBlankoBelumSelesai
-        : ((_summaryData?.pengajuanBlankoPending != null && _summaryData!.pengajuanBlankoPending > 0)
-            ? _summaryData!.pengajuanBlankoPending
-            : 35);
+        : ((_summaryData?.pengajuanBlankoPending != null &&
+                  _summaryData!.pengajuanBlankoPending > 0)
+              ? _summaryData!.pengajuanBlankoPending
+              : 35);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -863,10 +896,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 1.0,
-          ),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -877,11 +907,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: const Color(0xFFE5F1FC),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF3B82F6),
-                size: 24,
-              ),
+              child: Icon(icon, color: const Color(0xFF3B82F6), size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -924,9 +950,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       offset: const Offset(0, 48),
       elevation: 4,
       color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onSelected: (value) {
         if (value == 'profil') {
           Navigator.push(
@@ -1044,10 +1068,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: const Color(0xFFE2E8F0),
-                  width: 0.8,
-                ),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
               ),
               child: Text(
                 badgeText,
@@ -1102,7 +1123,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(20),
@@ -1142,10 +1166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   child: const Text(
                     'Mengerti',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
