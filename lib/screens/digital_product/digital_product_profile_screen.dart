@@ -1,9 +1,13 @@
+import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../models/auth_models.dart';
 import '../../models/digital_product_models.dart';
+import '../../services/auth/token_storage.dart';
 import '../../services/digital_product_service.dart';
-import '../../widgets/digital_product/digital_product_bottom_bar.dart';
+import '../../widgets/common/notification_panel.dart';
 import '../../widgets/digital_product/fade_page_route.dart';
+import '../profile/tiket_bantuan_screen.dart';
 import 'digital_product_favorit_screen.dart';
 import 'digital_product_pengaturan_profil_screen.dart';
 import 'digital_product_produk_jasa_screen.dart';
@@ -21,9 +25,8 @@ class DigitalProductProfileScreen extends StatefulWidget {
 class _DigitalProductProfileScreenState
     extends State<DigitalProductProfileScreen> {
   DigitalProductProfile? _profile;
+  AuthUser? _user;
   bool _loading = true;
-  String _error = '';
-  static const int _currentBottomNavIndex = 4;
 
   @override
   void initState() {
@@ -34,22 +37,26 @@ class _DigitalProductProfileScreenState
   Future<void> _load() async {
     setState(() {
       _loading = true;
-      _error = '';
     });
     try {
       final profile = await DigitalProductService.getProfile();
       if (mounted) setState(() => _profile = profile);
-    } catch (_) {
-      if (mounted) setState(() => _error = 'Profil belum dapat dimuat');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+    } catch (_) {}
+
+    try {
+      final user = await TokenStorage.instance.getUserProfile();
+      if (mounted) setState(() => _user = user);
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() => _loading = false);
     }
   }
 
-  void _onBottomNavTap(int index) {
-    if (index == 4) return;
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context, index);
+  void _handleKeluar() {
+    // Balik ke Aplikasi LSP (bukan keluar dari akun)
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } else {
       widget.onBackToHome?.call();
     }
@@ -57,169 +64,167 @@ class _DigitalProductProfileScreenState
 
   @override
   Widget build(BuildContext context) {
+    final seller = _profile?.seller ?? DigitalProductSeller.empty;
+    final name = seller.name.trim().isNotEmpty
+        ? seller.name
+        : (_user?.name.trim().isNotEmpty == true
+            ? _user!.name
+            : 'Jendela_Website');
+    final email = seller.email.trim().isNotEmpty
+        ? seller.email
+        : (_user?.email?.trim().isNotEmpty == true
+            ? _user!.email!
+            : 'Jendelawebsite@gmial.com');
+    final rawPhoto = seller.profilePhoto.trim().isNotEmpty
+        ? seller.profilePhoto
+        : (_user?.fotoProfilUrl ?? _user?.fotoProfil ?? '');
+    final photoUrl = rawPhoto.isNotEmpty
+        ? DigitalProductService.absoluteUrl(rawPhoto)
+        : '';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        bottom: false,
         child: Column(
           children: [
             _buildAppBar(),
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
-                  : _error.isNotEmpty
-                  ? Center(
-                      child: TextButton(
-                        onPressed: _load,
-                        child: Text('$_error. Coba lagi'),
-                      ),
-                    )
                   : RefreshIndicator(
                       onRefresh: _load,
-                      child: ListView(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        children: [
-                          _buildProfileCard(),
-                          const SizedBox(height: 12),
-                          _buildCompetencyCard(),
-                          const SizedBox(height: 12),
-                          _buildMenuCard(),
-                        ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildProfileCard(name, email, photoUrl),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Informasi',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildMenuCard(),
+                            const SizedBox(height: 24),
+                            _buildKeluarButton(),
+                          ],
+                        ),
                       ),
                     ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: DigitalProductBottomBar(
-        selectedIndex: _currentBottomNavIndex,
-        onTap: _onBottomNavTap,
-      ),
     );
   }
 
   Widget _buildAppBar() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
+          InkWell(
+            onTap: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
               } else {
                 widget.onBackToHome?.call();
               }
             },
-            icon: const Icon(Icons.chevron_left_rounded),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    LucideIcons.chevron_left,
+                    size: 22,
+                    color: Color(0xFF0F172A),
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Profil',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const Text(
-            'Profil',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(
+              LucideIcons.sliders_horizontal,
+              size: 22,
+              color: Color(0xFF0F172A),
+            ),
+            splashRadius: 20,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProfileCard() {
-    final seller = _profile?.seller ?? DigitalProductSeller.empty;
-    final photo = DigitalProductService.absoluteUrl(seller.profilePhoto);
+  Widget _buildProfileCard(String name, String email, String photoUrl) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
-        color: const Color(0xFFE0EDFB),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFFDFEDFA),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 34,
+            radius: 36,
             backgroundColor: const Color(0xFF94A3B8),
-            backgroundImage: photo.isEmpty ? null : NetworkImage(photo),
-            child: photo.isEmpty
-                ? const Icon(Icons.person, color: Colors.white, size: 34)
+            backgroundImage:
+                photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+            child: photoUrl.isEmpty
+                ? const Icon(LucideIcons.user, color: Colors.white, size: 34)
                 : null,
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  seller.name.isEmpty ? 'Asesi' : seller.name,
+                  name,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
-                  seller.email,
+                  email,
                   style: const TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 13,
                     color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w400,
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${_profile?.products.length ?? 0} Produk/Jasa',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompetencyCard() {
-    final certificates =
-        _profile?.certificates ?? const <DigitalProductCertificate>[];
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Sertifikasi Kompetensi',
-            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          if (certificates.isEmpty)
-            const Text(
-              'Belum ada sertifikasi kompetensi',
-              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-            )
-          else
-            ...certificates.map(
-              (certificate) => ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.verified_outlined, size: 20),
-                title: Text(
-                  certificate.schemeName,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                subtitle: Text(
-                  [
-                    certificate.schemeCode,
-                    certificate.competencyStatus,
-                  ].where((value) => value.isNotEmpty).join(' · '),
-                  style: const TextStyle(fontSize: 10.5),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -230,14 +235,18 @@ class _DigitalProductProfileScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
       ),
       child: Column(
         children: [
           _menuItem(
-            Icons.account_circle_outlined,
-            'Pengaturan Profil',
-            () async {
+            icon: const Icon(
+              LucideIcons.circle_user_round,
+              size: 22,
+              color: Color(0xFF0F172A),
+            ),
+            title: 'Pengaturan Profil',
+            onTap: () async {
               await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DigitalProductPengaturanProfilScreen(),
@@ -246,33 +255,166 @@ class _DigitalProductProfileScreenState
               if (mounted) _load();
             },
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
           _menuItem(
-            Icons.bookmark_border_rounded,
-            'Koleksi',
-            () => Navigator.of(
-              context,
-            ).push(FadePageRoute(page: const DigitalProductFavoritScreen())),
+            icon: const Icon(
+              LucideIcons.bell,
+              size: 22,
+              color: Color(0xFF0F172A),
+            ),
+            title: 'Notifikasi',
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const NotificationPanel(),
+              );
+            },
           ),
-          const Divider(height: 1),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
           _menuItem(
-            Icons.group_work_outlined,
-            'Produk/Jasa',
-            () => Navigator.of(
-              context,
-            ).push(FadePageRoute(page: const DigitalProductProdukJasaScreen())),
+            icon: const Icon(
+              Icons.bookmark,
+              size: 22,
+              color: Color(0xFF0F172A),
+            ),
+            title: 'Koleksi',
+            onTap: () => Navigator.of(context).push(
+              FadePageRoute(page: const DigitalProductFavoritScreen()),
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+          _menuItem(
+            icon: _buildProdukJasaIcon(),
+            title: 'Produk/Jasa',
+            onTap: () => Navigator.of(context).push(
+              FadePageRoute(page: const DigitalProductProdukJasaScreen()),
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+          _menuItem(
+            icon: const Icon(
+              LucideIcons.settings,
+              size: 22,
+              color: Color(0xFF0F172A),
+            ),
+            title: 'Bantuan',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const TiketBantuanScreen(),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _menuItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, size: 20),
-      title: Text(title, style: const TextStyle(fontSize: 13)),
-      trailing: const Icon(Icons.chevron_right_rounded),
+  Widget _buildProdukJasaIcon() {
+    return SizedBox(
+      width: 22,
+      height: 22,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: const [
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Icon(
+              Icons.person,
+              size: 20,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          Positioned(
+            right: -2,
+            bottom: 0,
+            child: Icon(
+              Icons.shopping_bag,
+              size: 11,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuItem({
+    required Widget icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Center(child: icon),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
+            const Icon(
+              LucideIcons.chevron_right,
+              size: 18,
+              color: Color(0xFF0F172A),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKeluarButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: _handleKeluar,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFD9D9D9),
+          foregroundColor: const Color(0xFF0F172A),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          padding: EdgeInsets.zero,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(
+              LucideIcons.log_out,
+              size: 20,
+              color: Color(0xFF0F172A),
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Keluar',
+              style: TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
