@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../services/asesor/asesor_service.dart';
 
@@ -99,7 +100,12 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              padding: const EdgeInsets.only(top: 14, left: 20, right: 20, bottom: 24),
+              padding: const EdgeInsets.only(
+                top: 14,
+                left: 20,
+                right: 20,
+                bottom: 24,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -115,7 +121,7 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Header Title
                   const Text(
                     'Upload Dokumentasi',
@@ -126,7 +132,7 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                     ),
                   ),
                   const Divider(height: 24, color: Color(0xFFE2E8F0)),
-                  
+
                   // Info/Description Row
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,8 +202,12 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: tempFileName != null ? FontWeight.bold : FontWeight.normal,
-                              color: tempFileName != null ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+                              fontWeight: tempFileName != null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: tempFileName != null
+                                  ? const Color(0xFF0F172A)
+                                  : const Color(0xFF64748B),
                             ),
                           ),
                           if (tempFileName != null) ...[
@@ -214,13 +224,26 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                           ElevatedButton(
                             onPressed: () async {
                               try {
+                                final messenger = ScaffoldMessenger.of(context);
                                 final files = await FilePicker.pickFiles(
                                   type: FileType.custom,
-                                  allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+                                  allowedExtensions: [
+                                    'pdf',
+                                    'jpg',
+                                    'jpeg',
+                                    'png',
+                                  ],
                                 );
                                 if (files.isNotEmpty) {
                                   final file = files.first;
-                                  if (file.path == null || file.path!.isEmpty) {
+                                  final valid =
+                                      await UploadFileValidator.isValid(
+                                        messenger,
+                                        file,
+                                        UploadFileValidator
+                                            .ticketAttachmentMaxMB,
+                                      );
+                                  if (!valid) {
                                     return;
                                   }
                                   final fileLength = (await file.length()) ?? 0;
@@ -242,13 +265,18 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                               backgroundColor: const Color(0xFF54A0EB),
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                             child: Text(
-                              tempFileName == null ? 'Pilih File' : 'Ganti File',
+                              tempFileName == null
+                                  ? 'Pilih File'
+                                  : 'Ganti File',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -390,7 +418,9 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
           _judulController.text.trim().isEmpty ||
           _pesanController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Harap isi Nama Lengkap, Judul, dan Pesan!')),
+          const SnackBar(
+            content: Text('Harap isi Nama Lengkap, Judul, dan Pesan!'),
+          ),
         );
         return;
       }
@@ -398,9 +428,7 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       try {
@@ -424,9 +452,9 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
       } catch (e) {
         if (mounted) {
           Navigator.pop(context); // Dismiss loading dialog
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Terjadi kesalahan: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
         }
       }
     }
@@ -444,7 +472,10 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
           const CustomAppBar(title: 'Buat Tiket'),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 16.0,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -466,14 +497,21 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                       decoration: InputDecoration(
                         hintText: 'Nama lengkap',
                         hintStyle: const TextStyle(color: Color(0xFFCBD5E1)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                       ),
                     ),
@@ -504,14 +542,21 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                       decoration: InputDecoration(
                         hintText: 'Judul laporan',
                         hintStyle: const TextStyle(color: Color(0xFFCBD5E1)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                       ),
                     ),
@@ -543,14 +588,21 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                       decoration: InputDecoration(
                         hintText: 'Pesan yang ingin disampaikan',
                         hintStyle: const TextStyle(color: Color(0xFFCBD5E1)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2E8F0),
+                          ),
                         ),
                       ),
                     ),
@@ -619,7 +671,10 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.cancel, color: Color(0xFF166534)),
+                              icon: const Icon(
+                                Icons.cancel,
+                                color: Color(0xFF166534),
+                              ),
                               onPressed: () {
                                 setState(() {
                                   _selectedFileName = null;
@@ -638,7 +693,10 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF8FAFC),
                             borderRadius: BorderRadius.circular(8),
@@ -649,7 +707,10 @@ class _BuatTiketScreenState extends State<BuatTiketScreen> {
                             children: [
                               Text(
                                 'Pilih Dokumen / Foto Bukti',
-                                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                                style: TextStyle(
+                                  color: Color(0xFF94A3B8),
+                                  fontSize: 14,
+                                ),
                               ),
                               Icon(
                                 Icons.cloud_upload_outlined,

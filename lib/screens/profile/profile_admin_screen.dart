@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import '../../services/auth/auth_repository.dart';
@@ -29,24 +30,31 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
   final List<Map<String, dynamic>> _carouselItems = const [
     {
       'title1': 'Visi LSP Teknologi Digital',
-      'desc1': 'Menjadi lembaga sertifikasi kompetensi terkemuka dan terpercaya.',
+      'desc1':
+          'Menjadi lembaga sertifikasi kompetensi terkemuka dan terpercaya.',
       'title2': 'Misi LSP Teknologi Digital',
-      'desc2': '1. Menyelenggarakan uji kompetensi secara terbuka dan profesional.\n2. Meningkatkan SDM di Indonesia.',
-      'imageUrl': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=400&auto=format&fit=crop',
+      'desc2':
+          '1. Menyelenggarakan uji kompetensi secara terbuka dan profesional.\n2. Meningkatkan SDM di Indonesia.',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=400&auto=format&fit=crop',
     },
     {
       'title1': 'Motto LSP Teknologi Digital',
       'desc1': 'Profesional, Akurat, Terpercaya dan Berintegritas Tinggi.',
       'title2': 'Sasaran Mutu',
-      'desc2': '1. Menghasilkan tenaga kerja yang kompeten.\n2. Menjaga kualitas pelaksanaan sertifikasi profesi.',
-      'imageUrl': 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=400&auto=format&fit=crop',
+      'desc2':
+          '1. Menghasilkan tenaga kerja yang kompeten.\n2. Menjaga kualitas pelaksanaan sertifikasi profesi.',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=400&auto=format&fit=crop',
     },
     {
       'title1': 'Kebijakan Mutu LSP',
       'desc1': 'Mengutamakan kepuasan pelanggan dengan pelayanan yang cepat.',
       'title2': 'Komitmen LSP',
-      'desc2': '1. Mengembangkan standar kompetensi kerja terkini.\n2. Mendorong pengakuan kompetensi nasional.',
-      'imageUrl': 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=400&auto=format&fit=crop',
+      'desc2':
+          '1. Mengembangkan standar kompetensi kerja terkini.\n2. Mendorong pengakuan kompetensi nasional.',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=400&auto=format&fit=crop',
     },
   ];
 
@@ -88,24 +96,25 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                 MainNavigator(key: mainNavigatorKey),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              final slideAnimation = Tween<Offset>(
-                begin: const Offset(0.0, 0.08),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                ),
-              );
-              final fadeAnimation = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeIn,
-              );
-              return SlideTransition(
-                position: slideAnimation,
-                child: FadeTransition(opacity: fadeAnimation, child: child),
-              );
-            },
+                  final slideAnimation =
+                      Tween<Offset>(
+                        begin: const Offset(0.0, 0.08),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      );
+                  final fadeAnimation = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeIn,
+                  );
+                  return SlideTransition(
+                    position: slideAnimation,
+                    child: FadeTransition(opacity: fadeAnimation, child: child),
+                  );
+                },
             transitionDuration: const Duration(milliseconds: 350),
           ),
           (route) => false,
@@ -216,12 +225,21 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
 
   Future<void> _pickAndUploadPhoto() async {
     try {
-      final file = await FilePicker.pickFile(
-        type: FileType.image,
-      );
+      final messenger = ScaffoldMessenger.of(context);
+      final file = await FilePicker.pickFile(type: FileType.image);
       if (file != null) {
-        final filePath = file.path;
-        if (filePath == null) return;
+        final valid = await UploadFileValidator.isValid(
+          messenger,
+          file,
+          UploadFileValidator.profilePhotoMaxMB,
+        );
+        if (!mounted) {
+          return;
+        }
+        if (!valid) {
+          return;
+        }
+        final filePath = file.path!;
         setState(() => _isUploadingPhoto = true);
         final uploaded = await AuthRepository.uploadProfilePhoto(filePath);
         if (!mounted) return;
@@ -258,10 +276,7 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
   }
 
   void _showPhotoPickerDemo() {
-    showProfilePhotoPicker(
-      context: context,
-      onPickPhoto: _pickAndUploadPhoto,
-    );
+    showProfilePhotoPicker(context: context, onPickPhoto: _pickAndUploadPhoto);
   }
 
   Widget _buildCertificateIllustration() {
@@ -330,7 +345,9 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                               Icons.logout_rounded,
                               color: Colors.white,
                             ),
-                            onPressed: _isLoggingOut ? null : _showLogoutConfirmDialog,
+                            onPressed: _isLoggingOut
+                                ? null
+                                : _showLogoutConfirmDialog,
                           ),
                           IconButton(
                             icon: const Icon(
@@ -359,7 +376,8 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                         builder: (context) {
                           final user = AuthRepository.currentUserInstance;
                           final rawPhoto = user?.fotoProfilUrl;
-                          final photoUrl = (rawPhoto != null && rawPhoto.isNotEmpty)
+                          final photoUrl =
+                              (rawPhoto != null && rawPhoto.isNotEmpty)
                               ? UrlHelper.resolveUrl(rawPhoto)
                               : null;
                           return Stack(
@@ -373,12 +391,16 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                                     color: Colors.white,
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.6),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.6,
+                                      ),
                                       width: 2,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.08),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.08,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       ),
@@ -392,31 +414,39 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                                               height: 28,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2.5,
-                                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5B9FD8)),
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Color(0xFF5B9FD8)),
                                               ),
                                             ),
                                           )
-                                        : (photoUrl != null && photoUrl.isNotEmpty)
-                                            ? Image.network(
-                                                photoUrl,
-                                                width: 76,
-                                                height: 76,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) => const Center(
-                                                  child: Icon(
-                                                    Icons.person_rounded,
-                                                    size: 48,
-                                                    color: Color(0xFFCBD5E1),
-                                                  ),
-                                                ),
-                                              )
-                                            : const Center(
-                                                child: Icon(
-                                                  Icons.person_rounded,
-                                                  size: 48,
-                                                  color: Color(0xFFCBD5E1),
-                                                ),
-                                              ),
+                                        : (photoUrl != null &&
+                                              photoUrl.isNotEmpty)
+                                        ? Image.network(
+                                            photoUrl,
+                                            width: 76,
+                                            height: 76,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    const Center(
+                                                      child: Icon(
+                                                        Icons.person_rounded,
+                                                        size: 48,
+                                                        color: Color(
+                                                          0xFFCBD5E1,
+                                                        ),
+                                                      ),
+                                                    ),
+                                          )
+                                        : const Center(
+                                            child: Icon(
+                                              Icons.person_rounded,
+                                              size: 48,
+                                              color: Color(0xFFCBD5E1),
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ),
@@ -508,7 +538,8 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const StrukturOrganisasiScreen(),
+                              builder: (context) =>
+                                  const StrukturOrganisasiScreen(),
                             ),
                           ),
                         ),
@@ -521,7 +552,8 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TugasTanggungJawabScreen(),
+                              builder: (context) =>
+                                  const TugasTanggungJawabScreen(),
                             ),
                           ),
                         ),
@@ -610,7 +642,8 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const TentangLspScreen(),
+                                  builder: (context) =>
+                                      const TentangLspScreen(),
                                 ),
                               );
                             },
@@ -677,4 +710,3 @@ class _ProfileAdminScreenState extends State<ProfileAdminScreen> {
     );
   }
 }
-

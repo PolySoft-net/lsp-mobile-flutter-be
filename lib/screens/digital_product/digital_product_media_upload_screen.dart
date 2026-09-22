@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../services/digital_product_service.dart';
+import '../../utils/upload_file_validator.dart';
 
 class DigitalProductMediaUploadScreen extends StatefulWidget {
   final String productType;
@@ -37,14 +38,24 @@ class _DigitalProductMediaUploadScreenState
   bool _publishing = false;
 
   Future<void> _pickFiles({required bool portfolio}) async {
+    final messenger = ScaffoldMessenger.of(context);
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: portfolio
           ? const ['jpg', 'jpeg', 'png', 'webp', 'pdf']
           : const ['jpg', 'jpeg', 'png', 'webp'],
     );
-    if (!mounted || result.isEmpty) return;
-    final files = result.where((file) => file.path != null).toList();
+    if (!mounted || result.isEmpty) {
+      return;
+    }
+    final files = await UploadFileValidator.filterValid(
+      messenger,
+      result.where((file) => file.path != null),
+      UploadFileValidator.digitalProductMaxMB,
+    );
+    if (!mounted || files.isEmpty) {
+      return;
+    }
     setState(() {
       if (portfolio) {
         _portfolioFiles = [..._portfolioFiles, ...files];

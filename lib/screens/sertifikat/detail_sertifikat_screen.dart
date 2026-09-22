@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/sertifikat_models.dart';
 import '../../widgets/common/custom_app_bar.dart';
@@ -26,13 +27,22 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
 
   Future<void> _pickFiles() async {
     try {
+      final messenger = ScaffoldMessenger.of(context);
       final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'png'],
       );
 
       if (files.isNotEmpty) {
-        for (var file in files) {
+        final validFiles = await UploadFileValidator.filterValid(
+          messenger,
+          files,
+          UploadFileValidator.certificateMaxMB,
+        );
+        if (!mounted) {
+          return;
+        }
+        for (var file in validFiles) {
           if (!_uploadedFiles.any((f) => f['name'] == file.name)) {
             final fileLength = (await file.length()) ?? 0;
             final double kb = fileLength / 1024;
@@ -66,7 +76,9 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
   }
 
   Future<void> _uploadFiles() async {
-    final pendingFiles = _uploadedFiles.where((f) => f['status'] == 'pending').toList();
+    final pendingFiles = _uploadedFiles
+        .where((f) => f['status'] == 'pending')
+        .toList();
     if (pendingFiles.isEmpty) return;
 
     setState(() {
@@ -127,7 +139,9 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
               ),
               backgroundColor: const Color(0xFF10B981),
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -192,37 +206,81 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                   _buildSectionHeader('Profil Sertifikasi'),
                   const SizedBox(height: 8),
                   _buildInfoCard([
-                    _buildInfoRow('Nama Pemegang Sertifikat', widget.item.pemegang, Icons.person_outline_rounded),
+                    _buildInfoRow(
+                      'Nama Pemegang Sertifikat',
+                      widget.item.pemegang,
+                      Icons.person_outline_rounded,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('Nama Skema', widget.item.skema, Icons.assignment_outlined),
+                    _buildInfoRow(
+                      'Nama Skema',
+                      widget.item.skema,
+                      Icons.assignment_outlined,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('Tempat Uji (TUK)', widget.item.tempatUji, Icons.business_outlined),
+                    _buildInfoRow(
+                      'Tempat Uji (TUK)',
+                      widget.item.tempatUji,
+                      Icons.business_outlined,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('Asesor', widget.item.namaAsesor, Icons.record_voice_over_outlined),
+                    _buildInfoRow(
+                      'Asesor',
+                      widget.item.namaAsesor,
+                      Icons.record_voice_over_outlined,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('Nama Jadwal Asesmen', widget.item.namaJadwal, Icons.event_note_outlined),
+                    _buildInfoRow(
+                      'Nama Jadwal Asesmen',
+                      widget.item.namaJadwal,
+                      Icons.event_note_outlined,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('Tanggal Asesmen', widget.item.tanggalAsesmen, Icons.event_available_outlined),
+                    _buildInfoRow(
+                      'Tanggal Asesmen',
+                      widget.item.tanggalAsesmen,
+                      Icons.event_available_outlined,
+                    ),
                   ]),
                   const SizedBox(height: 20),
 
                   _buildSectionHeader('Kodifikasi'),
                   const SizedBox(height: 8),
                   _buildInfoCard([
-                    _buildInfoRow('No. Registrasi', widget.item.nomorRegistrasi, Icons.badge_outlined),
+                    _buildInfoRow(
+                      'No. Registrasi',
+                      widget.item.nomorRegistrasi,
+                      Icons.badge_outlined,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('No. Sertifikat', widget.item.nomorSertifikat, Icons.workspace_premium_outlined),
+                    _buildInfoRow(
+                      'No. Sertifikat',
+                      widget.item.nomorSertifikat,
+                      Icons.workspace_premium_outlined,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('No. Blanko', widget.item.nomorBlanko, Icons.description_outlined),
+                    _buildInfoRow(
+                      'No. Blanko',
+                      widget.item.nomorBlanko,
+                      Icons.description_outlined,
+                    ),
                   ]),
                   const SizedBox(height: 20),
 
                   _buildSectionHeader('Masa Berlaku'),
                   const SizedBox(height: 8),
                   _buildInfoCard([
-                    _buildInfoRow('Tanggal Terbit', widget.item.tanggalTerbit, Icons.calendar_today_outlined),
+                    _buildInfoRow(
+                      'Tanggal Terbit',
+                      widget.item.tanggalTerbit,
+                      Icons.calendar_today_outlined,
+                    ),
                     _buildInfoDivider(),
-                    _buildInfoRow('Berlaku Sampai', widget.item.tanggalBerlaku, Icons.event_busy_outlined),
+                    _buildInfoRow(
+                      'Berlaku Sampai',
+                      widget.item.tanggalBerlaku,
+                      Icons.event_busy_outlined,
+                    ),
                   ]),
                   const SizedBox(height: 24),
 
@@ -289,7 +347,9 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                 Icon(
                   isActive
                       ? Icons.check_circle_outline_rounded
-                      : (isPending ? Icons.warning_amber_rounded : Icons.cancel_outlined),
+                      : (isPending
+                            ? Icons.warning_amber_rounded
+                            : Icons.cancel_outlined),
                   color: bannerColor,
                   size: 18,
                 ),
@@ -318,10 +378,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
           const SizedBox(height: 6),
           Text(
             'Nama Skema: ${widget.item.skema}',
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF64748B),
-            ),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
           ),
         ],
       ),
@@ -348,9 +405,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 
@@ -522,10 +577,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Maksimal ukuran berkas 5MB',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -560,7 +612,9 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: isSuccess ? const Color(0xFF10B981).withAlpha(76) : const Color(0xFFE2E8F0),
+                      color: isSuccess
+                          ? const Color(0xFF10B981).withAlpha(76)
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   child: Row(
@@ -569,7 +623,10 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                         file['name'].toString().toLowerCase().endsWith('.pdf')
                             ? Icons.picture_as_pdf_rounded
                             : Icons.image_rounded,
-                        color: file['name'].toString().toLowerCase().endsWith('.pdf')
+                        color:
+                            file['name'].toString().toLowerCase().endsWith(
+                              '.pdf',
+                            )
                             ? const Color(0xFFEF4444)
                             : const Color(0xFF3B82F6),
                         size: 24,
@@ -623,7 +680,9 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                             color: Color(0xFFEF4444),
                             size: 20,
                           ),
-                          onPressed: _isUploading ? null : () => _removeFile(index),
+                          onPressed: _isUploading
+                              ? null
+                              : () => _removeFile(index),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -669,18 +728,25 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
               ),
             ),
 
-          if (_uploadedFiles.isNotEmpty && _uploadedFiles.every((f) => f['status'] == 'success'))
+          if (_uploadedFiles.isNotEmpty &&
+              _uploadedFiles.every((f) => f['status'] == 'success'))
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFECFDF5),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF10B981).withAlpha(76)),
+                border: Border.all(
+                  color: const Color(0xFF10B981).withAlpha(76),
+                ),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.check_circle_outline_rounded, color: Color(0xFF10B981), size: 18),
+                  Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: Color(0xFF10B981),
+                    size: 18,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -709,7 +775,9 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
           try {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Menghubungi server untuk unduh ${widget.item.skema}...'),
+                content: Text(
+                  'Menghubungi server untuk unduh ${widget.item.skema}...',
+                ),
                 behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 1),
               ),
@@ -719,7 +787,10 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
             if (url != null && url.isNotEmpty) {
               final uri = Uri.parse(url);
               try {
-                if (await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+                if (await launchUrl(
+                  uri,
+                  mode: LaunchMode.externalApplication,
+                )) {
                   return; // Success
                 }
                 if (await launchUrl(uri, mode: LaunchMode.platformDefault)) {
@@ -728,7 +799,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
               } catch (e) {
                 // Launch failed for both modes
               }
-              
+
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -766,10 +837,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
         icon: const Icon(Icons.download_rounded, size: 20),
         label: const Text(
           'Download Sertifikat',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF5B9FD8),

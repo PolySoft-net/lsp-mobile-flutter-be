@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -269,22 +270,28 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
 
   Future<void> _pickAndUploadPhoto() async {
     try {
-      final file = await FilePicker.pickFile(
-        type: FileType.image,
-      );
+      final messenger = ScaffoldMessenger.of(context);
+      final file = await FilePicker.pickFile(type: FileType.image);
       if (file != null) {
-        final filePath = file.path;
-        if (filePath == null) return;
+        final valid = await UploadFileValidator.isValid(
+          messenger,
+          file,
+          UploadFileValidator.profilePhotoMaxMB,
+        );
+        if (!mounted) {
+          return;
+        }
+        if (!valid) {
+          return;
+        }
+        final filePath = file.path!;
         setState(() => _isUploadingPhoto = true);
         final uploaded = await AuthRepository.uploadProfilePhoto(filePath);
         if (!mounted) return;
         if (uploaded != null && uploaded['foto_profil_url'] != null) {
           final photoUrl = uploaded['foto_profil_url'].toString();
           setState(() {
-            _profileData = {
-              ...?_profileData,
-              'foto_profil_url': photoUrl,
-            };
+            _profileData = {...?_profileData, 'foto_profil_url': photoUrl};
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -317,10 +324,7 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
   }
 
   void _showPhotoPickerDemo() {
-    showProfilePhotoPicker(
-      context: context,
-      onPickPhoto: _pickAndUploadPhoto,
-    );
+    showProfilePhotoPicker(context: context, onPickPhoto: _pickAndUploadPhoto);
   }
 
   @override
@@ -399,8 +403,11 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
 
                         Builder(
                           builder: (context) {
-                            final rawPhoto = _profileData?['foto_profil_url']?.toString() ?? user.fotoProfilUrl;
-                            final photoUrl = (rawPhoto != null && rawPhoto.isNotEmpty)
+                            final rawPhoto =
+                                _profileData?['foto_profil_url']?.toString() ??
+                                user.fotoProfilUrl;
+                            final photoUrl =
+                                (rawPhoto != null && rawPhoto.isNotEmpty)
                                 ? UrlHelper.resolveUrl(rawPhoto)
                                 : null;
                             return Stack(
@@ -414,7 +421,9 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
                                       color: Colors.white,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.6),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.6,
+                                        ),
                                         width: 3,
                                       ),
                                       boxShadow: [
@@ -435,31 +444,40 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
                                                 height: 32,
                                                 child: CircularProgressIndicator(
                                                   strokeWidth: 3,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5B9FD8)),
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Color(0xFF5B9FD8)),
                                                 ),
                                               ),
                                             )
-                                          : (photoUrl != null && photoUrl.isNotEmpty)
-                                              ? Image.network(
-                                                  photoUrl,
-                                                  width: 110,
-                                                  height: 110,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) => const Center(
+                                          : (photoUrl != null &&
+                                                photoUrl.isNotEmpty)
+                                          ? Image.network(
+                                              photoUrl,
+                                              width: 110,
+                                              height: 110,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => const Center(
                                                     child: Icon(
                                                       Icons.person_rounded,
                                                       size: 70,
                                                       color: Color(0xFFCBD5E1),
                                                     ),
                                                   ),
-                                                )
-                                              : const Center(
-                                                  child: Icon(
-                                                    Icons.person_rounded,
-                                                    size: 70,
-                                                    color: Color(0xFFCBD5E1),
-                                                  ),
-                                                ),
+                                            )
+                                          : const Center(
+                                              child: Icon(
+                                                Icons.person_rounded,
+                                                size: 70,
+                                                color: Color(0xFFCBD5E1),
+                                              ),
+                                            ),
                                     ),
                                   ),
                                 ),
@@ -679,9 +697,7 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    height: 24 + MediaQuery.of(context).padding.bottom,
-                  ),
+                  SizedBox(height: 24 + MediaQuery.of(context).padding.bottom),
                 ],
               ),
             ),
@@ -716,9 +732,7 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
       onTapLihatSemua: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const HonorAsesorScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const HonorAsesorScreen()),
         );
       },
     );

@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import 'package:material_ui/material_ui.dart';
 
 class PersyaratanDasarTable extends StatefulWidget {
@@ -6,8 +7,14 @@ class PersyaratanDasarTable extends StatefulWidget {
   final List<Map<String, String>> items;
   final Map<String, bool> uploadedDocs;
   final Map<String, String?> uploadedFileNames;
-  final void Function(String key, String label, bool isUploaded, String? fileName, String? filePath)
-      onUploadChanged;
+  final void Function(
+    String key,
+    String label,
+    bool isUploaded,
+    String? fileName,
+    String? filePath,
+  )
+  onUploadChanged;
 
   const PersyaratanDasarTable({
     super.key,
@@ -24,37 +31,23 @@ class PersyaratanDasarTable extends StatefulWidget {
 class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
   Future<void> _pickAndUpload(String key, String label) async {
     try {
+      final messenger = ScaffoldMessenger.of(context);
       final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
       );
-      if (file == null) return;
-      final path = file.path;
-      if (path == null || path.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Path file tidak tersedia. Coba pilih ulang.'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+      if (file == null) {
         return;
       }
-      final fileLength = (await file.length()) ?? 0;
-      if (fileLength > 2 * 1024 * 1024) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ukuran berkas melebihi batas 2MB'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+      final valid = await UploadFileValidator.isValid(
+        messenger,
+        file,
+        UploadFileValidator.asesiDocMaxMB,
+      );
+      if (!mounted || !valid) {
         return;
       }
+      final path = file.path!;
       widget.onUploadChanged(key, label, true, file.name, path);
     } catch (e) {
       if (mounted) {
@@ -108,10 +101,7 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                 const SizedBox(height: 16),
                 const Text(
                   'Pilih berkas PDF/PNG/JPG (maks. 2MB):',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                  ),
+                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                 ),
                 const SizedBox(height: 20),
                 InkWell(
@@ -185,10 +175,7 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
               1: FlexColumnWidth(),
               2: FixedColumnWidth(150),
             },
-            border: TableBorder.all(
-              color: const Color(0xFFE2E8F0),
-              width: 1.0,
-            ),
+            border: TableBorder.all(color: const Color(0xFFE2E8F0), width: 1.0),
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             children: [
               const TableRow(
@@ -196,7 +183,10 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                 children: [
                   TableCell(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 4.0),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10.0,
+                        horizontal: 4.0,
+                      ),
                       child: Text(
                         'No',
                         style: TextStyle(
@@ -210,7 +200,10 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                   ),
                   TableCell(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10.0,
+                        horizontal: 8.0,
+                      ),
                       child: Text(
                         'Persyaratan',
                         style: TextStyle(
@@ -224,7 +217,10 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                   ),
                   TableCell(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10.0,
+                        horizontal: 8.0,
+                      ),
                       child: Text(
                         'Upload',
                         style: TextStyle(
@@ -249,7 +245,10 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                   children: [
                     TableCell(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 4.0),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10.0,
+                          horizontal: 4.0,
+                        ),
                         child: Text(
                           '${index + 1}.',
                           style: const TextStyle(
@@ -262,7 +261,10 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                     ),
                     TableCell(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10.0,
+                          horizontal: 10.0,
+                        ),
                         child: Text(
                           label,
                           style: const TextStyle(
@@ -275,13 +277,20 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                     ),
                     TableCell(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8.0,
+                          horizontal: 8.0,
+                        ),
                         child: Column(
                           children: [
                             InkWell(
-                              onTap: () => _showUploadBottomSheet(context, key, label),
+                              onTap: () =>
+                                  _showUploadBottomSheet(context, key, label),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isUploaded
                                       ? const Color(0xFFECFDF5)
@@ -317,7 +326,9 @@ class _PersyaratanDasarTableState extends State<PersyaratanDasarTable> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              isUploaded ? (fileName ?? 'file') : 'Tidak ada file',
+                              isUploaded
+                                  ? (fileName ?? 'file')
+                                  : 'Tidak ada file',
                               style: TextStyle(
                                 fontSize: 9,
                                 color: isUploaded

@@ -8,6 +8,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../utils/upload_file_validator.dart';
+
 /// Bottom sheet upload berkas portofolio (file picker + preview).
 class PortfolioUploadSheet extends StatefulWidget {
   final String docKey;
@@ -34,37 +36,23 @@ class _PortfolioUploadSheetState extends State<PortfolioUploadSheet> {
 
   Future<void> _pickRealFile() async {
     try {
+      final messenger = ScaffoldMessenger.of(context);
       final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
       );
-      if (file == null) return;
-      final path = file.path;
-      if (path == null || path.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Path file tidak tersedia. Coba pilih ulang.'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+      if (file == null) {
         return;
       }
-      final fileLength = (await file.length()) ?? 0;
-      if (fileLength > 2 * 1024 * 1024) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ukuran berkas melebihi batas 2MB'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+      final valid = await UploadFileValidator.isValid(
+        messenger,
+        file,
+        UploadFileValidator.asesiDocMaxMB,
+      );
+      if (!mounted || !valid) {
         return;
       }
+      final path = file.path!;
       setState(() {
         _localFileName = file.name;
         _localFilePath = path;
@@ -218,14 +206,16 @@ class _PortfolioUploadSheetState extends State<PortfolioUploadSheet> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white),
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text(
                             'Pilih File',
                             style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                   ),
                 ),
@@ -235,11 +225,7 @@ class _PortfolioUploadSheetState extends State<PortfolioUploadSheet> {
           const SizedBox(height: 16),
           const Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                color: Color(0xFFED8936),
-                size: 16,
-              ),
+              Icon(Icons.info_outline, color: Color(0xFFED8936), size: 16),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -272,7 +258,9 @@ class _PortfolioUploadSheetState extends State<PortfolioUploadSheet> {
                     child: const Text(
                       'Batal',
                       style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -303,7 +291,9 @@ class _PortfolioUploadSheetState extends State<PortfolioUploadSheet> {
                     child: const Text(
                       'Upload',
                       style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -382,10 +372,7 @@ class _PortfolioLinkSheetState extends State<PortfolioLinkSheet> {
           const SizedBox(height: 16),
           const Text(
             'Masukkan tautan GitHub atau URL portofolio karya Anda:',
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xFF64748B),
-            ),
+            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -402,7 +389,10 @@ class _PortfolioLinkSheetState extends State<PortfolioLinkSheet> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF378CE7), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF378CE7),
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -420,8 +410,10 @@ class _PortfolioLinkSheetState extends State<PortfolioLinkSheet> {
                     foregroundColor: const Color(0xFF64748B),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Batal',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Batal',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -445,8 +437,10 @@ class _PortfolioLinkSheetState extends State<PortfolioLinkSheet> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Simpan',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Simpan',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -508,10 +502,12 @@ class PortfolioItemCard extends StatelessWidget {
     }
 
     final bool isUnuploaded = statusText == 'Belum Diunggah' && !isUploaded;
-    final Color buttonBgColor =
-        isUnuploaded ? const Color(0xFFE2E8F0) : const Color(0xFF378CE7);
-    final Color buttonTextColor =
-        isUnuploaded ? const Color(0xFF64748B) : Colors.white;
+    final Color buttonBgColor = isUnuploaded
+        ? const Color(0xFFE2E8F0)
+        : const Color(0xFF378CE7);
+    final Color buttonTextColor = isUnuploaded
+        ? const Color(0xFF64748B)
+        : Colors.white;
 
     String buttonLabel = isLink ? 'Simpan Tautan' : 'Unggah Dokumen';
     if (!isUnuploaded) {
@@ -553,8 +549,10 @@ class PortfolioItemCard extends StatelessWidget {
                 if (isRequired)
                   const TextSpan(
                     text: ' *',
-                    style:
-                        TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
               ],
             ),
@@ -591,7 +589,9 @@ class PortfolioItemCard extends StatelessWidget {
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: badgeBgColor,
                             borderRadius: BorderRadius.circular(4),

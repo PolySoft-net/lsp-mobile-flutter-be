@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import 'package:material_ui/material_ui.dart';
 import '../../services/dashboard/berita_service.dart';
 
@@ -29,7 +30,9 @@ Future<void> showAdminBeritaFormDialog({
   String? newFotoFileName;
   bool isUploadingFoto = false;
 
-  int selectedKategori = [2, 4, 9].contains(initialKategori) ? initialKategori : 2;
+  int selectedKategori = [2, 4, 9].contains(initialKategori)
+      ? initialKategori
+      : 2;
   bool showImage = initialShowImage != '0';
   bool isSubmitting = false;
 
@@ -48,7 +51,9 @@ Future<void> showAdminBeritaFormDialog({
             ),
             child: Material(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: SafeArea(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
@@ -71,8 +76,11 @@ Future<void> showAdminBeritaFormDialog({
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close_rounded,
-                                  color: Color(0xFF64748B), size: 20),
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: Color(0xFF64748B),
+                                size: 20,
+                              ),
                               onPressed: () => Navigator.pop(ctx),
                             ),
                           ],
@@ -91,7 +99,9 @@ Future<void> showAdminBeritaFormDialog({
                               borderRadius: BorderRadius.circular(10),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                           ),
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
@@ -113,7 +123,9 @@ Future<void> showAdminBeritaFormDialog({
                               borderRadius: BorderRadius.circular(10),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                           ),
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
@@ -133,12 +145,20 @@ Future<void> showAdminBeritaFormDialog({
                               borderRadius: BorderRadius.circular(10),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                           ),
                           items: const [
                             DropdownMenuItem(value: 2, child: Text('Berita')),
-                            DropdownMenuItem(value: 4, child: Text('Berita LSP')),
-                            DropdownMenuItem(value: 9, child: Text('Galeri Foto')),
+                            DropdownMenuItem(
+                              value: 4,
+                              child: Text('Berita LSP'),
+                            ),
+                            DropdownMenuItem(
+                              value: 9,
+                              child: Text('Galeri Foto'),
+                            ),
                           ],
                           onChanged: (val) {
                             if (val != null) {
@@ -161,7 +181,9 @@ Future<void> showAdminBeritaFormDialog({
                               borderRadius: BorderRadius.circular(10),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 12),
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                           ),
                           validator: (val) {
                             if (val == null || val.trim().isEmpty) {
@@ -186,7 +208,9 @@ Future<void> showAdminBeritaFormDialog({
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 12),
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
                             ),
@@ -196,35 +220,71 @@ Future<void> showAdminBeritaFormDialog({
                                   ? null
                                   : () async {
                                       try {
+                                        final messenger = ScaffoldMessenger.of(
+                                          ctx,
+                                        );
                                         final file = await FilePicker.pickFile(
                                           type: FileType.image,
                                         );
                                         if (file != null && file.path != null) {
-                                          setModalState(() => isUploadingFoto = true);
-                                          final uploaded = await BeritaService.uploadBeritaFoto(file.path!);
+                                          final valid =
+                                              await UploadFileValidator.isValid(
+                                                messenger,
+                                                file,
+                                                UploadFileValidator.beritaMaxMB,
+                                              );
+                                          if (!ctx.mounted) {
+                                            return;
+                                          }
+                                          if (!valid) {
+                                            return;
+                                          }
+                                          setModalState(
+                                            () => isUploadingFoto = true,
+                                          );
+                                          final uploaded =
+                                              await BeritaService.uploadBeritaFoto(
+                                                file.path!,
+                                              );
                                           if (!ctx.mounted) return;
-                                          if (uploaded != null && uploaded['filename'] != null) {
-                                            final serverName = uploaded['filename'].toString();
+                                          if (uploaded != null &&
+                                              uploaded['filename'] != null) {
+                                            final serverName =
+                                                uploaded['filename'].toString();
                                             setModalState(() {
                                               newFotoFileName = serverName;
                                               fotoController.text = serverName;
                                             });
-                                            ScaffoldMessenger.of(ctx).showSnackBar(
-                                              const SnackBar(content: Text('Foto berhasil diunggah')),
+                                            ScaffoldMessenger.of(
+                                              ctx,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Foto berhasil diunggah',
+                                                ),
+                                              ),
                                             );
                                           } else {
-                                            ScaffoldMessenger.of(ctx).showSnackBar(
+                                            ScaffoldMessenger.of(
+                                              ctx,
+                                            ).showSnackBar(
                                               const SnackBar(
-                                                content: Text('Gagal mengunggah foto'),
+                                                content: Text(
+                                                  'Gagal mengunggah foto',
+                                                ),
                                                 backgroundColor: Colors.red,
                                               ),
                                             );
                                           }
-                                          setModalState(() => isUploadingFoto = false);
+                                          setModalState(
+                                            () => isUploadingFoto = false,
+                                          );
                                         }
                                       } catch (e) {
                                         if (ctx.mounted) {
-                                          setModalState(() => isUploadingFoto = false);
+                                          setModalState(
+                                            () => isUploadingFoto = false,
+                                          );
                                         }
                                         debugPrint('Error picking file: $e');
                                       }
@@ -232,26 +292,33 @@ Future<void> showAdminBeritaFormDialog({
                               borderRadius: BorderRadius.circular(10),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 12),
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFEFF6FF),
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                      color: const Color(0xFF2563EB)),
+                                    color: const Color(0xFF2563EB),
+                                  ),
                                 ),
                                 child: isUploadingFoto
                                     ? const SizedBox(
                                         width: 18,
                                         height: 18,
                                         child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Color(0xFF2563EB)),
+                                          strokeWidth: 2,
+                                          color: Color(0xFF2563EB),
+                                        ),
                                       )
                                     : const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.photo_library_outlined,
-                                              size: 18, color: Color(0xFF2563EB)),
+                                          Icon(
+                                            Icons.photo_library_outlined,
+                                            size: 18,
+                                            color: Color(0xFF2563EB),
+                                          ),
                                           SizedBox(width: 6),
                                           Text(
                                             'Pilih Foto',
@@ -273,11 +340,19 @@ Future<void> showAdminBeritaFormDialog({
                         SwitchListTile(
                           title: const Text(
                             'Tampilkan Gambar Berita',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           subtitle: Text(
-                            showImage ? 'Gambar akan ditampilkan' : 'Gambar disembunyikan',
-                            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                            showImage
+                                ? 'Gambar akan ditampilkan'
+                                : 'Gambar disembunyikan',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF64748B),
+                            ),
                           ),
                           value: showImage,
                           activeThumbColor: const Color(0xFF2563EB),
@@ -297,7 +372,9 @@ Future<void> showAdminBeritaFormDialog({
                             onPressed: isSubmitting
                                 ? null
                                 : () async {
-                                    if (!formKey.currentState!.validate()) return;
+                                    if (!formKey.currentState!.validate()) {
+                                      return;
+                                    }
 
                                     setModalState(() {
                                       isSubmitting = true;
@@ -307,31 +384,37 @@ Future<void> showAdminBeritaFormDialog({
                                     String msg = '';
 
                                     if (isEdit) {
-                                      final res = await BeritaService.updateAdminBerita(
-                                        beritaId,
-                                        judul: judulController.text.trim(),
-                                        headline: headlineController.text.trim(),
-                                        isi: isiController.text.trim(),
-                                        idKategori: selectedKategori,
-                                        foto: newFotoFileName,
-                                        showImage: showImage ? '1' : '0',
-                                      );
+                                      final res =
+                                          await BeritaService.updateAdminBerita(
+                                            beritaId,
+                                            judul: judulController.text.trim(),
+                                            headline: headlineController.text
+                                                .trim(),
+                                            isi: isiController.text.trim(),
+                                            idKategori: selectedKategori,
+                                            foto: newFotoFileName,
+                                            showImage: showImage ? '1' : '0',
+                                          );
                                       success = res != null;
-                                      msg = res?['message']?.toString() ??
+                                      msg =
+                                          res?['message']?.toString() ??
                                           (success
                                               ? 'Berita berhasil diperbarui'
                                               : 'Gagal memperbarui berita');
                                     } else {
-                                      final res = await BeritaService.createAdminBerita(
-                                        judul: judulController.text.trim(),
-                                        headline: headlineController.text.trim(),
-                                        isi: isiController.text.trim(),
-                                        idKategori: selectedKategori,
-                                        foto: fotoController.text.trim(),
-                                        showImage: showImage ? '1' : '0',
-                                      );
+                                      final res =
+                                          await BeritaService.createAdminBerita(
+                                            judul: judulController.text.trim(),
+                                            headline: headlineController.text
+                                                .trim(),
+                                            isi: isiController.text.trim(),
+                                            idKategori: selectedKategori,
+                                            foto: fotoController.text.trim(),
+                                            showImage: showImage ? '1' : '0',
+                                          );
                                       success = res != null;
-                                      msg = res?['message']?.toString() ??
+                                      msg =
+                                          res?['message']?.toString() ??
                                           (success
                                               ? 'Berita berhasil dibuat'
                                               : 'Gagal membuat berita');
@@ -339,7 +422,9 @@ Future<void> showAdminBeritaFormDialog({
 
                                     if (context.mounted) {
                                       Navigator.pop(ctx);
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text(msg),
                                           backgroundColor: success
@@ -370,7 +455,9 @@ Future<void> showAdminBeritaFormDialog({
                                     ),
                                   )
                                 : Text(
-                                    isEdit ? 'Perbarui Berita' : 'Simpan Berita',
+                                    isEdit
+                                        ? 'Perbarui Berita'
+                                        : 'Simpan Berita',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -406,7 +493,10 @@ Future<void> confirmDeleteAdminBerita({
           children: [
             Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626)),
             SizedBox(width: 8),
-            Text('Hapus Berita', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              'Hapus Berita',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: Text(
@@ -416,7 +506,10 @@ Future<void> confirmDeleteAdminBerita({
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
+            child: const Text(
+              'Batal',
+              style: TextStyle(color: Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -424,7 +517,9 @@ Future<void> confirmDeleteAdminBerita({
               backgroundColor: const Color(0xFFDC2626),
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Hapus'),
           ),
@@ -438,8 +533,12 @@ Future<void> confirmDeleteAdminBerita({
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? 'Berita berhasil dihapus' : 'Gagal menghapus berita'),
-          backgroundColor: success ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+          content: Text(
+            success ? 'Berita berhasil dihapus' : 'Gagal menghapus berita',
+          ),
+          backgroundColor: success
+              ? const Color(0xFF16A34A)
+              : const Color(0xFFDC2626),
         ),
       );
       if (success) {

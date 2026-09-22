@@ -1,9 +1,11 @@
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/instrumen_asesmen_models.dart';
 import '../../services/asesor/asesor_service.dart';
+
 class IA04BPenilaianProyekWidget extends StatefulWidget {
   final IA04BData? data;
   final Function(IA04BData updatedData) onSave;
@@ -19,7 +21,8 @@ class IA04BPenilaianProyekWidget extends StatefulWidget {
       _IA04BPenilaianProyekWidgetState();
 }
 
-class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget> {
+class _IA04BPenilaianProyekWidgetState
+    extends State<IA04BPenilaianProyekWidget> {
   late List<IA04BItem> _items;
   late String _isKompeten;
   late TextEditingController _catatanController;
@@ -33,12 +36,14 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
 
   void _initData() {
     _items = widget.data?.items ?? [];
-    _isKompeten = (widget.data?.isDitKompeten.isNotEmpty == true &&
+    _isKompeten =
+        (widget.data?.isDitKompeten.isNotEmpty == true &&
             widget.data?.isDitKompeten != '0')
         ? (widget.data?.isDitKompeten ?? 'K')
         : 'K';
-    _catatanController =
-        TextEditingController(text: widget.data?.catatanDit ?? '');
+    _catatanController = TextEditingController(
+      text: widget.data?.catatanDit ?? '',
+    );
   }
 
   @override
@@ -54,6 +59,7 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
     _catatanController.dispose();
     super.dispose();
   }
+
   String _cleanHtml(String htmlString) {
     if (htmlString.isEmpty) return '';
     String text = htmlString;
@@ -79,13 +85,31 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
     if (d == null || d.asesiId == 0) return;
 
     try {
+      final messenger = ScaffoldMessenger.of(context);
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg', 'zip', 'doc', 'docx', 'rar'],
+        allowedExtensions: const [
+          'pdf',
+          'png',
+          'jpg',
+          'jpeg',
+          'zip',
+          'doc',
+          'docx',
+          'rar',
+        ],
       );
 
       if (result.isNotEmpty && result.first.path != null) {
         final file = result.first;
+        final valid = await UploadFileValidator.isValid(
+          messenger,
+          file,
+          UploadFileValidator.ia04EvidenceMaxMB,
+        );
+        if (!mounted || !valid) {
+          return;
+        }
         setState(() => _isUploadingFile = true);
 
         final res = await AsesorService.uploadIA04(
@@ -174,7 +198,11 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
             ),
             child: const Row(
               children: [
-                Icon(LucideIcons.clipboard_list, color: Color(0xFF4D7C0F), size: 20),
+                Icon(
+                  LucideIcons.clipboard_list,
+                  color: Color(0xFF4D7C0F),
+                  size: 20,
+                ),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -225,21 +253,39 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                     TextButton(
                       onPressed: () => _setAllPencapaian('Ya'),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         backgroundColor: const Color(0xFFDCFCE7),
                         foregroundColor: const Color(0xFF15803D),
                       ),
-                      child: const Text('Semua Ya', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Semua Ya',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     TextButton(
                       onPressed: () => _setAllPencapaian('Tidak'),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         backgroundColor: const Color(0xFFFEE2E2),
                         foregroundColor: const Color(0xFFB91C1C),
                       ),
-                      child: const Text('Semua Tidak', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Semua Tidak',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -262,7 +308,11 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
               children: [
                 Row(
                   children: [
-                    const Icon(LucideIcons.file_archive, color: Color(0xFF64748B), size: 20),
+                    const Icon(
+                      LucideIcons.file_archive,
+                      color: Color(0xFF64748B),
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -270,7 +320,10 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                         children: [
                           const Text(
                             'File Tugas Proyek Asesi:',
-                            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF64748B),
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -286,12 +339,19 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                     ),
                     if (d.fileUrl != null && d.fileUrl!.isNotEmpty)
                       IconButton(
-                        icon: const Icon(LucideIcons.download, color: Color(0xFF2563EB), size: 18),
+                        icon: const Icon(
+                          LucideIcons.download,
+                          color: Color(0xFF2563EB),
+                          size: 18,
+                        ),
                         tooltip: 'Unduh Berkas',
                         onPressed: () async {
                           final uri = Uri.parse(d.fileUrl!);
                           if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
                           }
                         },
                       ),
@@ -314,14 +374,21 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                     label: Text(
                       _isUploadingFile
                           ? 'Mengunggah...'
-                          : (d.fileTugas != 'Belum Upload Tugas Proyek' ? 'Ganti Berkas Proyek' : 'Unggah Berkas Proyek'),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          : (d.fileTugas != 'Belum Upload Tugas Proyek'
+                                ? 'Ganti Berkas Proyek'
+                                : 'Unggah Berkas Proyek'),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF2563EB),
                       side: const BorderSide(color: Color(0xFF2563EB)),
                       padding: const EdgeInsets.symmetric(vertical: 9),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
                     ),
                   ),
                 ),
@@ -374,11 +441,20 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                   children: [
                     const SizedBox(
                       width: 110,
-                      child: Text('Kompeten ?', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Kompeten ?',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                     const Text(': ', style: TextStyle(fontSize: 12.5)),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
                         border: Border.all(color: const Color(0xFFCBD5E1)),
@@ -388,7 +464,11 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                         child: DropdownButton<String>(
                           value: _isKompeten == 'BK' ? 'BK' : 'K',
                           isDense: true,
-                          icon: const Icon(LucideIcons.chevron_down, size: 14, color: Color(0xFF64748B)),
+                          icon: const Icon(
+                            LucideIcons.chevron_down,
+                            size: 14,
+                            color: Color(0xFF64748B),
+                          ),
                           items: const [
                             DropdownMenuItem(
                               value: 'K',
@@ -424,15 +504,23 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                 const SizedBox(height: 12),
                 const Text(
                   'Diperlukan Bukti Tambahan:',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF334155),
+                  ),
                 ),
                 const SizedBox(height: 6),
                 TextField(
                   controller: _catatanController,
                   maxLines: 3,
                   decoration: InputDecoration(
-                    hintText: 'Tulis catatan jika diperlukan bukti tambahan atau rekomendasi...',
-                    hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                    hintText:
+                        'Tulis catatan jika diperlukan bukti tambahan atau rekomendasi...',
+                    hintStyle: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF94A3B8),
+                    ),
                     contentPadding: const EdgeInsets.all(10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -463,15 +551,24 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
                         ? const SizedBox(
                             width: 14,
                             height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(LucideIcons.save, size: 16),
-                    label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Penilaian Proyek (FR.IA.04B)'),
+                    label: Text(
+                      _isSaving
+                          ? 'Menyimpan...'
+                          : 'Simpan Penilaian Proyek (FR.IA.04B)',
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF16A34A),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
@@ -483,7 +580,6 @@ class _IA04BPenilaianProyekWidgetState extends State<IA04BPenilaianProyekWidget>
       ),
     );
   }
-
 }
 
 class _IA04BRubricCardItem extends StatefulWidget {
@@ -544,8 +640,8 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
           color: item.pencapaian == 'Ya'
               ? const Color(0xFFBBF7D0)
               : item.pencapaian == 'Tidak'
-                  ? const Color(0xFFFECACA)
-                  : const Color(0xFFE2E8F0),
+              ? const Color(0xFFFECACA)
+              : const Color(0xFFE2E8F0),
           width: item.pencapaian != null ? 1.5 : 1.0,
         ),
         boxShadow: const [
@@ -571,13 +667,19 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
                 ),
                 child: Text(
                   '${index + 1}',
-                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF334155),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  item.lingkupProyek.isNotEmpty ? widget.cleanHtml(item.lingkupProyek) : 'Lingkup Penyajian Proyek',
+                  item.lingkupProyek.isNotEmpty
+                      ? widget.cleanHtml(item.lingkupProyek)
+                      : 'Lingkup Penyajian Proyek',
                   style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.bold,
@@ -593,12 +695,20 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
           if (item.pertanyaan.isNotEmpty) ...[
             const Text(
               'Daftar Pertanyaan:',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF64748B),
+              ),
             ),
             const SizedBox(height: 3),
             Text(
               widget.cleanHtml(item.pertanyaan),
-              style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B), height: 1.35),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF1E293B),
+                height: 1.35,
+              ),
             ),
             const SizedBox(height: 10),
           ],
@@ -606,7 +716,11 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
           // Tanggapan (Editable Text Box)
           const Text(
             'Tanggapan :',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF475569),
+            ),
           ),
           const SizedBox(height: 4),
           TextFormField(
@@ -618,7 +732,10 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
             style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)),
             decoration: InputDecoration(
               hintText: 'Tuliskan tanggapan asesi terkait pertanyaan ini...',
-              hintStyle: const TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8)),
+              hintStyle: const TextStyle(
+                fontSize: 11.5,
+                color: Color(0xFF94A3B8),
+              ),
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
               contentPadding: const EdgeInsets.all(10),
@@ -632,7 +749,10 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2563EB),
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -649,12 +769,20 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
               ),
               child: Row(
                 children: [
-                  const Icon(LucideIcons.tag, size: 13, color: Color(0xFF475569)),
+                  const Icon(
+                    LucideIcons.tag,
+                    size: 13,
+                    color: Color(0xFF475569),
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       'Kesesuaian Standar: ${widget.cleanHtml(item.kesesuaianStandar)}',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF334155)),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF334155),
+                      ),
                     ),
                   ),
                 ],
@@ -669,7 +797,11 @@ class _IA04BRubricCardItemState extends State<_IA04BRubricCardItem> {
             children: [
               const Text(
                 'Pencapaian:',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
+                ),
               ),
               Row(
                 children: [

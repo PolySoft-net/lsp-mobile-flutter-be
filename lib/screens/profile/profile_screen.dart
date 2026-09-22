@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import '../../utils/upload_file_validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -73,7 +74,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _instansiType = type;
           if (type == 'Mahasiswa') {
             _instansiData = {
-              'Nama Perguruan Tinggi': data['nama_perguruan_tinggi']?.toString() ?? '',
+              'Nama Perguruan Tinggi':
+                  data['nama_perguruan_tinggi']?.toString() ?? '',
               'Falkutas': data['fakultas']?.toString() ?? '',
               'Program Studi': data['program_studi']?.toString() ?? '',
               'NIM': data['nim']?.toString() ?? '',
@@ -103,7 +105,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _copyTukId() {
-    final userAccount = AuthRepository.currentUserInstance?.account ?? AuthRepository.currentUserInstance?.id ?? '';
+    final userAccount =
+        AuthRepository.currentUserInstance?.account ??
+        AuthRepository.currentUserInstance?.id ??
+        '';
     Clipboard.setData(ClipboardData(text: userAccount));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -289,12 +294,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAndUploadPhoto() async {
     try {
-      final file = await FilePicker.pickFile(
-        type: FileType.image,
-      );
+      final messenger = ScaffoldMessenger.of(context);
+      final file = await FilePicker.pickFile(type: FileType.image);
       if (file != null) {
-        final filePath = file.path;
-        if (filePath == null) return;
+        final valid = await UploadFileValidator.isValid(
+          messenger,
+          file,
+          UploadFileValidator.profilePhotoMaxMB,
+        );
+        if (!mounted) {
+          return;
+        }
+        if (!valid) {
+          return;
+        }
+        final filePath = file.path!;
         setState(() => _isUploadingPhoto = true);
         final uploaded = await AuthRepository.uploadProfilePhoto(filePath);
         if (!mounted) return;
@@ -396,8 +410,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -507,31 +519,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           height: 32,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 3,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5B9FD8)),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFF5B9FD8),
+                                                ),
                                           ),
                                         ),
                                       )
                                     : (photoUrl != null && photoUrl.isNotEmpty)
-                                        ? Image.network(
-                                            photoUrl,
-                                            width: 110,
-                                            height: 110,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) => const Center(
-                                              child: Icon(
-                                                Icons.person_rounded,
-                                                size: 70,
-                                                color: Color(0xFFCBD5E1),
-                                              ),
-                                            ),
-                                          )
-                                        : const Center(
-                                            child: Icon(
-                                              Icons.person_rounded,
-                                              size: 70,
-                                              color: Color(0xFFCBD5E1),
-                                            ),
-                                          ),
+                                    ? Image.network(
+                                        photoUrl,
+                                        width: 110,
+                                        height: 110,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Center(
+                                                  child: Icon(
+                                                    Icons.person_rounded,
+                                                    size: 70,
+                                                    color: Color(0xFFCBD5E1),
+                                                  ),
+                                                ),
+                                      )
+                                    : const Center(
+                                        child: Icon(
+                                          Icons.person_rounded,
+                                          size: 70,
+                                          color: Color(0xFFCBD5E1),
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
@@ -607,7 +624,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'ID TUK : ${user.account.isNotEmpty ? user.account : user.id.isNotEmpty ? user.id : '-'}',
+                          'ID TUK : ${user.account.isNotEmpty
+                              ? user.account
+                              : user.id.isNotEmpty
+                              ? user.id
+                              : '-'}',
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.75),
                             fontSize: 11.5,
@@ -677,19 +698,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               // Prepare fields for backend schema mapping
                               final Map<String, String> dataMap = {};
                               if (type == 'Mahasiswa') {
-                                dataMap['nama_perguruan_tinggi'] = data['Nama Perguruan Tinggi'] ?? '';
+                                dataMap['nama_perguruan_tinggi'] =
+                                    data['Nama Perguruan Tinggi'] ?? '';
                                 dataMap['nim'] = data['NIM'] ?? '';
                                 dataMap['alamat'] = data['Alamat'] ?? '';
                               } else if (type == 'Karyawan') {
-                                dataMap['nama_perusahaan'] = data['Nama Perusahaan'] ?? '';
+                                dataMap['nama_perusahaan'] =
+                                    data['Nama Perusahaan'] ?? '';
                                 dataMap['jabatan'] = data['Jabatan'] ?? '';
-                                dataMap['bidang_pekerjaan'] = data['Bidang Pekerjaan'] ?? '';
-                                dataMap['lama_bekerja'] = data['Lama Bekerja'] ?? '';
+                                dataMap['bidang_pekerjaan'] =
+                                    data['Bidang Pekerjaan'] ?? '';
+                                dataMap['lama_bekerja'] =
+                                    data['Lama Bekerja'] ?? '';
                                 dataMap['alamat'] = data['Alamat'] ?? '';
                               } else {
-                                dataMap['nama_usaha'] = data['Nama Usaha'] ?? '';
-                                dataMap['bidang_usaha'] = data['Bidang Usaha'] ?? '';
-                                dataMap['tahun_berdiri'] = data['Tahun Berdiri'] ?? '';
+                                dataMap['nama_usaha'] =
+                                    data['Nama Usaha'] ?? '';
+                                dataMap['bidang_usaha'] =
+                                    data['Bidang Usaha'] ?? '';
+                                dataMap['tahun_berdiri'] =
+                                    data['Tahun Berdiri'] ?? '';
                                 dataMap['alamat'] = data['Alamat'] ?? '';
                               }
                               await AsesiService.updateInstansi(type, dataMap);
@@ -714,9 +742,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            SizedBox(
-              height: 24 + MediaQuery.of(context).padding.bottom,
-            ),
+            SizedBox(height: 24 + MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),
