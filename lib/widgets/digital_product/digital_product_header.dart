@@ -5,14 +5,12 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
   final TextEditingController? searchController;
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onFavoriteTap;
-  final VoidCallback? onFilterTap;
 
   const DigitalProductHeader({
     super.key,
     this.searchController,
     this.onSearchChanged,
     this.onFavoriteTap,
-    this.onFilterTap,
   });
 
   @override
@@ -101,21 +99,6 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Filter / Sliders horizontal icon button
-          InkWell(
-            onTap: onFilterTap,
-            borderRadius: BorderRadius.circular(8),
-            child: const Padding(
-              padding: EdgeInsets.all(4.0),
-              child: Icon(
-                LucideIcons.sliders_horizontal,
-                size: 22,
-                color: Color(0xFF1E293B),
               ),
             ),
           ),
