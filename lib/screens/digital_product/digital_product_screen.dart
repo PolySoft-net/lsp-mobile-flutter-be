@@ -10,6 +10,7 @@ import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_category_chips.dart';
 import '../../widgets/digital_product/digital_product_header.dart';
 import '../../widgets/digital_product/fade_page_route.dart';
+import 'digital_product_create_screen.dart';
 import 'digital_product_detail_screen.dart';
 import 'digital_product_favorit_screen.dart';
 import 'digital_product_profile_screen.dart';
@@ -141,6 +142,12 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
               onFavoriteTap: () => Navigator.of(
                 context,
               ).push(FadePageRoute(page: const DigitalProductFavoritScreen())),
+              onAddProductTap: () async {
+                await Navigator.of(context).push(
+                  FadePageRoute(page: const DigitalProductCreateScreen()),
+                );
+                if (mounted) _loadProducts();
+              },
             ),
             Expanded(child: _buildContent()),
           ],

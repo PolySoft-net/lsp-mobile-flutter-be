@@ -5,12 +5,14 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
   final TextEditingController? searchController;
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onFavoriteTap;
+  final VoidCallback? onAddProductTap;
 
   const DigitalProductHeader({
     super.key,
     this.searchController,
     this.onSearchChanged,
     this.onFavoriteTap,
+    this.onAddProductTap,
   });
 
   @override
@@ -102,6 +104,32 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
               ),
             ),
           ),
+          if (onAddProductTap != null) ...[
+            const SizedBox(width: 8),
+            // Add Product circle button
+            InkWell(
+              onTap: onAddProductTap,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFCBD5E1),
+                    width: 1.2,
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    LucideIcons.plus,
+                    size: 20,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
