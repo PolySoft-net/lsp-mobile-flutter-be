@@ -120,9 +120,9 @@ class DigitalProductCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
 
-                // Status
+                // Skema Sertifikasi
                 Text(
-                  'Status :  ${item.status}',
+                  'Skema Sertifikasi : ${item.displayScheme}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(

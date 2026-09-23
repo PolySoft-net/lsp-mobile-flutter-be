@@ -237,9 +237,9 @@ class _DigitalProductDetailScreenState
           ),
           const SizedBox(height: 2),
 
-          // Status
+          // Skema Sertifikasi
           Text(
-            'Status :  ${_item.status}',
+            'Skema Sertifikasi : ${_item.displayScheme}',
             style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
           const SizedBox(height: 10),

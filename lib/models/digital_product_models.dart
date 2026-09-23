@@ -50,8 +50,8 @@ class DigitalProductItem {
       id: json['id']?.toString() ?? '',
       userId: JsonHelper.asInt(json['user_id']),
       schemeId: JsonHelper.asInt(json['scheme_id']),
-      schemeCode: json['scheme_code']?.toString() ?? '',
-      schemeName: json['scheme_name']?.toString() ?? '',
+      schemeCode: (json['scheme_code'] ?? json['kode_skema'])?.toString() ?? '',
+      schemeName: (json['scheme_name'] ?? json['nama_skema'] ?? json['skema'])?.toString() ?? '',
       productType: json['product_type']?.toString().toLowerCase() ?? '',
       category: json['category']?.toString() ?? '',
       serviceType: json['service_type']?.toString().toLowerCase() ?? '',
@@ -68,6 +68,12 @@ class DigitalProductItem {
       description: json['description']?.toString() ?? '',
       publicationStatus: json['publication_status']?.toString() ?? 'published',
     );
+  }
+
+  String get displayScheme {
+    if (schemeName.trim().isNotEmpty) return schemeName.trim();
+    if (schemeCode.trim().isNotEmpty) return schemeCode.trim();
+    return '-';
   }
 
   String get price {
