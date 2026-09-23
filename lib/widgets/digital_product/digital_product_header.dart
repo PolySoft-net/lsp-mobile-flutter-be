@@ -51,16 +51,33 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
           const SizedBox(width: 10),
 
           // Title
-          const Text(
-            'Digital Produk',
-            style: TextStyle(
-              color: Color(0xFF1E293B),
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-            ),
+          const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Digital Product',
+                style: TextStyle(
+                  color: Color(0xFF1E293B),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                  height: 1.15,
+                ),
+              ),
+              Text(
+                '& Services',
+                style: TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.1,
+                  height: 1.15,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
 
           // Search bar pill
           Expanded(
