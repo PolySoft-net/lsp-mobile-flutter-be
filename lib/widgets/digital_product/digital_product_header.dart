@@ -84,13 +84,13 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
             child: Align(
               alignment: Alignment.centerRight,
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 135),
+                constraints: const BoxConstraints(maxWidth: 175),
                 height: 38,
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
                     const Icon(
