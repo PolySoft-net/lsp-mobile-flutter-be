@@ -25,26 +25,23 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          // Favorite / Heart circle button
-          InkWell(
-            onTap: onFavoriteTap,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: const Color(0xFFCBD5E1),
-                  width: 1.2,
-                ),
+          // Digital Product Icon
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFCCFBF1).withValues(alpha: 0.6),
+              border: Border.all(
+                color: const Color(0xFF0D9488).withValues(alpha: 0.35),
+                width: 1.2,
               ),
-              child: const Center(
-                child: Icon(
-                  LucideIcons.heart,
-                  size: 20,
-                  color: Color(0xFF1E293B),
-                ),
+            ),
+            child: const Center(
+              child: Icon(
+                LucideIcons.shopping_bag,
+                size: 20,
+                color: Color(0xFF0D9488),
               ),
             ),
           ),
@@ -59,7 +56,7 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
                 'Digital Product',
                 style: TextStyle(
                   color: Color(0xFF1E293B),
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.2,
                   height: 1.15,
@@ -77,56 +74,8 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
               ),
             ],
           ),
-          const SizedBox(width: 10),
-
-          // Search bar pill
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 175),
-                height: 38,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    const Icon(
-                      LucideIcons.search,
-                      size: 15,
-                      color: Color(0xFF64748B),
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: TextField(
-                        controller: searchController,
-                        onChanged: onSearchChanged,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: Color(0xFF1E293B),
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: 'search',
-                          hintStyle: TextStyle(
-                            fontSize: 12.5,
-                            color: Color(0xFF94A3B8),
-                            fontWeight: FontWeight.w400,
-                          ),
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          const Spacer(),
           if (onAddProductTap != null) ...[
-            const SizedBox(width: 8),
             // Add Product circle button
             InkWell(
               onTap: onAddProductTap,

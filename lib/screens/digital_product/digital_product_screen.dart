@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_lucide/flutter_lucide.dart';
 
 import '../../models/digital_product_models.dart';
 import '../../services/digital_product_service.dart';
@@ -153,6 +154,10 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
       }
       return;
     }
+    if (_currentBottomNavIndex == 2 && index != 2 && _searchController.text.isNotEmpty) {
+      _searchController.clear();
+      _loadProducts();
+    }
     setState(() => _currentBottomNavIndex = index);
   }
 
@@ -165,11 +170,6 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
         child: Column(
           children: [
             DigitalProductHeader(
-              searchController: _searchController,
-              onSearchChanged: _onSearchChanged,
-              onFavoriteTap: () => Navigator.of(
-                context,
-              ).push(FadePageRoute(page: const DigitalProductFavoritScreen())),
               onAddProductTap: () async {
                 await Navigator.of(context).push(
                   FadePageRoute(page: const DigitalProductCreateScreen()),
@@ -207,6 +207,64 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          if (_currentBottomNavIndex == 2)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Container(
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(21),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.search,
+                        size: 18,
+                        color: Color(0xFF64748B),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          autofocus: true,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF1E293B),
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: 'Cari produk atau layanan digital...',
+                            hintStyle: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF94A3B8),
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                      if (_searchController.text.isNotEmpty)
+                        GestureDetector(
+                          onTap: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
+                          child: const Icon(
+                            LucideIcons.x,
+                            size: 16,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           if (showBanner)
             SliverToBoxAdapter(
               child: Padding(
