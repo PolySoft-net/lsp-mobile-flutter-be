@@ -21,7 +21,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
   final _priceController = TextEditingController();
   List<MasterSkema> _schemes = const [];
   MasterSkema? _selectedScheme;
-  String _category = 'Design';
+  String _category = 'Software';
   String _serviceType = 'Online';
   bool _negotiable = false;
   bool _loadingSchemes = true;
@@ -131,7 +131,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: _category,
                   decoration: _decoration('Kategori'),
-                  items: const ['Design', 'Development', 'Marketing', 'Writing']
+                  items: const ['Software', 'Ebook', 'Video', 'Template', 'Musik']
                       .map(
                         (value) =>
                             DropdownMenuItem(value: value, child: Text(value)),

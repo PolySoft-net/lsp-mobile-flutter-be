@@ -84,27 +84,42 @@ class DigitalProductCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
 
-                // Harga
-                RichText(
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Color(0xFF64748B),
-                    ),
-                    children: [
-                      const TextSpan(text: 'Harga : '),
-                      TextSpan(
-                        text: item.price,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF2563EB),
+                // Harga & Terjual
+                Row(
+                  children: [
+                    Expanded(
+                      child: RichText(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFF64748B),
+                          ),
+                          children: [
+                            const TextSpan(text: 'Harga : '),
+                            TextSpan(
+                              text: item.price,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                            TextSpan(text: item.priceUnit),
+                          ],
                         ),
                       ),
-                      TextSpan(text: item.priceUnit),
-                    ],
-                  ),
+                    ),
+                    if (item.salesCount > 0)
+                      Text(
+                        'Terjual ${item.salesCount}',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF059669),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 2),
 

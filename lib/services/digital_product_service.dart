@@ -21,6 +21,27 @@ class DigitalProductService {
     return _parseProducts(response.data);
   }
 
+  static Future<List<DigitalProductItem>> getPopularProducts({
+    int limit = 10,
+  }) async {
+    try {
+      final response = await _dio.get(
+        ApiRoutes.digitalProductPopular(limit: limit),
+      );
+      return _parseProducts(response.data);
+    } catch (_) {
+      try {
+        final fallbackResponse = await _dio.get(
+          ApiRoutes.digitalProducts,
+          queryParameters: {'filter': 'popular', 'limit': limit},
+        );
+        return _parseProducts(fallbackResponse.data);
+      } catch (_) {
+        return const [];
+      }
+    }
+  }
+
   static Future<DigitalProductDetail> getDetail(String id) async {
     final response = await _dio.get(ApiRoutes.digitalProductDetail(id));
     return DigitalProductDetail.fromJson(

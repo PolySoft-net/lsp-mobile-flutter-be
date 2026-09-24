@@ -242,6 +242,17 @@ class _DigitalProductDetailScreenState
             'Skema Sertifikasi : ${_item.displayScheme}',
             style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
+          if (_item.salesCount > 0) ...[
+            const SizedBox(height: 2),
+            Text(
+              'Terjual : ${_item.salesCount} produk',
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF059669),
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
 
           // Kategori

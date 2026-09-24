@@ -21,6 +21,9 @@ class DigitalProductItem {
   final String thumbnailUrl;
   final String description;
   final String publicationStatus;
+  final int salesCount;
+  final bool negotiable;
+  final String createdAt;
 
   const DigitalProductItem({
     required this.id,
@@ -43,6 +46,9 @@ class DigitalProductItem {
     this.thumbnailUrl = '',
     this.description = '',
     this.publicationStatus = 'published',
+    this.salesCount = 0,
+    this.negotiable = false,
+    this.createdAt = '',
   });
 
   factory DigitalProductItem.fromJson(Map<String, dynamic> json) {
@@ -67,6 +73,11 @@ class DigitalProductItem {
       thumbnailUrl: json['thumbnail_url']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       publicationStatus: json['publication_status']?.toString() ?? 'published',
+      salesCount: JsonHelper.asInt(
+        json['sales_count'] ?? json['terjual'] ?? json['sold_count'],
+      ),
+      negotiable: JsonHelper.asBool(json['negotiable']),
+      createdAt: json['created_at']?.toString() ?? '',
     );
   }
 
@@ -99,14 +110,22 @@ class DigitalProductItem {
   ];
 
   bool matchesFilter(String? filter) {
-    final value = filter?.toLowerCase();
-    return value == null ||
-        value.isEmpty ||
-        value == serviceType ||
-        value == productType;
+    final value = filter?.trim().toLowerCase();
+    if (value == null || value.isEmpty) return true;
+    return serviceType.toLowerCase() == value ||
+        productType.toLowerCase() == value ||
+        category.trim().toLowerCase() == value ||
+        title.toLowerCase().contains(value) ||
+        description.toLowerCase().contains(value);
   }
 
-  DigitalProductItem copyWith({bool? isFavorite}) {
+  String get soldText => salesCount > 0 ? 'Terjual $salesCount' : '';
+
+  DigitalProductItem copyWith({
+    bool? isFavorite,
+    int? salesCount,
+    bool? negotiable,
+  }) {
     return DigitalProductItem(
       id: id,
       userId: userId,
@@ -128,6 +147,9 @@ class DigitalProductItem {
       thumbnailUrl: thumbnailUrl,
       description: description,
       publicationStatus: publicationStatus,
+      salesCount: salesCount ?? this.salesCount,
+      negotiable: negotiable ?? this.negotiable,
+      createdAt: createdAt,
     );
   }
 

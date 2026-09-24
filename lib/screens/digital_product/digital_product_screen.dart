@@ -27,6 +27,7 @@ class DigitalProductScreen extends StatefulWidget {
 class _DigitalProductScreenState extends State<DigitalProductScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<DigitalProductItem> _products = const [];
+  List<DigitalProductItem> _popularProducts = const [];
   String? _selectedCategory;
   Timer? _searchDebounce;
   bool _loading = true;
@@ -52,11 +53,19 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
       _error = '';
     });
     try {
-      final products = await DigitalProductService.getProducts(
-        search: _searchController.text,
-        filter: _selectedCategory ?? '',
-      );
-      if (mounted) setState(() => _products = products);
+      final results = await Future.wait([
+        DigitalProductService.getProducts(
+          search: _searchController.text,
+          filter: _selectedCategory ?? '',
+        ),
+        DigitalProductService.getPopularProducts(limit: 10),
+      ]);
+      if (mounted) {
+        setState(() {
+          _products = results[0];
+          _popularProducts = results[1];
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _error = 'Produk belum dapat dimuat');
     } finally {
@@ -175,12 +184,20 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          if (_currentBottomNavIndex != 1 && _products.isNotEmpty)
+          if (_currentBottomNavIndex != 1)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: DigitalProductBanner(
-                  onTap: () => _openDetail(_products.first),
+                  products: _popularProducts.isNotEmpty
+                      ? _popularProducts
+                      : _products,
+                  onProductTap: _openDetail,
+                  onTap: _popularProducts.isNotEmpty
+                      ? () => _openDetail(_popularProducts.first)
+                      : (_products.isNotEmpty
+                          ? () => _openDetail(_products.first)
+                          : null),
                 ),
               ),
             ),
