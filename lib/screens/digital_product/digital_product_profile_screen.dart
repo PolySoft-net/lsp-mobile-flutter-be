@@ -8,6 +8,7 @@ import '../../services/auth/token_storage.dart';
 import '../../services/digital_product_service.dart';
 import '../../utils/url_helper.dart';
 import '../../widgets/common/notification_panel.dart';
+import '../../widgets/digital_product/digital_product_bottom_bar.dart';
 import '../../widgets/digital_product/fade_page_route.dart';
 import '../profile/tiket_bantuan_screen.dart';
 import 'digital_product_favorit_screen.dart';
@@ -58,6 +59,24 @@ class _DigitalProductProfileScreenState
     }
   }
 
+  Future<void> _onBottomNavTap(int index) async {
+    if (index == 4) return;
+    if (index == 3) {
+      final targetIndex = await Navigator.of(
+        context,
+      ).push<int>(FadePageRoute(page: const DigitalProductFavoritScreen()));
+      if (targetIndex != null && mounted && targetIndex != 4) {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, targetIndex);
+        }
+      }
+      return;
+    }
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context, index);
+    }
+  }
+
   void _handleKeluar() {
     // Balik ke Aplikasi LSP (bukan keluar dari akun)
     if (Navigator.of(context).canPop()) {
@@ -92,6 +111,7 @@ class _DigitalProductProfileScreenState
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildAppBar(),
@@ -102,24 +122,30 @@ class _DigitalProductProfileScreenState
                       onRefresh: _load,
                       child: SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildProfileCard(name, email, photoUrl),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Informasi',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0F172A),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Informasi',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  _buildMenuCard(),
+                                  const SizedBox(height: 24),
+                                  _buildKeluarButton(),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 10),
-                            _buildMenuCard(),
-                            const SizedBox(height: 24),
-                            _buildKeluarButton(),
                           ],
                         ),
                       ),
@@ -127,6 +153,10 @@ class _DigitalProductProfileScreenState
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: DigitalProductBottomBar(
+        selectedIndex: 4,
+        onTap: _onBottomNavTap,
       ),
     );
   }
@@ -186,10 +216,10 @@ class _DigitalProductProfileScreenState
   Widget _buildProfileCard(String name, String email, String photoUrl) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDFEDFA),
-        borderRadius: BorderRadius.circular(14),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: const BoxDecoration(
+        color: Color(0xFFDFEDFA),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       child: Row(
         children: [
@@ -414,11 +444,11 @@ class _DigitalProductProfileScreenState
       child: ElevatedButton(
         onPressed: _handleKeluar,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFD9D9D9),
-          foregroundColor: const Color(0xFF0F172A),
+          backgroundColor: const Color(0xFFE5E7EB),
+          foregroundColor: const Color(0xFF374151),
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
           padding: EdgeInsets.zero,
         ),
@@ -428,7 +458,7 @@ class _DigitalProductProfileScreenState
             Icon(
               LucideIcons.log_out,
               size: 20,
-              color: Color(0xFF0F172A),
+              color: Color(0xFFEF4444),
             ),
             SizedBox(width: 8),
             Text(
@@ -436,7 +466,7 @@ class _DigitalProductProfileScreenState
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF0F172A),
+                color: Color(0xFF374151),
               ),
             ),
           ],
