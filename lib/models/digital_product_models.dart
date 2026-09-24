@@ -106,7 +106,6 @@ class DigitalProductItem {
     if (serviceType.isNotEmpty) '#${_titleCase(serviceType)}',
     if (productType.isNotEmpty) '#${_titleCase(productType)}',
     if (category.isNotEmpty) '#$category',
-    if (schemeCode.isNotEmpty) '#$schemeCode',
   ];
 
   bool matchesFilter(String? filter) {
