@@ -11,12 +11,15 @@ class DigitalProductService {
   static Future<List<DigitalProductItem>> getProducts({
     String search = '',
     String filter = '',
+    String sortBy = 'latest',
   }) async {
     final response = await _dio.get(
       ApiRoutes.digitalProducts,
       queryParameters: {
         if (search.trim().isNotEmpty) 'q': search.trim(),
-        if (filter.isNotEmpty) 'filter': filter.toLowerCase(),
+        if (filter.isNotEmpty && filter.toLowerCase() != 'semua')
+          'filter': filter.toLowerCase(),
+        if (sortBy.isNotEmpty) 'sort_by': sortBy,
       },
     );
     return _parseProducts(response.data);

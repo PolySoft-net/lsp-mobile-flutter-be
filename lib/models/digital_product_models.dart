@@ -110,7 +110,7 @@ class DigitalProductItem {
 
   bool matchesFilter(String? filter) {
     final value = filter?.trim().toLowerCase();
-    if (value == null || value.isEmpty) return true;
+    if (value == null || value.isEmpty || value == 'semua') return true;
     return serviceType.toLowerCase() == value ||
         productType.toLowerCase() == value ||
         category.trim().toLowerCase() == value ||

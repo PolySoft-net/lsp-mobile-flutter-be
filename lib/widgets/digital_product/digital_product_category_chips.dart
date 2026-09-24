@@ -3,11 +3,13 @@ import 'package:material_ui/material_ui.dart';
 class DigitalProductCategoryChips extends StatelessWidget {
   final String? selectedCategory;
   final ValueChanged<String>? onCategorySelected;
+  final bool showAllOption;
 
   const DigitalProductCategoryChips({
     super.key,
     this.selectedCategory,
     this.onCategorySelected,
+    this.showAllOption = true,
   });
 
   static const List<String> categories = [
@@ -24,20 +26,36 @@ class DigitalProductCategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final list = [
+      if (showAllOption) 'Semua',
+      ...categories,
+    ];
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       child: Row(
-        children: categories.map((category) {
-          final isSelected =
-              selectedCategory?.toLowerCase() == category.toLowerCase();
+        children: list.map((category) {
+          final isAll = category == 'Semua';
+          final isSelected = isAll
+              ? (selectedCategory == null ||
+                  selectedCategory!.isEmpty ||
+                  selectedCategory!.toLowerCase() == 'semua')
+              : (selectedCategory?.toLowerCase() == category.toLowerCase());
+
           return Padding(
             padding: EdgeInsets.only(
-              right: category != categories.last ? 8.0 : 0.0,
+              right: category != list.last ? 8.0 : 0.0,
             ),
             child: InkWell(
-              onTap: () => onCategorySelected?.call(category),
+              onTap: () {
+                if (isAll) {
+                  onCategorySelected?.call('');
+                } else {
+                  onCategorySelected?.call(category);
+                }
+              },
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding: const EdgeInsets.symmetric(

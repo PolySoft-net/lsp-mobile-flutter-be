@@ -40,6 +40,11 @@ class _DigitalProductProdukJasaScreenState
     });
     try {
       final products = await DigitalProductService.getMine();
+      products.sort((a, b) {
+        final idA = int.tryParse(a.id) ?? 0;
+        final idB = int.tryParse(b.id) ?? 0;
+        return idB.compareTo(idA);
+      });
       if (mounted) setState(() => _products = products);
     } catch (_) {
       if (mounted) setState(() => _error = 'Produk/Jasa belum dapat dimuat');
@@ -78,9 +83,13 @@ class _DigitalProductProdukJasaScreenState
                 DigitalProductCategoryChips(
                   selectedCategory: _selectedCategory,
                   onCategorySelected: (category) => setState(() {
-                    _selectedCategory = _selectedCategory == category
-                        ? null
-                        : category;
+                    if (category.isEmpty || category.toLowerCase() == 'semua') {
+                      _selectedCategory = null;
+                    } else {
+                      _selectedCategory = _selectedCategory == category
+                          ? null
+                          : category;
+                    }
                   }),
                 ),
                 const Divider(height: 1),

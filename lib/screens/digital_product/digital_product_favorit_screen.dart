@@ -37,9 +37,20 @@ class _DigitalProductFavoritScreenState
       _error = '';
     });
     try {
+      final categoryFilter = (_selectedCategory == null ||
+              _selectedCategory!.trim().isEmpty ||
+              _selectedCategory!.trim().toLowerCase() == 'semua')
+          ? ''
+          : _selectedCategory!.trim();
+
       final products = await DigitalProductService.getFavorites(
-        filter: _selectedCategory ?? '',
+        filter: categoryFilter,
       );
+      products.sort((a, b) {
+        final idA = int.tryParse(a.id) ?? 0;
+        final idB = int.tryParse(b.id) ?? 0;
+        return idB.compareTo(idA);
+      });
       if (mounted) setState(() => _products = products);
     } catch (_) {
       if (mounted) setState(() => _error = 'Favorit belum dapat dimuat');
@@ -50,7 +61,11 @@ class _DigitalProductFavoritScreenState
 
   void _selectCategory(String category) {
     setState(() {
-      _selectedCategory = _selectedCategory == category ? null : category;
+      if (category.isEmpty || category.toLowerCase() == 'semua') {
+        _selectedCategory = null;
+      } else {
+        _selectedCategory = _selectedCategory == category ? null : category;
+      }
     });
     _load();
   }

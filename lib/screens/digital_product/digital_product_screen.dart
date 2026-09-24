@@ -53,16 +53,30 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
       _error = '';
     });
     try {
+      final categoryFilter = (_selectedCategory == null ||
+              _selectedCategory!.trim().isEmpty ||
+              _selectedCategory!.trim().toLowerCase() == 'semua')
+          ? ''
+          : _selectedCategory!.trim();
+
       final results = await Future.wait([
         DigitalProductService.getProducts(
           search: _searchController.text,
-          filter: _selectedCategory ?? '',
+          filter: categoryFilter,
+          sortBy: 'latest',
         ),
         DigitalProductService.getPopularProducts(limit: 10),
       ]);
       if (mounted) {
+        final list = List<DigitalProductItem>.from(results[0]);
+        // Pastikan order produk yang terakhir di-upload selalu paling awal
+        list.sort((a, b) {
+          final idA = int.tryParse(a.id) ?? 0;
+          final idB = int.tryParse(b.id) ?? 0;
+          return idB.compareTo(idA);
+        });
         setState(() {
-          _products = results[0];
+          _products = list;
           _popularProducts = results[1];
         });
       }
@@ -81,7 +95,11 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
 
   void _onCategorySelected(String category) {
     setState(() {
-      _selectedCategory = _selectedCategory == category ? null : category;
+      if (category.isEmpty || category.toLowerCase() == 'semua') {
+        _selectedCategory = null;
+      } else {
+        _selectedCategory = _selectedCategory == category ? null : category;
+      }
     });
     _loadProducts();
   }
