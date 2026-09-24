@@ -81,43 +81,47 @@ class DigitalProductHeader extends StatelessWidget implements PreferredSizeWidge
 
           // Search bar pill
           Expanded(
-            child: Container(
-              height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  const Icon(
-                    LucideIcons.search,
-                    size: 16,
-                    color: Color(0xFF64748B),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: onSearchChanged,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF1E293B),
-                      ),
-                      decoration: const InputDecoration(
-                        hintText: 'search',
-                        hintStyle: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF94A3B8),
-                          fontWeight: FontWeight.w400,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 135),
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    const Icon(
+                      LucideIcons.search,
+                      size: 15,
+                      color: Color(0xFF64748B),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: onSearchChanged,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: Color(0xFF1E293B),
                         ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
+                        decoration: const InputDecoration(
+                          hintText: 'search',
+                          hintStyle: TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF94A3B8),
+                            fontWeight: FontWeight.w400,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

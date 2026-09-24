@@ -1,13 +1,39 @@
+import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../../models/digital_product_models.dart';
 import 'interactive_favorite_button.dart';
 
 class PortofolioHighlightCard extends StatelessWidget {
-  const PortofolioHighlightCard({super.key});
+  final String? sellerName;
+  final String? description;
+  final List<String>? tags;
+  final List<DigitalProductMedia>? media;
+  final EdgeInsetsGeometry margin;
+
+  const PortofolioHighlightCard({
+    super.key,
+    this.sellerName,
+    this.description,
+    this.tags,
+    this.media,
+    this.margin = EdgeInsets.zero,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final authorName = (sellerName != null && sellerName!.trim().isNotEmpty)
+        ? sellerName!.trim()
+        : 'Jendela_Website';
+    final descText = (description != null && description!.trim().isNotEmpty)
+        ? description!.trim()
+        : 'website ini hanya berupa desain prototype saja. Website ini cocok untuk produk apa saja. Pengerjaan membutuhkan sekiter 2 bulan dan secara online atau dering...';
+    final tagList = (tags != null && tags!.isNotEmpty)
+        ? tags!
+        : const ['#Software', '#Template', '#Website', '#Design'];
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      margin: margin,
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -27,35 +53,18 @@ class PortofolioHighlightCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section Title
-          const Text(
-            'Portofolio Produk',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Divider(
-            height: 1,
-            thickness: 0.8,
-            color: Color(0xFFE2E8F0),
-          ),
-          const SizedBox(height: 10),
-
           // Author / Creator Row
           Row(
-            children: const [
-              Icon(
-                Icons.account_circle_outlined,
-                size: 22,
+            children: [
+              const Icon(
+                LucideIcons.circle_user_round,
+                size: 20,
                 color: Color(0xFF334155),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
-                'Jendela_Website',
-                style: TextStyle(
+                authorName,
+                style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF334155),
@@ -236,9 +245,9 @@ class PortofolioHighlightCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          const Text(
-            'website ini hanya berupa desain prototype saja. Website ini cocok untuk produk apa saja. Pengerjaan membutuhkan sekitar 2 bulan dan secara online atau daring...',
-            style: TextStyle(
+          Text(
+            descText,
+            style: const TextStyle(
               fontSize: 11,
               color: Color(0xFF64748B),
               height: 1.35,
@@ -255,16 +264,11 @@ class PortofolioHighlightCard extends StatelessWidget {
               color: Color(0xFF1E293B),
             ),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Wrap(
             spacing: 6,
             runSpacing: 4,
-            children: const [
-              _CategoryTag(tag: '#Online'),
-              _CategoryTag(tag: '#Produk'),
-              _CategoryTag(tag: '#Website'),
-              _CategoryTag(tag: '#Design'),
-            ],
+            children: tagList.map((tag) => _CategoryTag(tag: tag)).toList(),
           ),
         ],
       ),
@@ -282,7 +286,7 @@ class _CategoryTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
       decoration: BoxDecoration(
-        color: const Color(0xFF94A3B8).withValues(alpha: 0.6),
+        color: const Color(0xFFDFEDFA),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
@@ -290,7 +294,7 @@ class _CategoryTag extends StatelessWidget {
         style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF1E293B),
+          color: Color(0xFF1E3A8A),
         ),
       ),
     );
@@ -304,6 +308,7 @@ class PortofolioLainnyaCard extends StatefulWidget {
   final bool isFavorite;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteTap;
+  final EdgeInsetsGeometry? margin;
 
   const PortofolioLainnyaCard({
     super.key,
@@ -313,6 +318,7 @@ class PortofolioLainnyaCard extends StatefulWidget {
     this.isFavorite = true,
     this.onTap,
     this.onFavoriteTap,
+    this.margin,
   });
 
   @override
@@ -339,7 +345,7 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+      margin: widget.margin ?? const EdgeInsets.only(bottom: 12.0),
       padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
         color: Colors.white,

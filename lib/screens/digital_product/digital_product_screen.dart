@@ -74,6 +74,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   }
 
   void _onSearchChanged(String _) {
+    setState(() {});
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 400), _loadProducts);
   }
@@ -179,12 +180,16 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
         ),
       );
     }
+    final isSearching =
+        _searchController.text.trim().isNotEmpty || _currentBottomNavIndex == 2;
+    final showBanner = !isSearching && _currentBottomNavIndex != 1;
+
     return RefreshIndicator(
       onRefresh: _loadProducts,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          if (_currentBottomNavIndex != 1)
+          if (showBanner)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
@@ -204,7 +209,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.only(
-                top: _currentBottomNavIndex == 1 ? 4 : 8,
+                top: showBanner ? 8 : 4,
                 bottom: 12,
               ),
               child: DigitalProductCategoryChips(

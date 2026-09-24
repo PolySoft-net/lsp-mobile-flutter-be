@@ -258,28 +258,35 @@ class _DigitalProductDetailScreenState
           // Kategori
           const Text(
             'Kategori :',
-            style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 6.0,
-            runSpacing: 6.0,
-            children: tags.map((tag) {
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: (tags.isNotEmpty
+                    ? tags
+                    : const ['#Software', '#Template', '#Website', '#Design'])
+                .map((tag) {
               return Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10.0,
-                  vertical: 3.5,
+                  horizontal: 14.0,
+                  vertical: 6.0,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF94A3B8),
-                  borderRadius: BorderRadius.circular(4),
+                  color: const Color(0xFFDFEDFA),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   tag,
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF0F172A),
+                    color: Color(0xFF1E3A8A),
                   ),
                 ),
               );
@@ -522,17 +529,16 @@ class _DigitalProductDetailScreenState
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: InkWell(
-        onTap: media.isEmpty
-            ? null
-            : () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => DigitalProductPortofolioScreen(
-                    media: media,
-                    sellerName: _item.sellerName,
-                    sellerPhone: _item.sellerPhone,
-                  ),
-                ),
-              ),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DigitalProductPortofolioScreen(
+              media: media,
+              sellerName: _item.sellerName,
+              sellerPhone: _item.sellerPhone,
+              product: _item,
+            ),
+          ),
+        ),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
