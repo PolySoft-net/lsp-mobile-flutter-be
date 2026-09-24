@@ -192,6 +192,8 @@ class DigitalProductCertificate {
   final String schemeName;
   final String competencyStatus;
   final String certificateNo;
+  // final String registrationNo;
+  // final String publishedDate;
 
   const DigitalProductCertificate({
     required this.schemeId,
@@ -199,6 +201,8 @@ class DigitalProductCertificate {
     required this.schemeName,
     required this.competencyStatus,
     required this.certificateNo,
+    // this.registrationNo = '',
+    // this.publishedDate = '',
   });
 
   factory DigitalProductCertificate.fromJson(Map<String, dynamic> json) {
@@ -208,9 +212,12 @@ class DigitalProductCertificate {
       schemeName: json['scheme_name']?.toString() ?? '',
       competencyStatus: json['competency_status']?.toString() ?? '',
       certificateNo: json['certificate_no']?.toString() ?? '',
+      // registrationNo: json['registration_no']?.toString() ?? '',
+      // publishedDate: json['published_date']?.toString() ?? '',
     );
   }
 }
+
 
 class DigitalProductSeller {
   final int id;
