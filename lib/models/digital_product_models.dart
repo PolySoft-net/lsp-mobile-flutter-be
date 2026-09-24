@@ -163,6 +163,7 @@ class DigitalProductMedia {
   final String url;
   final String fileName;
   final bool isPrimary;
+  final int order;
 
   const DigitalProductMedia({
     required this.id,
@@ -170,6 +171,7 @@ class DigitalProductMedia {
     required this.url,
     required this.fileName,
     required this.isPrimary,
+    this.order = 0,
   });
 
   factory DigitalProductMedia.fromJson(Map<String, dynamic> json) {
@@ -179,6 +181,7 @@ class DigitalProductMedia {
       url: json['url']?.toString() ?? '',
       fileName: json['file_name']?.toString() ?? '',
       isPrimary: JsonHelper.asBool(json['is_primary']),
+      order: JsonHelper.asInt(json['order']),
     );
   }
 }

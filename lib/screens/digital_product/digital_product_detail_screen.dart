@@ -536,6 +536,7 @@ class _DigitalProductDetailScreenState
               sellerName: _item.sellerName,
               sellerPhone: _item.sellerPhone,
               product: _item,
+              detail: _detail,
             ),
           ),
         ),

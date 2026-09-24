@@ -3,13 +3,16 @@ import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/digital_product_models.dart';
+import '../../services/digital_product_service.dart';
 import '../../widgets/digital_product/digital_product_portofolio_cards.dart';
+import 'digital_product_detail_screen.dart';
 
-class DigitalProductPortofolioScreen extends StatelessWidget {
+class DigitalProductPortofolioScreen extends StatefulWidget {
   final List<DigitalProductMedia> media;
   final String sellerName;
   final String sellerPhone;
   final DigitalProductItem? product;
+  final DigitalProductDetail? detail;
 
   const DigitalProductPortofolioScreen({
     super.key,
@@ -17,14 +20,47 @@ class DigitalProductPortofolioScreen extends StatelessWidget {
     this.sellerName = '',
     this.sellerPhone = '',
     this.product,
+    this.detail,
   });
 
-  Future<void> _contactSeller(BuildContext context) async {
-    final phone = (sellerPhone.trim().isNotEmpty
-            ? sellerPhone
-            : (product?.sellerPhone ?? ''))
-        .trim();
-    if (phone.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: phone))) {
+  @override
+  State<DigitalProductPortofolioScreen> createState() =>
+      _DigitalProductPortofolioScreenState();
+}
+
+class _DigitalProductPortofolioScreenState
+    extends State<DigitalProductPortofolioScreen> {
+  DigitalProductDetail? _detail;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _detail = widget.detail;
+    if (_detail == null &&
+        widget.product != null &&
+        widget.product!.id.isNotEmpty) {
+      _loadDetail();
+    }
+  }
+
+  Future<void> _loadDetail() async {
+    if (widget.product == null || widget.product!.id.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      final detail = await DigitalProductService.getDetail(widget.product!.id);
+      if (mounted) {
+        setState(() => _detail = detail);
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _contactSeller(BuildContext context, String phone) async {
+    final cleaned = phone.trim();
+    if (cleaned.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: cleaned))) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Nomor penjual belum tersedia')),
@@ -33,13 +69,52 @@ class DigitalProductPortofolioScreen extends StatelessWidget {
     }
   }
 
+  static String _titleCase(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final resolvedSellerName = sellerName.trim().isNotEmpty
-        ? sellerName.trim()
-        : (product?.sellerName.trim().isNotEmpty == true
-            ? product!.sellerName.trim()
-            : 'Jendela_Website');
+    final resolvedSellerName = (_detail?.seller.name.trim().isNotEmpty == true)
+        ? _detail!.seller.name.trim()
+        : (widget.sellerName.trim().isNotEmpty
+            ? widget.sellerName.trim()
+            : (widget.product?.sellerName.trim().isNotEmpty == true
+                ? widget.product!.sellerName.trim()
+                : 'Jendela_Website'));
+
+    final resolvedPhone = (_detail?.seller.phone.trim().isNotEmpty == true)
+        ? _detail!.seller.phone.trim()
+        : (widget.sellerPhone.trim().isNotEmpty
+            ? widget.sellerPhone.trim()
+            : (widget.product?.sellerPhone.trim().isNotEmpty == true
+                ? widget.product!.sellerPhone.trim()
+                : ''));
+
+    final resolvedDescription =
+        (_detail?.product.description.trim().isNotEmpty == true)
+            ? _detail!.product.description.trim()
+            : (widget.product?.description.trim().isNotEmpty == true
+                ? widget.product!.description.trim()
+                : 'website ini hanya berupa desain prototype saja. Website ini cocok untuk produk apa saja. Pengerjaan membutuhkan sekiter 2 bulan dan secara online atau dering...');
+
+    final resolvedTags = (_detail != null && _detail!.product.tags.isNotEmpty)
+        ? _detail!.product.tags
+        : (widget.product != null && widget.product!.tags.isNotEmpty
+            ? widget.product!.tags
+            : const ['#Software', '#Template', '#Website', '#Design']);
+
+    final resolvedMedia = (_detail != null && _detail!.media.isNotEmpty)
+        ? _detail!.media
+        : widget.media;
+
+    final fallbackThumb = _detail?.product.thumbnailUrl.isNotEmpty == true
+        ? _detail!.product.thumbnailUrl
+        : (widget.product?.thumbnailUrl ?? '');
+
+    final sellerProducts =
+        _detail?.sellerProducts ?? const <DigitalProductItem>[];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -48,41 +123,75 @@ class DigitalProductPortofolioScreen extends StatelessWidget {
           children: [
             _buildAppBar(context),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionHeader('Portofolio Produk'),
-                    const SizedBox(height: 10),
-                    PortofolioHighlightCard(
-                      sellerName: resolvedSellerName,
-                      description: product?.description,
-                      tags: (product != null && product!.tags.isNotEmpty)
-                          ? product!.tags
-                          : null,
-                      media: media,
+              child: _loading && _detail == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: _loadDetail,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader('Portofolio Produk'),
+                            const SizedBox(height: 10),
+                            PortofolioHighlightCard(
+                              sellerName: resolvedSellerName,
+                              description: resolvedDescription,
+                              tags: resolvedTags,
+                              media: resolvedMedia,
+                              fallbackThumbnailUrl: fallbackThumb,
+                            ),
+                            const SizedBox(height: 14),
+                            _buildContactSellerButton(context, resolvedPhone),
+                            const SizedBox(height: 18),
+                            _buildSectionHeader('Portofolio Produk Lainnya :'),
+                            const SizedBox(height: 10),
+                            if (sellerProducts.isNotEmpty)
+                              ...sellerProducts.map((item) {
+                                final typeText = item.serviceType.isNotEmpty
+                                    ? '/${_titleCase(item.serviceType)}'
+                                    : '/Online';
+                                return PortofolioLainnyaCard(
+                                  title: item.title,
+                                  price: item.price,
+                                  type: typeText,
+                                  isFavorite: item.isFavorite,
+                                  thumbnailUrl: item.thumbnailUrl,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          DigitalProductDetailScreen(item: item),
+                                    ),
+                                  ),
+                                  onFavoriteTap: (fav) async {
+                                    try {
+                                      await DigitalProductService.setFavorite(
+                                        item.id,
+                                        fav,
+                                      );
+                                    } catch (_) {}
+                                  },
+                                );
+                              })
+                            else ...[
+                              const PortofolioLainnyaCard(
+                                title: 'Portofolio Design Aplikasi Motor',
+                                price: 'Rp 400.000',
+                                type: '/Online',
+                                isFavorite: true,
+                              ),
+                              const PortofolioLainnyaCard(
+                                title: 'Portofolio Prototype Aplikasi Motor',
+                                price: 'Rp 400.000',
+                                type: '/Online',
+                                isFavorite: true,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 14),
-                    _buildContactSellerButton(context),
-                    const SizedBox(height: 18),
-                    _buildSectionHeader('Portofolio Produk Lainnya :'),
-                    const SizedBox(height: 10),
-                    const PortofolioLainnyaCard(
-                      title: 'Portofolio Design Aplikasi Motor',
-                      price: 'Rp 400.000',
-                      type: '/Online',
-                      isFavorite: true,
-                    ),
-                    const PortofolioLainnyaCard(
-                      title: 'Portofolio Prototype Aplikasi Motor',
-                      price: 'Rp 400.000',
-                      type: '/Online',
-                      isFavorite: true,
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -158,7 +267,7 @@ class DigitalProductPortofolioScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactSellerButton(BuildContext context) {
+  Widget _buildContactSellerButton(BuildContext context, String phone) {
     return Container(
       width: double.infinity,
       height: 48,
@@ -178,7 +287,7 @@ class DigitalProductPortofolioScreen extends StatelessWidget {
         ],
       ),
       child: InkWell(
-        onTap: () => _contactSeller(context),
+        onTap: () => _contactSeller(context, phone),
         borderRadius: BorderRadius.circular(10),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/digital_product_models.dart';
+import '../../services/digital_product_service.dart';
 import 'interactive_favorite_button.dart';
 
 class PortofolioHighlightCard extends StatelessWidget {
@@ -9,6 +12,7 @@ class PortofolioHighlightCard extends StatelessWidget {
   final String? description;
   final List<String>? tags;
   final List<DigitalProductMedia>? media;
+  final String? fallbackThumbnailUrl;
   final EdgeInsetsGeometry margin;
 
   const PortofolioHighlightCard({
@@ -17,6 +21,7 @@ class PortofolioHighlightCard extends StatelessWidget {
     this.description,
     this.tags,
     this.media,
+    this.fallbackThumbnailUrl,
     this.margin = EdgeInsets.zero,
   });
 
@@ -31,6 +36,18 @@ class PortofolioHighlightCard extends StatelessWidget {
     final tagList = (tags != null && tags!.isNotEmpty)
         ? tags!
         : const ['#Software', '#Template', '#Website', '#Design'];
+
+    final photos = (media ?? const [])
+        .where((m) =>
+            m.type == 'foto_produk' ||
+            m.type == 'screenshot' ||
+            m.type.isEmpty)
+        .toList();
+    if (photos.isEmpty && media != null && media!.isNotEmpty) {
+      photos.addAll(media!);
+    }
+
+    final dotCount = min(max(photos.length, 4), 6);
 
     return Container(
       margin: margin,
@@ -77,134 +94,48 @@ class PortofolioHighlightCard extends StatelessWidget {
           // Showcase Images Row
           Row(
             children: [
-              // Image 1: Retro Computer Illustration
+              // Image 1
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Container(
+                  child: SizedBox(
                     height: 110,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Background accents
-                        Positioned(
-                          top: 6,
-                          left: 6,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF87171),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: const Text(
-                              'JAN',
-                              style: TextStyle(fontSize: 7, color: Colors.white, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                        // Monitor box
-                        Container(
-                          width: 86,
-                          height: 68,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE2E8F0),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 72,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF2563EB),
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'PORTOFOLIO',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8.5,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Container(width: 24, height: 2, color: const Color(0xFF94A3B8)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: photos.isNotEmpty
+                        ? Image.network(
+                            DigitalProductService.absoluteUrl(photos[0].url),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) =>
+                                _buildRetroComputerIllustration(),
+                          )
+                        : (fallbackThumbnailUrl != null &&
+                                fallbackThumbnailUrl!.isNotEmpty
+                            ? Image.network(
+                                DigitalProductService.absoluteUrl(
+                                    fallbackThumbnailUrl!),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) =>
+                                    _buildRetroComputerIllustration(),
+                              )
+                            : _buildRetroComputerIllustration()),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
 
-              // Image 2: Creative Scrapbook Illustration
+              // Image 2
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Container(
+                  child: SizedBox(
                     height: 110,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F766E),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Positioned(
-                          top: 6,
-                          left: 8,
-                          child: Icon(Icons.star_rounded, size: 14, color: const Color(0xFFFDE047)),
-                        ),
-                        Positioned(
-                          top: 6,
-                          right: 8,
-                          child: Container(
-                            width: 16,
-                            height: 16,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFFDE047),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                        // Center banner
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF08A),
-                            borderRadius: BorderRadius.circular(4),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 3,
-                              ),
-                            ],
-                          ),
-                          child: const Text(
-                            'PORTFOLIO',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              fontStyle: FontStyle.italic,
-                              color: Color(0xFF1E293B),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: photos.length > 1
+                        ? Image.network(
+                            DigitalProductService.absoluteUrl(photos[1].url),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) =>
+                                _buildScrapbookIllustration(),
+                          )
+                        : _buildScrapbookIllustration(),
                   ),
                 ),
               ),
@@ -218,14 +149,16 @@ class PortofolioHighlightCard extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.only(left: 4),
                 child: Row(
-                  children: List.generate(4, (index) {
+                  children: List.generate(dotCount, (index) {
                     return Container(
                       width: 5,
                       height: 5,
                       margin: const EdgeInsets.symmetric(horizontal: 1.5),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: index == 0 ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                        color: index == 0
+                            ? const Color(0xFF0F172A)
+                            : const Color(0xFF94A3B8),
                       ),
                     );
                   }),
@@ -274,6 +207,136 @@ class PortofolioHighlightCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildRetroComputerIllustration() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: 6,
+            left: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF87171),
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: const Text(
+                'JAN',
+                style: TextStyle(
+                  fontSize: 7,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width: 86,
+            height: 68,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E8F0),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 72,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'PORTOFOLIO',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Container(
+                  width: 24,
+                  height: 2,
+                  color: const Color(0xFF94A3B8),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScrapbookIllustration() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F766E),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          const Positioned(
+            top: 6,
+            left: 8,
+            child: Icon(
+              Icons.star_rounded,
+              size: 14,
+              color: Color(0xFFFDE047),
+            ),
+          ),
+          Positioned(
+            top: 6,
+            right: 8,
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFDE047),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF08A),
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 3,
+                ),
+              ],
+            ),
+            child: const Text(
+              'PORTFOLIO',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w900,
+                fontStyle: FontStyle.italic,
+                color: Color(0xFF1E293B),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _CategoryTag extends StatelessWidget {
@@ -306,8 +369,10 @@ class PortofolioLainnyaCard extends StatefulWidget {
   final String price;
   final String type;
   final bool isFavorite;
+  final String? thumbnailUrl;
+  final String? secondImageUrl;
   final VoidCallback? onTap;
-  final VoidCallback? onFavoriteTap;
+  final ValueChanged<bool>? onFavoriteTap;
   final EdgeInsetsGeometry? margin;
 
   const PortofolioLainnyaCard({
@@ -316,6 +381,8 @@ class PortofolioLainnyaCard extends StatefulWidget {
     this.price = 'Rp 400.000',
     this.type = '/Online',
     this.isFavorite = true,
+    this.thumbnailUrl,
+    this.secondImageUrl,
     this.onTap,
     this.onFavoriteTap,
     this.margin,
@@ -370,109 +437,45 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
             // Two preview images
             Row(
               children: [
-                // Image A: Retro Web UI Windows
+                // Image A
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Container(
+                    child: SizedBox(
                       height: 92,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBEB),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Positioned(
-                            top: 6,
-                            left: 6,
-                            child: Container(
-                              width: 18,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFB923C),
-                                borderRadius: BorderRadius.circular(3),
+                      child: (widget.thumbnailUrl != null &&
+                              widget.thumbnailUrl!.isNotEmpty)
+                          ? Image.network(
+                              DigitalProductService.absoluteUrl(
+                                widget.thumbnailUrl!,
                               ),
-                            ),
-                          ),
-                          Container(
-                            width: 80,
-                            height: 54,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFBAE6FD),
-                              borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: const Color(0xFF7DD3FC), width: 1.2),
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.sentiment_satisfied_alt_rounded, size: 22, color: Color(0xFF0369A1)),
-                            ),
-                          ),
-                        ],
-                      ),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  _buildImageAIllustration(),
+                            )
+                          : _buildImageAIllustration(),
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
 
-                // Image B: Portfolio Typography + Adobe Icons
+                // Image B
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Container(
+                    child: SizedBox(
                       height: 92,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCBD5E1).withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Text(
-                                'porto',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF0F172A),
-                                ),
+                      child: (widget.secondImageUrl != null &&
+                              widget.secondImageUrl!.isNotEmpty)
+                          ? Image.network(
+                              DigitalProductService.absoluteUrl(
+                                widget.secondImageUrl!,
                               ),
-                              Text(
-                                'folio',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFFEA580C),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0284C7),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                                child: const Text('Ps', style: TextStyle(fontSize: 7, color: Colors.white, fontWeight: FontWeight.bold)),
-                              ),
-                              const SizedBox(width: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFD97706),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                                child: const Text('Ai', style: TextStyle(fontSize: 7, color: Colors.white, fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) =>
+                                  _buildImageBIllustration(),
+                            )
+                          : _buildImageBIllustration(),
                     ),
                   ),
                 ),
@@ -484,35 +487,37 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${widget.price}  ${widget.type}',
-                      style: const TextStyle(
-                        fontSize: 10.5,
-                        color: Color(0xFF64748B),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${widget.price}  ${widget.type}',
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: Color(0xFF64748B),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 InteractiveFavoriteButton(
                   initialIsFavorite: _isFavorite,
                   size: 18,
                   onFavoriteChanged: (isFav) {
-                    setState(() {
-                      _isFavorite = isFav;
-                    });
-                    widget.onFavoriteTap?.call();
+                    setState(() => _isFavorite = isFav);
+                    widget.onFavoriteTap?.call(isFav);
                   },
                 ),
               ],
@@ -522,5 +527,124 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
       ),
     );
   }
-}
 
+  Widget _buildImageAIllustration() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBEB),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            top: 6,
+            left: 6,
+            child: Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFB923C),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+          ),
+          Container(
+            width: 80,
+            height: 54,
+            decoration: BoxDecoration(
+              color: const Color(0xFFBAE6FD),
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(color: const Color(0xFF7DD3FC), width: 1.2),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.sentiment_satisfied_alt_rounded,
+                size: 22,
+                color: Color(0xFF0369A1),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageBIllustration() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFCBD5E1).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text(
+                'porto',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              Text(
+                'folio',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFEA580C),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0284C7),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: const Text(
+                  'Ps',
+                  style: TextStyle(
+                    fontSize: 7,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD97706),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: const Text(
+                  'Ai',
+                  style: TextStyle(
+                    fontSize: 7,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
