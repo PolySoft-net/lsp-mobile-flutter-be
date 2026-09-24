@@ -40,10 +40,12 @@ class DigitalProductCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: double.infinity,
-                height: 80,
-                child: _buildThumbnail(),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: _buildThumbnail(),
+                ),
               ),
             ),
           ),

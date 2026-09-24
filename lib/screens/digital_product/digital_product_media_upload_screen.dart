@@ -389,7 +389,9 @@ class _DigitalProductMediaUploadScreenState
                     onTap: () => _pickFiles(portfolio: true),
                   ),
                   const SizedBox(height: 6),
-                  _helperCaption('Pilih foto atau dokumen pendukung minimal 10gb'),
+                  _helperCaption(
+                    'Format JPG, PNG, WEBP, atau PDF. Rekomendasi rasio 16:9 (maks. 10MB)',
+                  ),
 
                   // Daftar Fortofolio Preview
                   if (_portfolioFiles.isNotEmpty) ...[
@@ -414,7 +416,9 @@ class _DigitalProductMediaUploadScreenState
                     onTap: () => _pickFiles(portfolio: false),
                   ),
                   const SizedBox(height: 6),
-                  _helperCaption('Pilih foto atau dokumen pendukung minimal 10gb'),
+                  _helperCaption(
+                    'Format gambar disarankan rasio 16:9 (maks. 10MB per file)',
+                  ),
 
                   // Daftar Foto Produk Preview
                   if (_productFiles.isNotEmpty) ...[

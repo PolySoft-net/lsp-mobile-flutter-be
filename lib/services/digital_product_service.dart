@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../models/digital_product_models.dart';
 import '../utils/api_routes.dart';
+import '../utils/image_compress_helper.dart';
 import 'api_client.dart';
 
 class DigitalProductService {
@@ -79,14 +80,16 @@ class DigitalProductService {
   }) async {
     Response response;
     if (photoPath != null && photoPath.isNotEmpty) {
+      final compressedPhotoPath =
+          await ImageCompressHelper.compressImage(photoPath);
       final formData = FormData.fromMap({
         'name': name,
         'phone': phone,
         'email': email,
         '_method': 'PUT',
         'profile_photo': await MultipartFile.fromFile(
-          photoPath,
-          filename: _fileName(photoPath),
+          compressedPhotoPath,
+          filename: _fileName(compressedPhotoPath),
         ),
       });
       response = await _dio.post(
@@ -143,6 +146,11 @@ class DigitalProductService {
     required List<String> productFiles,
     required List<String> portfolioFiles,
   }) async {
+    final compressedProductFiles =
+        await ImageCompressHelper.compressAll(productFiles);
+    final compressedPortfolioFiles =
+        await ImageCompressHelper.compressAll(portfolioFiles);
+
     final data = FormData.fromMap({
       'scheme_id': schemeId,
       'product_type': productType.toLowerCase(),
@@ -154,11 +162,11 @@ class DigitalProductService {
       'negotiable': negotiable,
       'seller_status': 'Open to hire / Freelance',
       'product_files': [
-        for (final path in productFiles)
+        for (final path in compressedProductFiles)
           await MultipartFile.fromFile(path, filename: _fileName(path)),
       ],
       'portfolio_files': [
-        for (final path in portfolioFiles)
+        for (final path in compressedPortfolioFiles)
           await MultipartFile.fromFile(path, filename: _fileName(path)),
       ],
     });

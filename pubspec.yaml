@@ -30,6 +30,7 @@ dependencies:
   geocode_cache: ^1.1.0
   google_places_sdk_plus: ^1.1.0
   flutter_markdown_plus: ^1.0.12
+  flutter_image_compress: ^2.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

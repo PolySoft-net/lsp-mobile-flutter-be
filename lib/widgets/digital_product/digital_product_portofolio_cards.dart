@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/digital_product_models.dart';
 import '../../services/digital_product_service.dart';
+import 'digital_product_image_viewer.dart';
 import 'interactive_favorite_button.dart';
 
 class PortofolioHighlightCard extends StatelessWidget {
@@ -159,18 +160,28 @@ class PortofolioHighlightCard extends StatelessWidget {
 
   Widget _buildShowcaseImages(List<String> imageUrls) {
     if (imageUrls.length == 1) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: double.infinity,
-          height: 140,
-          child: Image.network(
-            DigitalProductService.absoluteUrl(imageUrls[0]),
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => const ColoredBox(
-              color: Color(0xFFF1F5F9),
-              child: Center(
-                child: Icon(LucideIcons.image, size: 28, color: Color(0xFF94A3B8)),
+      final url = DigitalProductService.absoluteUrl(imageUrls[0]);
+      return Builder(
+        builder: (ctx) => InkWell(
+          onTap: () => DigitalProductImageViewer.show(ctx, imageUrl: url),
+          borderRadius: BorderRadius.circular(8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const ColoredBox(
+                  color: Color(0xFFF1F5F9),
+                  child: Center(
+                    child: Icon(
+                      LucideIcons.image,
+                      size: 28,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -185,27 +196,32 @@ class PortofolioHighlightCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 110,
+          height: 84,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: imageUrls.length,
             separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
-              return ClipRRect(
+              final url = DigitalProductService.absoluteUrl(imageUrls[index]);
+              return InkWell(
+                onTap: () =>
+                    DigitalProductImageViewer.show(context, imageUrl: url),
                 borderRadius: BorderRadius.circular(8),
-                child: SizedBox(
-                  width: 150,
-                  height: 110,
-                  child: Image.network(
-                    DigitalProductService.absoluteUrl(imageUrls[index]),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => const ColoredBox(
-                      color: Color(0xFFF1F5F9),
-                      child: Center(
-                        child: Icon(
-                          LucideIcons.image,
-                          size: 24,
-                          color: Color(0xFF94A3B8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const ColoredBox(
+                        color: Color(0xFFF1F5F9),
+                        child: Center(
+                          child: Icon(
+                            LucideIcons.image,
+                            size: 24,
+                            color: Color(0xFF94A3B8),
+                          ),
                         ),
                       ),
                     ),

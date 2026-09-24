@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/digital_product_service.dart';
 import 'digital_product_portofolio_screen.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
+import '../../widgets/digital_product/digital_product_image_viewer.dart';
 import '../../widgets/digital_product/interactive_favorite_button.dart';
 
 class DigitalProductDetailScreen extends StatefulWidget {
@@ -170,10 +171,23 @@ class _DigitalProductDetailScreenState
           // Main Illustration Banner
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              width: double.infinity,
-              height: 140,
-              child: _buildBannerIllustration(),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: InkWell(
+                onTap: _item.thumbnailUrl.isNotEmpty
+                    ? () => DigitalProductImageViewer.show(
+                          context,
+                          imageUrl: DigitalProductService.absoluteUrl(
+                            _item.thumbnailUrl,
+                          ),
+                          title: _item.title,
+                        )
+                    : null,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: _buildBannerIllustration(),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -531,25 +545,24 @@ class _DigitalProductDetailScreenState
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => DigitalProductPortofolioScreen(
-              media: media,
-              sellerName: _item.sellerName,
-              sellerPhone: _item.sellerPhone,
-              product: _item,
-              detail: _detail,
-            ),
-          ),
-        ),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DigitalProductPortofolioScreen(
+                    media: media,
+                    sellerName: _item.sellerName,
+                    sellerPhone: _item.sellerPhone,
+                    product: _item,
+                    detail: _detail,
+                  ),
+                ),
+              ),
+              child: const Row(
                 children: [
                   Text(
                     'Portofolio Produk',
@@ -562,35 +575,63 @@ class _DigitalProductDetailScreenState
                   Icon(Icons.chevron_right_rounded, size: 20),
                 ],
               ),
-              const SizedBox(height: 10),
-              if (media.isEmpty)
-                const Text(
-                  'Belum ada portofolio yang diunggah.',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                )
-              else
-                SizedBox(
-                  height: 96,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: media.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 10),
-                    itemBuilder: (_, index) {
-                      final item = media[index];
-                      final isPdf = item.fileName.toLowerCase().endsWith(
-                        '.pdf',
-                      );
-                      return ClipRRect(
+            ),
+            const SizedBox(height: 10),
+            if (media.isEmpty)
+              const Text(
+                'Belum ada portofolio yang diunggah.',
+                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              )
+            else
+              SizedBox(
+                height: 74,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: media.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (_, index) {
+                    final item = media[index];
+                    final isPdf = item.fileName.toLowerCase().endsWith(
+                      '.pdf',
+                    );
+                    final imageUrl =
+                        DigitalProductService.absoluteUrl(item.url);
+                    return InkWell(
+                      onTap: () {
+                        if (!isPdf && imageUrl.isNotEmpty) {
+                          DigitalProductImageViewer.show(
+                            context,
+                            imageUrl: imageUrl,
+                            title: item.fileName.isNotEmpty
+                                ? item.fileName
+                                : 'Portofolio Produk',
+                          );
+                        } else if (isPdf) {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => DigitalProductPortofolioScreen(
+                                media: media,
+                                sellerName: _item.sellerName,
+                                sellerPhone: _item.sellerPhone,
+                                product: _item,
+                                detail: _detail,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: SizedBox(
-                          width: 132,
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
                           child: isPdf
                               ? const ColoredBox(
                                   color: Color(0xFFF1F5F9),
                                   child: Icon(Icons.picture_as_pdf_outlined),
                                 )
                               : Image.network(
-                                  DigitalProductService.absoluteUrl(item.url),
+                                  imageUrl,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, _, _) => const ColoredBox(
                                     color: Color(0xFFF1F5F9),
@@ -598,12 +639,12 @@ class _DigitalProductDetailScreenState
                                   ),
                                 ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
