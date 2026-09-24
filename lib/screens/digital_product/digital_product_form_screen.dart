@@ -20,6 +20,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
+  final _unitController = TextEditingController();
   List<MasterSkema> _schemes = const [];
   MasterSkema? _selectedScheme;
   String _category = DigitalProductCategoryChips.categories.first;
@@ -38,6 +39,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
+    _unitController.dispose();
     super.dispose();
   }
 
@@ -213,6 +215,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
               : _nameController.text.trim(),
           price: price,
           negotiable: _negotiable,
+          priceUnit: _unitController.text.trim(),
         ),
       ),
     );
@@ -328,6 +331,22 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                             _buildTagChip('#${widget.productType}'),
                           ],
                         ),
+                        const SizedBox(height: 14),
+
+                        // Deskripsi
+                        _label('Deskripsi ${widget.productType}'),
+                        TextFormField(
+                          controller: _descriptionController,
+                          maxLines: 4,
+                          minLines: 3,
+                          decoration: _inputDecoration(
+                            'Masukkan deskripsi ${widget.productType.toLowerCase()}',
+                          ),
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
+                                  ? 'Deskripsi wajib diisi'
+                                  : null,
+                        ),
                       ],
                     ),
 
@@ -371,6 +390,16 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                           title: 'Harga Bisa Nego',
                           isSelected: _negotiable,
                           onTap: () => setState(() => _negotiable = true),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Satuan
+                        _label('Satuan'),
+                        TextFormField(
+                          controller: _unitController,
+                          decoration: _inputDecoration(
+                            'Contoh: Per Jam, Per Bulan, Per License',
+                          ),
                         ),
                       ],
                     ),

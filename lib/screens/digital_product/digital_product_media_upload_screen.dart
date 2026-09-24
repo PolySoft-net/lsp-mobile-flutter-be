@@ -15,7 +15,7 @@ class DigitalProductMediaUploadScreen extends StatefulWidget {
   final String description;
   final int price;
   final bool negotiable;
-
+  final String priceUnit;
   const DigitalProductMediaUploadScreen({
     super.key,
     this.productType = 'Produk',
@@ -26,6 +26,7 @@ class DigitalProductMediaUploadScreen extends StatefulWidget {
     required this.description,
     required this.price,
     required this.negotiable,
+    this.priceUnit = '',
   });
 
   @override
@@ -198,6 +199,7 @@ class _DigitalProductMediaUploadScreenState
         description: widget.description,
         price: widget.price,
         negotiable: widget.negotiable,
+        priceUnit: widget.priceUnit,
         productFiles: _productFiles.map((file) => file.path!).toList(),
         portfolioFiles: _portfolioFiles.map((file) => file.path!).toList(),
       );

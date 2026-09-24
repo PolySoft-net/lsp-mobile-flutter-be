@@ -23,6 +23,7 @@ class DigitalProductItem {
   final String publicationStatus;
   final int salesCount;
   final bool negotiable;
+  final String unit;
   final String createdAt;
 
   const DigitalProductItem({
@@ -48,6 +49,7 @@ class DigitalProductItem {
     this.publicationStatus = 'published',
     this.salesCount = 0,
     this.negotiable = false,
+    this.unit = '',
     this.createdAt = '',
   });
 
@@ -77,6 +79,7 @@ class DigitalProductItem {
         json['sales_count'] ?? json['terjual'] ?? json['sold_count'],
       ),
       negotiable: JsonHelper.asBool(json['negotiable']),
+      unit: (json['price_unit'] ?? json['unit'] ?? json['satuan'])?.toString() ?? '',
       createdAt: json['created_at']?.toString() ?? '',
     );
   }
@@ -96,9 +99,16 @@ class DigitalProductItem {
     return 'Rp $formatted';
   }
 
-  String get priceUnit => priceValue == 0
-      ? ''
-      : '/${status.toLowerCase().contains('nego') ? 'Nego' : 'Tetap'}';
+  String get priceUnit {
+    if (unit.trim().isNotEmpty) {
+      final trimmed = unit.trim();
+      final formatted =
+          trimmed.startsWith('/') ? trimmed.substring(1).trim() : trimmed;
+      return '/$formatted';
+    }
+    if (priceValue == 0) return '';
+    return '/${status.toLowerCase().contains('nego') ? 'Nego' : 'Tetap'}';
+  }
 
   String get thumbnailType => thumbnailUrl.isEmpty ? 'iot' : 'network';
 
@@ -124,6 +134,7 @@ class DigitalProductItem {
     bool? isFavorite,
     int? salesCount,
     bool? negotiable,
+    String? unit,
   }) {
     return DigitalProductItem(
       id: id,
@@ -148,6 +159,7 @@ class DigitalProductItem {
       publicationStatus: publicationStatus,
       salesCount: salesCount ?? this.salesCount,
       negotiable: negotiable ?? this.negotiable,
+      unit: unit ?? this.unit,
       createdAt: createdAt,
     );
   }
