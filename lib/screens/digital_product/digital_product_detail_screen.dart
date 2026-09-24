@@ -256,59 +256,64 @@ class _DigitalProductDetailScreenState
           const SizedBox(height: 10),
 
           // Kategori
-          const Text(
-            'Kategori :',
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+          if (tags.isNotEmpty) ...[
+            const Text(
+              'Kategori :',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 8.0,
-            children: (tags.isNotEmpty
-                    ? tags
-                    : const ['#Software', '#Template', '#Website', '#Design'])
-                .map((tag) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14.0,
-                  vertical: 6.0,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDFEDFA),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  tag,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E3A8A),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: tags.map((tag) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14.0,
+                    vertical: 6.0,
                   ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDFEDFA),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    tag,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1E3A8A),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 10),
+          ],
 
           // Deskripsi
-          const Text(
-            'Deskripsi :',
-            style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 10,
-              color: Color(0xFF475569),
-              height: 1.35,
+          if (description.isNotEmpty) ...[
+            const Text(
+              'Deskripsi :',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF475569),
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // Bottom pill indicator handle
           Center(
@@ -517,9 +522,7 @@ class _DigitalProductDetailScreenState
   }
 
   Widget _buildPortfolioCard(BuildContext context) {
-    final media =
-        _detail?.media.where((item) => item.type == 'portofolio').toList() ??
-        const <DigitalProductMedia>[];
+    final media = _detail?.media ?? const <DigitalProductMedia>[];
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),

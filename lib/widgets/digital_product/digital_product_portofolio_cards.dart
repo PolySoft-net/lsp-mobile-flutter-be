@@ -27,27 +27,37 @@ class PortofolioHighlightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authorName = (sellerName != null && sellerName!.trim().isNotEmpty)
-        ? sellerName!.trim()
-        : 'Jendela_Website';
-    final descText = (description != null && description!.trim().isNotEmpty)
-        ? description!.trim()
-        : 'website ini hanya berupa desain prototype saja. Website ini cocok untuk produk apa saja. Pengerjaan membutuhkan sekiter 2 bulan dan secara online atau dering...';
-    final tagList = (tags != null && tags!.isNotEmpty)
-        ? tags!
-        : const ['#Software', '#Template', '#Website', '#Design'];
+    final authorName = sellerName?.trim() ?? '';
+    final descText = description?.trim() ?? '';
+    final tagList = tags ?? const <String>[];
 
-    final photos = (media ?? const [])
-        .where((m) =>
-            m.type == 'foto_produk' ||
-            m.type == 'screenshot' ||
-            m.type.isEmpty)
-        .toList();
-    if (photos.isEmpty && media != null && media!.isNotEmpty) {
-      photos.addAll(media!);
+    // Filter media URL dari server
+    final List<String> imageUrls = [];
+    if (media != null) {
+      for (final m in media!) {
+        final url = m.url.trim();
+        if (url.isNotEmpty &&
+            !url.toLowerCase().endsWith('.pdf') &&
+            !imageUrls.contains(url)) {
+          imageUrls.add(url);
+        }
+      }
+    }
+    if (imageUrls.isEmpty &&
+        fallbackThumbnailUrl != null &&
+        fallbackThumbnailUrl!.trim().isNotEmpty) {
+      imageUrls.add(fallbackThumbnailUrl!.trim());
     }
 
-    final dotCount = min(max(photos.length, 4), 6);
+    // Jika tidak ada data sama sekali dari server, jangan tampilkan card kosong
+    final hasImages = imageUrls.isNotEmpty;
+    final hasDesc = descText.isNotEmpty;
+    final hasTags = tagList.isNotEmpty;
+    final hasAuthor = authorName.isNotEmpty;
+
+    if (!hasImages && !hasDesc && !hasTags && !hasAuthor) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       margin: margin,
@@ -70,271 +80,165 @@ class PortofolioHighlightCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Author / Creator Row
-          Row(
-            children: [
-              const Icon(
-                LucideIcons.circle_user_round,
-                size: 20,
-                color: Color(0xFF334155),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                authorName,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+          // Author / Creator Row (hanya jika ada dari server)
+          if (hasAuthor) ...[
+            Row(
+              children: [
+                const Icon(
+                  LucideIcons.circle_user_round,
+                  size: 20,
                   color: Color(0xFF334155),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Showcase Images Row
-          Row(
-            children: [
-              // Image 1
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    height: 110,
-                    child: photos.isNotEmpty
-                        ? Image.network(
-                            DigitalProductService.absoluteUrl(photos[0].url),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                _buildRetroComputerIllustration(),
-                          )
-                        : (fallbackThumbnailUrl != null &&
-                                fallbackThumbnailUrl!.isNotEmpty
-                            ? Image.network(
-                                DigitalProductService.absoluteUrl(
-                                    fallbackThumbnailUrl!),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) =>
-                                    _buildRetroComputerIllustration(),
-                              )
-                            : _buildRetroComputerIllustration()),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    authorName,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF334155),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-
-              // Image 2
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    height: 110,
-                    child: photos.length > 1
-                        ? Image.network(
-                            DigitalProductService.absoluteUrl(photos[1].url),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                _buildScrapbookIllustration(),
-                          )
-                        : _buildScrapbookIllustration(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // Dots indicator under first image
-          Row(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(left: 4),
-                child: Row(
-                  children: List.generate(dotCount, (index) {
-                    return Container(
-                      width: 5,
-                      height: 5,
-                      margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: index == 0
-                            ? const Color(0xFF0F172A)
-                            : const Color(0xFF94A3B8),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Deskripsi
-          const Text(
-            'Deskripsi :',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+              ],
             ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            descText,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF64748B),
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
+          ],
 
-          // Kategori
-          const Text(
-            'Kategori :',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1E293B),
+          // Showcase Images (Hanya jika benar-benar ada gambar dari server)
+          if (hasImages) ...[
+            _buildShowcaseImages(imageUrls),
+            const SizedBox(height: 10),
+          ],
+
+          // Deskripsi (Hanya jika ada dari server)
+          if (hasDesc) ...[
+            const Text(
+              'Deskripsi :',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: tagList.map((tag) => _CategoryTag(tag: tag)).toList(),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              descText,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF64748B),
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+
+          // Kategori (Hanya jika ada dari server)
+          if (hasTags) ...[
+            const Text(
+              'Kategori :',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: tagList.map((tag) => _CategoryTag(tag: tag)).toList(),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildRetroComputerIllustration() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF3C7),
+  Widget _buildShowcaseImages(List<String> imageUrls) {
+    if (imageUrls.length == 1) {
+      return ClipRRect(
         borderRadius: BorderRadius.circular(8),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            top: 6,
-            left: 6,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF87171),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: const Text(
-                'JAN',
-                style: TextStyle(
-                  fontSize: 7,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 140,
+          child: Image.network(
+            DigitalProductService.absoluteUrl(imageUrls[0]),
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const ColoredBox(
+              color: Color(0xFFF1F5F9),
+              child: Center(
+                child: Icon(LucideIcons.image, size: 28, color: Color(0xFF94A3B8)),
               ),
             ),
           ),
-          Container(
-            width: 86,
-            height: 68,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 72,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'PORTOFOLIO',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
+        ),
+      );
+    }
+
+    // Jika 2 gambar atau lebih
+    final dotCount = min(imageUrls.length, 5);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 110,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: imageUrls.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  width: 150,
+                  height: 110,
+                  child: Image.network(
+                    DigitalProductService.absoluteUrl(imageUrls[index]),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const ColoredBox(
+                      color: Color(0xFFF1F5F9),
+                      child: Center(
+                        child: Icon(
+                          LucideIcons.image,
+                          size: 24,
+                          color: Color(0xFF94A3B8),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 3),
-                Container(
-                  width: 24,
-                  height: 2,
-                  color: const Color(0xFF94A3B8),
-                ),
-              ],
-            ),
+              );
+            },
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScrapbookIllustration() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F766E),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          const Positioned(
-            top: 6,
-            left: 8,
-            child: Icon(
-              Icons.star_rounded,
-              size: 14,
-              color: Color(0xFFFDE047),
-            ),
-          ),
-          Positioned(
-            top: 6,
-            right: 8,
-            child: Container(
-              width: 16,
-              height: 16,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFDE047),
-                shape: BoxShape.circle,
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(left: 4),
+              child: Row(
+                children: List.generate(dotCount, (index) {
+                  return Container(
+                    width: 5,
+                    height: 5,
+                    margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: index == 0
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFF94A3B8),
+                    ),
+                  );
+                }),
               ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFEF08A),
-              borderRadius: BorderRadius.circular(4),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 3,
-                ),
-              ],
-            ),
-            child: const Text(
-              'PORTFOLIO',
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w900,
-                fontStyle: FontStyle.italic,
-                color: Color(0xFF1E293B),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -378,9 +282,9 @@ class PortofolioLainnyaCard extends StatefulWidget {
   const PortofolioLainnyaCard({
     super.key,
     required this.title,
-    this.price = 'Rp 400.000',
-    this.type = '/Online',
-    this.isFavorite = true,
+    this.price = '',
+    this.type = '',
+    this.isFavorite = false,
     this.thumbnailUrl,
     this.secondImageUrl,
     this.onTap,
@@ -411,6 +315,11 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
 
   @override
   Widget build(BuildContext context) {
+    final hasThumb = widget.thumbnailUrl != null &&
+        widget.thumbnailUrl!.trim().isNotEmpty;
+    final hasSecond = widget.secondImageUrl != null &&
+        widget.secondImageUrl!.trim().isNotEmpty;
+
     return Container(
       margin: widget.margin ?? const EdgeInsets.only(bottom: 12.0),
       padding: const EdgeInsets.all(10.0),
@@ -434,54 +343,20 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
         borderRadius: BorderRadius.circular(10),
         child: Column(
           children: [
-            // Two preview images
-            Row(
-              children: [
-                // Image A
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      height: 92,
-                      child: (widget.thumbnailUrl != null &&
-                              widget.thumbnailUrl!.isNotEmpty)
-                          ? Image.network(
-                              DigitalProductService.absoluteUrl(
-                                widget.thumbnailUrl!,
-                              ),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) =>
-                                  _buildImageAIllustration(),
-                            )
-                          : _buildImageAIllustration(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Image B
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: SizedBox(
-                      height: 92,
-                      child: (widget.secondImageUrl != null &&
-                              widget.secondImageUrl!.isNotEmpty)
-                          ? Image.network(
-                              DigitalProductService.absoluteUrl(
-                                widget.secondImageUrl!,
-                              ),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) =>
-                                  _buildImageBIllustration(),
-                            )
-                          : _buildImageBIllustration(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+            // Preview images (hanya render jika ada dari server)
+            if (hasThumb || hasSecond) ...[
+              if (hasThumb && hasSecond)
+                Row(
+                  children: [
+                    Expanded(child: _buildImageItem(widget.thumbnailUrl!)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildImageItem(widget.secondImageUrl!)),
+                  ],
+                )
+              else if (hasThumb)
+                _buildImageItem(widget.thumbnailUrl!, width: double.infinity),
+              const SizedBox(height: 8),
+            ],
 
             // Info bottom row
             Row(
@@ -501,14 +376,16 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
                           color: Color(0xFF1E293B),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${widget.price}  ${widget.type}',
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          color: Color(0xFF64748B),
+                      if (widget.price.isNotEmpty || widget.type.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          '${widget.price}  ${widget.type}'.trim(),
+                          style: const TextStyle(
+                            fontSize: 10.5,
+                            color: Color(0xFF64748B),
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -528,122 +405,22 @@ class _PortofolioLainnyaCardState extends State<PortofolioLainnyaCard> {
     );
   }
 
-  Widget _buildImageAIllustration() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            top: 6,
-            left: 6,
-            child: Container(
-              width: 18,
-              height: 18,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFB923C),
-                borderRadius: BorderRadius.circular(3),
-              ),
+  Widget _buildImageItem(String url, {double? width}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: width,
+        height: 92,
+        child: Image.network(
+          DigitalProductService.absoluteUrl(url),
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const ColoredBox(
+            color: Color(0xFFF1F5F9),
+            child: Center(
+              child: Icon(LucideIcons.image, size: 24, color: Color(0xFF94A3B8)),
             ),
           ),
-          Container(
-            width: 80,
-            height: 54,
-            decoration: BoxDecoration(
-              color: const Color(0xFFBAE6FD),
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: const Color(0xFF7DD3FC), width: 1.2),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.sentiment_satisfied_alt_rounded,
-                size: 22,
-                color: Color(0xFF0369A1),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImageBIllustration() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFCBD5E1).withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text(
-                'porto',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              Text(
-                'folio',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFFEA580C),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 1,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0284C7),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: const Text(
-                  'Ps',
-                  style: TextStyle(
-                    fontSize: 7,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 1,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD97706),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: const Text(
-                  'Ai',
-                  style: TextStyle(
-                    fontSize: 7,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

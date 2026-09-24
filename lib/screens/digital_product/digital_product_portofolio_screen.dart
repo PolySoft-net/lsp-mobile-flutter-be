@@ -82,7 +82,7 @@ class _DigitalProductPortofolioScreenState
             ? widget.sellerName.trim()
             : (widget.product?.sellerName.trim().isNotEmpty == true
                 ? widget.product!.sellerName.trim()
-                : 'Jendela_Website'));
+                : ''));
 
     final resolvedPhone = (_detail?.seller.phone.trim().isNotEmpty == true)
         ? _detail!.seller.phone.trim()
@@ -97,13 +97,13 @@ class _DigitalProductPortofolioScreenState
             ? _detail!.product.description.trim()
             : (widget.product?.description.trim().isNotEmpty == true
                 ? widget.product!.description.trim()
-                : 'website ini hanya berupa desain prototype saja. Website ini cocok untuk produk apa saja. Pengerjaan membutuhkan sekiter 2 bulan dan secara online atau dering...');
+                : '');
 
     final resolvedTags = (_detail != null && _detail!.product.tags.isNotEmpty)
         ? _detail!.product.tags
         : (widget.product != null && widget.product!.tags.isNotEmpty
             ? widget.product!.tags
-            : const ['#Software', '#Template', '#Website', '#Design']);
+            : const <String>[]);
 
     final resolvedMedia = (_detail != null && _detail!.media.isNotEmpty)
         ? _detail!.media
@@ -144,14 +144,16 @@ class _DigitalProductPortofolioScreenState
                             ),
                             const SizedBox(height: 14),
                             _buildContactSellerButton(context, resolvedPhone),
-                            const SizedBox(height: 18),
-                            _buildSectionHeader('Portofolio Produk Lainnya :'),
-                            const SizedBox(height: 10),
-                            if (sellerProducts.isNotEmpty)
+
+                            // Hanya tampilkan jika sellerProducts benar-benar ada dari server
+                            if (sellerProducts.isNotEmpty) ...[
+                              const SizedBox(height: 18),
+                              _buildSectionHeader('Portofolio Produk Lainnya :'),
+                              const SizedBox(height: 10),
                               ...sellerProducts.map((item) {
                                 final typeText = item.serviceType.isNotEmpty
                                     ? '/${_titleCase(item.serviceType)}'
-                                    : '/Online';
+                                    : '';
                                 return PortofolioLainnyaCard(
                                   title: item.title,
                                   price: item.price,
@@ -173,20 +175,7 @@ class _DigitalProductPortofolioScreenState
                                     } catch (_) {}
                                   },
                                 );
-                              })
-                            else ...[
-                              const PortofolioLainnyaCard(
-                                title: 'Portofolio Design Aplikasi Motor',
-                                price: 'Rp 400.000',
-                                type: '/Online',
-                                isFavorite: true,
-                              ),
-                              const PortofolioLainnyaCard(
-                                title: 'Portofolio Prototype Aplikasi Motor',
-                                price: 'Rp 400.000',
-                                type: '/Online',
-                                isFavorite: true,
-                              ),
+                              }),
                             ],
                           ],
                         ),
