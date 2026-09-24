@@ -16,6 +16,10 @@ class DigitalProductCategoryChips extends StatelessWidget {
     'Video',
     'Template',
     'Musik',
+    'Voucher',
+    'Instalasi',
+    'Konfigurasi',
+    'Troubleshoot',
   ];
 
   @override

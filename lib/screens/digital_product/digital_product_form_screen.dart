@@ -58,53 +58,72 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
     final categories = DigitalProductCategoryChips.categories;
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (ctx) {
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Pilih Kategori',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ...categories.map((cat) {
-                final isSelected = cat.toLowerCase() == _category.toLowerCase();
-                return ListTile(
-                  dense: true,
-                  title: Text(
-                    cat,
-                    style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: isSelected
-                          ? const Color(0xFF2563EB)
-                          : const Color(0xFF0F172A),
+                const SizedBox(height: 12),
+                const Text(
+                  'Pilih Kategori',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: categories.map((cat) {
+                        final isSelected =
+                            cat.toLowerCase() == _category.toLowerCase();
+                        return ListTile(
+                          dense: true,
+                          title: Text(
+                            cat,
+                            style: TextStyle(
+                              fontWeight:
+                                  isSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected
+                                  ? const Color(0xFF2563EB)
+                                  : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Color(0xFF2563EB),
+                                  size: 18,
+                                )
+                              : null,
+                          onTap: () {
+                            setState(() => _category = cat);
+                            Navigator.pop(ctx);
+                          },
+                        );
+                      }).toList(),
                     ),
                   ),
-                  trailing: isSelected
-                      ? const Icon(Icons.check, color: Color(0xFF2563EB), size: 18)
-                      : null,
-                  onTap: () {
-                    setState(() => _category = cat);
-                    Navigator.pop(ctx);
-                  },
-                );
-              }),
-              const SizedBox(height: 12),
-            ],
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         );
       },
