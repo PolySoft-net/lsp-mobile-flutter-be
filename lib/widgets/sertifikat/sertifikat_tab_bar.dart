@@ -29,19 +29,6 @@ class SertifikatTabBar extends StatelessWidget {
     );
   }
 
-  Color _getBadgeColor(int index) {
-    switch (index) {
-      case 0:
-        return const Color(0xFF10B981); // Hijau untuk Aktif
-      case 1:
-        return const Color(0xFFF59E0B); // Amber untuk Akan Berakhir
-      case 2:
-        return const Color(0xFFEF4444); // Merah untuk Kadaluarsa
-      default:
-        return const Color(0xFF64748B);
-    }
-  }
-
   Widget _buildTabItem(int index, String label, int? count) {
     final isSelected = currentTab == index;
     
@@ -86,7 +73,7 @@ class SertifikatTabBar extends StatelessWidget {
                 height: 20,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: _getBadgeColor(index),
+                  color: Colors.red,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
