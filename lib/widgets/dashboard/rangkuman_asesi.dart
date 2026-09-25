@@ -249,11 +249,11 @@ class _RangkumanAsesiState extends State<RangkumanAsesi> {
             mainAxisSpacing: 12,
             children: [
               _AsesiSummaryCard(
-                title: 'Sertifikat',
+                title: 'E-Certificate',
                 value: isLoading
                     ? '...'
                     : NumberFormatHelper.formatWithDots(data.sertifikatAktif),
-                subtitle: 'Sertifikat dimiliki',
+                subtitle: 'Lihat E-Certificate',
                 icon: Icons.workspace_premium_rounded,
                 iconColor: const Color(0xFFFF9800),
                 iconBgColor: const Color(0xFFFFF3E0),

@@ -6,6 +6,7 @@ import '../../models/sertifikat_models.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../services/api_service.dart';
 import '../../utils/date_format_helper.dart';
+import 'e_certificate_webview_screen.dart';
 
 class DetailSertifikatScreen extends StatefulWidget {
   final SertifikatItem item;
@@ -291,7 +292,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                     _buildUploadSection(),
                     const SizedBox(height: 24),
                   ],
-
+                  _buildECertificateSection(context),
                   _buildDownloadButton(context),
                   const SizedBox(height: 24),
                 ],
@@ -763,6 +764,128 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildECertificateSection(BuildContext context) {
+    final previewDepan = widget.item.fileSertifikatPreview.isNotEmpty
+        ? widget.item.fileSertifikatPreview
+        : widget.item.fileSertifikat;
+    final previewBelakang = widget.item.fileSertifikatBelakangPreview.isNotEmpty
+        ? widget.item.fileSertifikatBelakangPreview
+        : widget.item.fileSertifikatBelakang;
+
+    if (previewDepan.isEmpty && previewBelakang.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Dokumen E-Certificate'),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x05000000),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Pratinjau Lembar Sertifikat Digital',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Buka langsung lembar sertifikat resmi melalui tampilan in-app browser:',
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (previewDepan.isNotEmpty)
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.badge_outlined, size: 16),
+                        label: const Text('Lembar Depan', style: TextStyle(fontSize: 12.5)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ECertificateWebViewScreen(
+                                 title: 'Sertifikat (Lembar Depan)',
+                                previewUrl: previewDepan,
+                                downloadUrl: widget.item.fileSertifikatDownload.isNotEmpty
+                                    ? widget.item.fileSertifikatDownload
+                                    : previewDepan,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  if (previewDepan.isNotEmpty && previewBelakang.isNotEmpty)
+                    const SizedBox(width: 8),
+                  if (previewBelakang.isNotEmpty)
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.list_alt_rounded, size: 16),
+                        label: const Text('Lembar Belakang', style: TextStyle(fontSize: 12.5)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ECertificateWebViewScreen(
+                                title: 'Unit Kompetensi (Belakang)',
+                                previewUrl: previewBelakang,
+                                downloadUrl: widget.item.fileSertifikatBelakangDownload.isNotEmpty
+                                    ? widget.item.fileSertifikatBelakangDownload
+                                    : previewBelakang,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 

@@ -582,6 +582,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (isGuest || isAsesi)
               MenuBulatSection(
                 items: [
+                  if (isAsesi)
+                    MenuBulatItem(
+                      icon: Icons.card_membership_rounded,
+                      label: 'E-Certificate',
+                      color: const Color(0xFF6366F1),
+                      onTap: () => widget.onNavigateToTab?.call(3),
+                    ),
                   MenuBulatItem(
                     icon: Icons.groups_rounded,
                     label: 'Talenta',

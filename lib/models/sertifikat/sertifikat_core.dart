@@ -19,7 +19,13 @@ class SertifikatItem {
   final String namaAsesor;
   final String namaJadwal;
   final String tanggalAsesmen;
-
+  final int jadwalId;
+  final String fileSertifikat;
+  final String fileSertifikatBelakang;
+  final String fileSertifikatPreview;
+  final String fileSertifikatDownload;
+  final String fileSertifikatBelakangPreview;
+  final String fileSertifikatBelakangDownload;
   const SertifikatItem({
     required this.id,
     required this.skema,
@@ -37,6 +43,13 @@ class SertifikatItem {
     this.namaAsesor = '',
     this.namaJadwal = '',
     this.tanggalAsesmen = '',
+    this.jadwalId = 0,
+    this.fileSertifikat = '',
+    this.fileSertifikatBelakang = '',
+    this.fileSertifikatPreview = '',
+    this.fileSertifikatDownload = '',
+    this.fileSertifikatBelakangPreview = '',
+    this.fileSertifikatBelakangDownload = '',
   });
 
   factory SertifikatItem.fromJson(Map<String, dynamic> json) {
@@ -67,6 +80,13 @@ class SertifikatItem {
       namaAsesor: json['nama_asesor'] ?? asesorMap['nama'] ?? '',
       namaJadwal: json['nama_jadwal'] ?? '',
       tanggalAsesmen: json['tanggal_asesmen'] ?? '',
+      jadwalId: json['jadwal_id'] ?? 0,
+      fileSertifikat: json['file_sertifikat'] ?? '',
+      fileSertifikatBelakang: json['file_sertifikat_belakang'] ?? '',
+      fileSertifikatPreview: json['file_sertifikat_preview'] ?? '',
+      fileSertifikatDownload: json['file_sertifikat_download'] ?? '',
+      fileSertifikatBelakangPreview: json['file_sertifikat_belakang_preview'] ?? '',
+      fileSertifikatBelakangDownload: json['file_sertifikat_belakang_download'] ?? '',
     );
   }
 }

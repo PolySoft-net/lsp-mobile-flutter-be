@@ -170,7 +170,7 @@ class _AsesiSertifikatScreenState extends State<AsesiSertifikatScreen> {
           SizedBox(height: statusBarHeight + 8),
           
           CustomAppBar(
-            title: 'Sertifikat',
+            title: 'E-Certificate',
             onBack: () {
               if (widget.onBackToHome != null) {
                 widget.onBackToHome!();
