@@ -29,6 +29,7 @@ import '../../widgets/dashboard/menu_bulat_section.dart';
 import '../talenta/talenta_screen.dart';
 import '../sertifikat/skema_sertifikasi_screen.dart';
 import '../sertifikat/validasi_sertifikat_screen.dart';
+import '../sertifikat/e_certificate_screen.dart';
 import 'berita_screen.dart';
 import '../ai/asesor_ai_screen.dart';
 import '../digital_product/digital_product_screen.dart';
@@ -587,7 +588,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       icon: Icons.card_membership_rounded,
                       label: 'E-Certificate',
                       color: const Color(0xFF6366F1),
-                      onTap: () => widget.onNavigateToTab?.call(3),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ECertificateScreen(),
+                        ),
+                      ),
                     ),
                   MenuBulatItem(
                     icon: Icons.groups_rounded,

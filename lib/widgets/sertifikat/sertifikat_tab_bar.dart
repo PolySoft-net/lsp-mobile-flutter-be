@@ -29,6 +29,19 @@ class SertifikatTabBar extends StatelessWidget {
     );
   }
 
+  Color _getBadgeColor(int index) {
+    switch (index) {
+      case 0:
+        return const Color(0xFF10B981); // Hijau untuk Aktif
+      case 1:
+        return const Color(0xFFF59E0B); // Amber untuk Akan Berakhir
+      case 2:
+        return const Color(0xFFEF4444); // Merah untuk Kadaluarsa
+      default:
+        return const Color(0xFF64748B);
+    }
+  }
+
   Widget _buildTabItem(int index, String label, int? count) {
     final isSelected = currentTab == index;
     
@@ -67,26 +80,22 @@ class SertifikatTabBar extends StatelessWidget {
               ),
             ),
             if (count != null && count > 0) ...[
-              const SizedBox(width: 4),
+              const SizedBox(width: 5),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                width: 20,
+                height: 20,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(10),
+                  color: _getBadgeColor(index),
+                  shape: BoxShape.circle,
                 ),
-                constraints: const BoxConstraints(
-                  minWidth: 18,
-                  minHeight: 18,
-                ),
-                child: Center(
-                  child: Text(
-                    count > 999 ? '999+' : '$count',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.0,
-                    ),
+                child: Text(
+                  count > 99 ? '99+' : '$count',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.0,
                   ),
                 ),
               ),
