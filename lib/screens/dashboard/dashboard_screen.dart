@@ -586,7 +586,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (isAsesi)
                     MenuBulatItem(
                       icon: Icons.card_membership_rounded,
-                      label: 'E-Certificate',
+                      label: 'Sertifikat',
                       color: const Color(0xFF6366F1),
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(

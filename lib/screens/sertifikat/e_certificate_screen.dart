@@ -407,7 +407,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.badge_outlined, size: 16),
                   label: const Text(
-                    'Buka E-Certificate',
+                    'Buka Sertifikat',
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(

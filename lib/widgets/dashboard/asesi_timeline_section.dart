@@ -431,26 +431,26 @@ class AsesiTimelineSection extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Detail rows
+          _buildCertDetailRow('No. Sertifikat', item.nomorSertifikat.isNotEmpty ? item.nomorSertifikat : '-'),
+          const SizedBox(height: 8),
           _buildCertDetailRow('Nama Skema', item.skema.isNotEmpty ? item.skema : '-'),
           const SizedBox(height: 8),
           _buildCertDetailRow('No. Registrasi', item.nomorRegistrasi.isNotEmpty ? item.nomorRegistrasi : '-'),
           const SizedBox(height: 8),
-          _buildCertDetailRow('Masa Berlaku', masaBerlakuStr),
-          const SizedBox(height: 8),
           _buildCertDetailRow('No. Seri (Blanko)', noSeri),
           const SizedBox(height: 8),
-          _buildCertDetailRow('No. Sertifikat', item.nomorSertifikat.isNotEmpty ? item.nomorSertifikat : '-'),
+          _buildCertDetailRow('Masa Berlaku', masaBerlakuStr),
 
           const SizedBox(height: 16),
 
-          // Action Buttons: Buka E-Certificate & Download
+          // Action Buttons: Buka Sertifikat & Download
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.badge_outlined, size: 16),
                   label: const Text(
-                    'Buka E-Certificate',
+                    'Buka Sertifikat',
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
