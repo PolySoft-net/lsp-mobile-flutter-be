@@ -5,8 +5,12 @@ import '../../screens/asesi/asesi_ak03_form_screen.dart';
 import '../../screens/jadwal/jadwal_detail_screen.dart';
 import '../../screens/pengajuan/pra_asesmen_screen.dart';
 import '../../screens/pengajuan/hasil_review_pra_asesmen_screen.dart';
+import '../../screens/sertifikat/e_certificate_webview_screen.dart';
+import '../../services/api_client.dart';
 import '../../services/auth/auth_repository.dart';
+import '../../services/auth/token_storage.dart';
 import '../../utils/date_format_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AsesiTimelineSection extends StatelessWidget {
   final AsesiTimelineTerakhir? timeline;
@@ -146,15 +150,44 @@ class AsesiTimelineSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Linimasa Asesmen Terakhir',
-                style: TextStyle(
+              Text(
+                (timeline?.isSertifikatTerbit == true)
+                    ? 'Sertifikat Kompetensi'
+                    : 'Linimasa Asesmen Terakhir',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),
                 ),
               ),
-              if (timeline?.hasUji == true)
+              if (timeline?.isSertifikatTerbit == true)
+                InkWell(
+                  onTap: () => onNavigateToTab?.call(3),
+                  borderRadius: BorderRadius.circular(4),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Lihat Semua',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (timeline?.hasUji == true)
                 InkWell(
                   onTap: () => _openDetailJadwal(context, timeline!),
                   borderRadius: BorderRadius.circular(4),
@@ -213,11 +246,215 @@ class AsesiTimelineSection extends StatelessWidget {
                   )
                 : (timeline == null || !timeline!.hasUji)
                     ? _buildEmptyState(context)
-                    : _buildTimelineContent(context, timeline!),
+                    : timeline!.isSertifikatTerbit
+                        ? _buildSertifikatCard(context, timeline!)
+                        : _buildTimelineContent(context, timeline!),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildSertifikatCard(BuildContext context, AsesiTimelineTerakhir data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header: Skema & Badge
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEFF6FF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.verified_rounded,
+                color: Color(0xFF2563EB),
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    data.namaSkema.isNotEmpty ? data.namaSkema : 'Sertifikat Kompetensi',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  if (data.kodeSkema.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      data.kodeSkema,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Terbit / Aktif',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF16A34A),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 14),
+        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+        const SizedBox(height: 14),
+
+        // Detail rows
+        _buildCertDetailRow('Nama Skema', data.namaSkema.isNotEmpty ? data.namaSkema : '-'),
+        const SizedBox(height: 8),
+        _buildCertDetailRow('No. Registrasi', data.noRegistrasi.isNotEmpty ? data.noRegistrasi : '-'),
+        const SizedBox(height: 8),
+        _buildCertDetailRow(
+          'Masa Berlaku',
+          data.masaBerlaku.isNotEmpty
+              ? '${data.masaBerlaku} (${data.tanggalTerbit} s/d ${data.tanggalBerlaku})'
+              : (data.tanggalBerlaku.isNotEmpty ? data.tanggalBerlaku : '-'),
+        ),
+        const SizedBox(height: 8),
+        _buildCertDetailRow('No. Seri (Blanko)', data.noSeri.isNotEmpty ? data.noSeri : '-'),
+        const SizedBox(height: 8),
+        _buildCertDetailRow('No. Sertifikat', data.noSertifikat.isNotEmpty ? data.noSertifikat : '-'),
+
+        const SizedBox(height: 16),
+
+        // Action Buttons: Buka E-Certificate & Download
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.badge_outlined, size: 16),
+                label: const Text(
+                  'Buka E-Certificate',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () => _openECertificate(context, data),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              height: 44,
+              width: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.download_rounded, size: 20, color: Color(0xFF334155)),
+                tooltip: 'Unduh E-Certificate',
+                padding: EdgeInsets.zero,
+                onPressed: () => _downloadECertificate(context, data),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCertDetailRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const Text(': ', style: TextStyle(fontSize: 11.5, color: Color(0xFF94A3B8))),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openECertificate(BuildContext context, AsesiTimelineTerakhir data) async {
+    final token = await TokenStorage.instance.getAccessToken();
+    final baseUrl = ApiClient.baseUrl;
+    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
+    final previewUrl = '$baseUrl/api/asesi/e-certificate/view?id_asesi=${data.asesiId}$tokenParam';
+    final downloadUrl = '$baseUrl/api/asesi/e-certificate/download?id_asesi=${data.asesiId}$tokenParam';
+
+    if (!context.mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ECertificateWebViewScreen(
+          title: 'E-Certificate - ${data.namaSkema}',
+          previewUrl: previewUrl,
+          downloadUrl: downloadUrl,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _downloadECertificate(BuildContext context, AsesiTimelineTerakhir data) async {
+    final token = await TokenStorage.instance.getAccessToken();
+    final baseUrl = ApiClient.baseUrl;
+    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
+    final downloadUrl = '$baseUrl/api/asesi/e-certificate/download?id_asesi=${data.asesiId}$tokenParam';
+
+    final uri = Uri.parse(downloadUrl);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat membuka tautan unduh.')),
+        );
+      }
+    }
   }
 
   Widget _buildEmptyState(BuildContext context) {

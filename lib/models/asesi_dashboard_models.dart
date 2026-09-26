@@ -1,5 +1,6 @@
 import '../utils/json_helper.dart';
 import 'jadwal_models.dart';
+import 'sertifikat_models.dart';
 
 // ============================================================================
 // Asesi Dashboard Summary Model
@@ -19,6 +20,7 @@ class AsesiDashboardSummary {
   final String alertTitle;
   final String alertSubtitle;
   final AsesiTimelineTerakhir timelineTerakhir;
+  final List<SertifikatItem> sertifikatList;
 
   const AsesiDashboardSummary({
     required this.totalJadwalDiikuti,
@@ -33,6 +35,7 @@ class AsesiDashboardSummary {
     this.alertTitle = '',
     this.alertSubtitle = '',
     this.timelineTerakhir = const AsesiTimelineTerakhir(),
+    this.sertifikatList = const [],
   });
 
   factory AsesiDashboardSummary.fromJson(Map<String, dynamic> json) {
@@ -65,6 +68,15 @@ class AsesiDashboardSummary {
           : null,
     );
 
+    final rawCerts = json['sertifikat_list'];
+    final List<SertifikatItem> parsedCerts = [];
+    if (rawCerts is List) {
+      for (final c in rawCerts) {
+        if (c is Map<String, dynamic>) {
+          parsedCerts.add(SertifikatItem.fromJson(c));
+        }
+      }
+    }
     return AsesiDashboardSummary(
       totalJadwalDiikuti: skemaDiikuti,
       sertifikatDiterima: sertAktif,
@@ -78,6 +90,7 @@ class AsesiDashboardSummary {
       alertTitle: alert['title']?.toString() ?? '',
       alertSubtitle: alert['subtitle']?.toString() ?? '',
       timelineTerakhir: timeline,
+      sertifikatList: parsedCerts,
     );
   }
 
@@ -95,6 +108,7 @@ class AsesiDashboardSummary {
       alertTitle: '',
       alertSubtitle: '',
       timelineTerakhir: AsesiTimelineTerakhir(),
+      sertifikatList: const [],
     );
   }
 }
@@ -119,6 +133,13 @@ class AsesiTimelineTerakhir {
   final String statusLabel;
   final String currentStep;
   final List<AsesiTimelineStep> steps;
+  final bool isSertifikatTerbit;
+  final String noSertifikat;
+  final String noRegistrasi;
+  final String noSeri;
+  final String tanggalTerbit;
+  final String tanggalBerlaku;
+  final String masaBerlaku;
 
   const AsesiTimelineTerakhir({
     this.hasUji = false,
@@ -136,6 +157,13 @@ class AsesiTimelineTerakhir {
     this.statusLabel = 'Aktif',
     this.currentStep = 'apl01',
     this.steps = const [],
+    this.isSertifikatTerbit = false,
+    this.noSertifikat = '',
+    this.noRegistrasi = '',
+    this.noSeri = '',
+    this.tanggalTerbit = '',
+    this.tanggalBerlaku = '',
+    this.masaBerlaku = '',
   });
 
   factory AsesiTimelineTerakhir.fromJson(Map<String, dynamic>? json) {
@@ -169,6 +197,13 @@ class AsesiTimelineTerakhir {
       statusLabel: json['status_label']?.toString() ?? 'Aktif',
       currentStep: json['current_step']?.toString() ?? 'apl01',
       steps: parsedSteps,
+      isSertifikatTerbit: json['is_sertifikat_terbit'] == true,
+      noSertifikat: json['no_sertifikat']?.toString() ?? '',
+      noRegistrasi: json['no_registrasi']?.toString() ?? '',
+      noSeri: json['no_seri']?.toString() ?? '',
+      tanggalTerbit: json['tanggal_terbit']?.toString() ?? '',
+      tanggalBerlaku: json['tanggal_berlaku']?.toString() ?? '',
+      masaBerlaku: json['masa_berlaku']?.toString() ?? '',
     );
   }
 
