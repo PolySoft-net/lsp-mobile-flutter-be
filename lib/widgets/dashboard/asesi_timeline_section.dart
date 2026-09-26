@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import '../../models/asesi_dashboard_models.dart';
 import '../../models/jadwal_models.dart';
+import '../../models/sertifikat_models.dart';
 import '../../screens/asesi/asesi_ak03_form_screen.dart';
 import '../../screens/jadwal/jadwal_detail_screen.dart';
 import '../../screens/pengajuan/pra_asesmen_screen.dart';
@@ -14,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class AsesiTimelineSection extends StatelessWidget {
   final AsesiTimelineTerakhir? timeline;
+  final List<SertifikatItem> sertifikatList;
   final bool isLoading;
   final Function(int tabIndex)? onNavigateToTab;
   final VoidCallback? onRefresh;
@@ -21,6 +23,7 @@ class AsesiTimelineSection extends StatelessWidget {
   const AsesiTimelineSection({
     super.key,
     this.timeline,
+    this.sertifikatList = const [],
     this.isLoading = false,
     this.onNavigateToTab,
     this.onRefresh,
@@ -151,7 +154,7 @@ class AsesiTimelineSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                (timeline?.isSertifikatTerbit == true)
+                (sertifikatList.isNotEmpty || timeline?.isSertifikatTerbit == true)
                     ? 'Sertifikat Kompetensi'
                     : 'Linimasa Asesmen Terakhir',
                 style: const TextStyle(
@@ -160,25 +163,27 @@ class AsesiTimelineSection extends StatelessWidget {
                   color: Color(0xFF0F172A),
                 ),
               ),
-              if (timeline?.isSertifikatTerbit == true)
+              if (sertifikatList.isNotEmpty || timeline?.isSertifikatTerbit == true)
                 InkWell(
                   onTap: () => onNavigateToTab?.call(3),
                   borderRadius: BorderRadius.circular(4),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Lihat Semua',
-                          style: TextStyle(
+                          sertifikatList.length > 1
+                              ? 'Lihat Semua (${sertifikatList.length})'
+                              : 'Lihat Semua',
+                          style: const TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF2563EB),
                           ),
                         ),
-                        SizedBox(width: 4),
-                        Icon(
+                        const SizedBox(width: 4),
+                        const Icon(
                           Icons.chevron_right_rounded,
                           size: 16,
                           color: Color(0xFF2563EB),
@@ -218,173 +223,313 @@ class AsesiTimelineSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // Main Card
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-                width: 1.0,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x08000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+          if (isLoading)
+            Container(
+              width: double.infinity,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1.0,
                 ),
-              ],
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            )
+          else if (sertifikatList.isNotEmpty || timeline?.isSertifikatTerbit == true)
+            _buildSertifikatListSection(context)
+          else if (timeline == null || !timeline!.hasUji)
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1.0,
+                ),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: _buildEmptyState(context),
+            )
+          else
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1.0,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x08000000),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: _buildTimelineContent(context, timeline!),
             ),
-            padding: const EdgeInsets.all(16),
-            child: isLoading
-                ? const SizedBox(
-                    height: 120,
-                    child: Center(
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSertifikatListSection(BuildContext context) {
+    final certs = sertifikatList.isNotEmpty
+        ? sertifikatList
+        : (timeline != null && timeline!.isSertifikatTerbit
+            ? [
+                SertifikatItem(
+                  id: timeline!.asesiId,
+                  skema: timeline!.namaSkema,
+                  pemegang: '',
+                  nomorSertifikat: timeline!.noSertifikat,
+                  nomorRegistrasi: timeline!.noRegistrasi,
+                  nomorSeri: timeline!.noSeri,
+                  tanggalTerbit: timeline!.tanggalTerbit,
+                  tanggalBerlaku: timeline!.tanggalBerlaku,
+                  status: 'aktif',
+                  kategori: timeline!.kodeSkema,
+                ),
+              ]
+            : <SertifikatItem>[]);
+
+    if (certs.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Jika <= 3: tampilkan langsung bertumpuk
+    if (certs.length <= 3) {
+      return Column(
+        children: certs
+            .map((c) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildSertifikatCardFromItem(context, c),
+                ))
+            .toList(),
+      );
+    }
+
+    // Jika > 3: batasi dengan virtual scrolling (ListView berbatas tinggi)
+    return SizedBox(
+      height: 480,
+      child: ListView.builder(
+        physics: const BouncingScrollPhysics(),
+        itemCount: certs.length,
+        itemBuilder: (context, index) {
+          final cert = certs[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildSertifikatCardFromItem(context, cert),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSertifikatCardFromItem(BuildContext context, SertifikatItem item) {
+    final masaBerlakuStr = (item.tanggalTerbit.isNotEmpty && item.tanggalBerlaku.isNotEmpty)
+        ? '${item.tanggalTerbit} s/d ${item.tanggalBerlaku}'
+        : (item.tanggalBerlaku.isNotEmpty ? item.tanggalBerlaku : '-');
+
+    final noSeri = item.nomorSeri.isNotEmpty
+        ? item.nomorSeri
+        : (item.nomorBlanko.isNotEmpty ? item.nomorBlanko : '-');
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFE2E8F0),
+          width: 1.0,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: Skema & Badge
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEFF6FF),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.verified_rounded,
+                  color: Color(0xFF2563EB),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.skema.isNotEmpty ? item.skema : 'Sertifikat Kompetensi',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
-                  )
-                : (timeline == null || !timeline!.hasUji)
-                    ? _buildEmptyState(context)
-                    : timeline!.isSertifikatTerbit
-                        ? _buildSertifikatCard(context, timeline!)
-                        : _buildTimelineContent(context, timeline!),
+                    if (item.kategori.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        item.kategori,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'Terbit / Aktif',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF16A34A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 14),
+
+          // Detail rows
+          _buildCertDetailRow('Nama Skema', item.skema.isNotEmpty ? item.skema : '-'),
+          const SizedBox(height: 8),
+          _buildCertDetailRow('No. Registrasi', item.nomorRegistrasi.isNotEmpty ? item.nomorRegistrasi : '-'),
+          const SizedBox(height: 8),
+          _buildCertDetailRow('Masa Berlaku', masaBerlakuStr),
+          const SizedBox(height: 8),
+          _buildCertDetailRow('No. Seri (Blanko)', noSeri),
+          const SizedBox(height: 8),
+          _buildCertDetailRow('No. Sertifikat', item.nomorSertifikat.isNotEmpty ? item.nomorSertifikat : '-'),
+
+          const SizedBox(height: 16),
+
+          // Action Buttons: Buka E-Certificate & Download
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.badge_outlined, size: 16),
+                  label: const Text(
+                    'Buka E-Certificate',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => _openECertificateByItem(context, item),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                height: 44,
+                width: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  border: Border.all(color: const Color(0xFFCBD5E1)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.download_rounded, size: 20, color: Color(0xFF334155)),
+                  tooltip: 'Unduh E-Certificate',
+                  padding: EdgeInsets.zero,
+                  onPressed: () => _downloadECertificateByItem(context, item),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSertifikatCard(BuildContext context, AsesiTimelineTerakhir data) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header: Skema & Badge
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEFF6FF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.verified_rounded,
-                color: Color(0xFF2563EB),
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data.namaSkema.isNotEmpty ? data.namaSkema : 'Sertifikat Kompetensi',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  if (data.kodeSkema.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      data.kodeSkema,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFDCFCE7),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Text(
-                'Terbit / Aktif',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF16A34A),
-                ),
-              ),
-            ),
-          ],
+  Future<void> _openECertificateByItem(BuildContext context, SertifikatItem item) async {
+    final token = await TokenStorage.instance.getAccessToken();
+    final baseUrl = ApiClient.baseUrl;
+    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
+    final previewUrl = '$baseUrl/api/asesi/e-certificate/view?id_asesi=${item.id}$tokenParam';
+    final downloadUrl = item.fileSertifikatDownload.isNotEmpty
+        ? item.fileSertifikatDownload
+        : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
+
+    if (!context.mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ECertificateWebViewScreen(
+          title: 'E-Certificate - ${item.skema}',
+          previewUrl: previewUrl,
+          downloadUrl: downloadUrl,
         ),
-
-        const SizedBox(height: 14),
-        const Divider(height: 1, color: Color(0xFFF1F5F9)),
-        const SizedBox(height: 14),
-
-        // Detail rows
-        _buildCertDetailRow('Nama Skema', data.namaSkema.isNotEmpty ? data.namaSkema : '-'),
-        const SizedBox(height: 8),
-        _buildCertDetailRow('No. Registrasi', data.noRegistrasi.isNotEmpty ? data.noRegistrasi : '-'),
-        const SizedBox(height: 8),
-        _buildCertDetailRow(
-          'Masa Berlaku',
-          data.masaBerlaku.isNotEmpty
-              ? '${data.masaBerlaku} (${data.tanggalTerbit} s/d ${data.tanggalBerlaku})'
-              : (data.tanggalBerlaku.isNotEmpty ? data.tanggalBerlaku : '-'),
-        ),
-        const SizedBox(height: 8),
-        _buildCertDetailRow('No. Seri (Blanko)', data.noSeri.isNotEmpty ? data.noSeri : '-'),
-        const SizedBox(height: 8),
-        _buildCertDetailRow('No. Sertifikat', data.noSertifikat.isNotEmpty ? data.noSertifikat : '-'),
-
-        const SizedBox(height: 16),
-
-        // Action Buttons: Buka E-Certificate & Download
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.badge_outlined, size: 16),
-                label: const Text(
-                  'Buka E-Certificate',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                onPressed: () => _openECertificate(context, data),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              height: 44,
-              width: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.download_rounded, size: 20, color: Color(0xFF334155)),
-                tooltip: 'Unduh E-Certificate',
-                padding: EdgeInsets.zero,
-                onPressed: () => _downloadECertificate(context, data),
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
+  }
+
+  Future<void> _downloadECertificateByItem(BuildContext context, SertifikatItem item) async {
+    final token = await TokenStorage.instance.getAccessToken();
+    final baseUrl = ApiClient.baseUrl;
+    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
+    final downloadUrl = item.fileSertifikatDownload.isNotEmpty
+        ? item.fileSertifikatDownload
+        : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
+
+    final uri = Uri.parse(downloadUrl);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat membuka tautan unduh.')),
+        );
+      }
+    }
   }
 
   Widget _buildCertDetailRow(String label, String value) {

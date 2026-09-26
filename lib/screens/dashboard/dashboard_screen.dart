@@ -711,6 +711,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (isAsesi)
               AsesiTimelineSection(
                 timeline: _asesiSummaryData?.timelineTerakhir,
+                sertifikatList: _asesiSummaryData?.sertifikatList ?? const [],
                 isLoading: _isLoading,
                 onNavigateToTab: widget.onNavigateToTab,
                 onRefresh: _loadAllData,
