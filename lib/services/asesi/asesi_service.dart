@@ -71,6 +71,25 @@ class AsesiService {
     }
   }
 
+  /// 4b. Fetch E-Certificate (GET /api/asesi/e-certificate)
+  static Future<Map<String, dynamic>?> getECertificate({int? asesiId, int? jadwalId, String? noSertifikat}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (asesiId != null && asesiId > 0) queryParams['id_asesi'] = asesiId;
+      if (jadwalId != null && jadwalId > 0) queryParams['id_jadwal'] = jadwalId;
+      if (noSertifikat != null && noSertifikat.isNotEmpty) queryParams['no_sertifikat'] = noSertifikat;
+
+      final response = await _dio.get(ApiRoutes.asesiECertificate, queryParameters: queryParams);
+      if (response.statusCode == 200 && response.data != null) {
+        return response.data['data'] as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting e-certificate: $e');
+      return null;
+    }
+  }
+
   /// 5. Upload Foto & TTD (POST /api/asesi/sertifikat/:id/upload-ttd)
   /// Supports single/multi-file uploads
   static Future<Map<String, dynamic>?> uploadTtd(int id, List<String> filePaths) async {

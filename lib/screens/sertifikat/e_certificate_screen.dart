@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import '../../models/sertifikat_models.dart';
 import '../../services/asesi/asesi_service.dart';
+import '../../services/api_client.dart';
+import '../../services/auth/token_storage.dart';
 import 'e_certificate_webview_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -41,11 +43,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
       final list = result['data'] as List<dynamic>? ?? [];
       final parsed = list
           .map((e) => SertifikatItem.fromJson(e as Map<String, dynamic>))
-          .where((item) =>
-              item.fileSertifikat.isNotEmpty ||
-              item.fileSertifikatPreview.isNotEmpty ||
-              item.fileSertifikatBelakang.isNotEmpty ||
-              item.fileSertifikatBelakangPreview.isNotEmpty)
+          .where((item) => item.nomorSertifikat.isNotEmpty)
           .toList();
 
       setState(() {
@@ -111,6 +109,30 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
         );
       }
     }
+  }
+
+  Future<void> _openECertificate(SertifikatItem item) async {
+    final token = await TokenStorage.instance.getAccessToken();
+    final baseUrl = ApiClient.baseUrl;
+    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
+    final previewUrl = '$baseUrl/api/asesi/e-certificate/view?id_asesi=${item.id}$tokenParam';
+    final downloadUrl = item.fileSertifikatDownload.isNotEmpty
+        ? item.fileSertifikatDownload
+        : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
+
+    if (!mounted) return;
+    _openWebView('E-Certificate - ${item.skema}', previewUrl, downloadUrl);
+  }
+
+  Future<void> _downloadECertificate(SertifikatItem item) async {
+    final token = await TokenStorage.instance.getAccessToken();
+    final baseUrl = ApiClient.baseUrl;
+    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
+    final downloadUrl = item.fileSertifikatDownload.isNotEmpty
+        ? item.fileSertifikatDownload
+        : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
+
+    await _downloadFile(downloadUrl, item.skema);
   }
 
   @override
@@ -256,20 +278,6 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
   }
 
   Widget _buildECertificateCard(SertifikatItem item) {
-    final previewDepan = item.fileSertifikatPreview.isNotEmpty
-        ? item.fileSertifikatPreview
-        : item.fileSertifikat;
-    final downloadDepan = item.fileSertifikatDownload.isNotEmpty
-        ? item.fileSertifikatDownload
-        : previewDepan;
-
-    final previewBelakang = item.fileSertifikatBelakangPreview.isNotEmpty
-        ? item.fileSertifikatBelakangPreview
-        : item.fileSertifikatBelakang;
-    final downloadBelakang = item.fileSertifikatBelakangDownload.isNotEmpty
-        ? item.fileSertifikatBelakangDownload
-        : previewBelakang;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -392,66 +400,42 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
 
           const SizedBox(height: 14),
 
-          // Direct Action Buttons (WebView Preview & Download)
+          // Action Buttons: Buka E-Certificate (single view) & Download
           Row(
             children: [
-              if (previewDepan.isNotEmpty)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.badge_outlined, size: 15),
-                    label: const Text('Lembar Depan', style: TextStyle(fontSize: 12)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () => _openWebView(
-                      'E-Certificate (Lembar Depan)',
-                      previewDepan,
-                      downloadDepan,
+              Expanded(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.badge_outlined, size: 16),
+                  label: const Text(
+                    'Buka E-Certificate',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
+                  onPressed: () => _openECertificate(item),
                 ),
-              if (previewDepan.isNotEmpty && previewBelakang.isNotEmpty)
-                const SizedBox(width: 8),
-              if (previewBelakang.isNotEmpty)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.list_alt_rounded, size: 15),
-                    label: const Text('Lembar Belakang', style: TextStyle(fontSize: 12)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F172A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () => _openWebView(
-                      'Unit Kompetensi (Lembar Belakang)',
-                      previewBelakang,
-                      downloadBelakang,
-                    ),
-                  ),
-                ),
+              ),
               const SizedBox(width: 8),
               Container(
-                width: 38,
-                height: 38,
+                height: 44,
+                width: 44,
                 decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
                   border: Border.all(color: const Color(0xFFCBD5E1)),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.download_rounded, size: 18, color: Color(0xFF475569)),
-                  tooltip: 'Unduh Dokumen',
+                  icon: const Icon(Icons.download_rounded, size: 20, color: Color(0xFF334155)),
+                  tooltip: 'Unduh E-Certificate',
                   padding: EdgeInsets.zero,
-                  onPressed: () => _downloadFile(downloadDepan, item.skema),
+                  onPressed: () => _downloadECertificate(item),
                 ),
               ),
             ],

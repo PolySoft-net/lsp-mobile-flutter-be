@@ -177,6 +177,23 @@ class ApiRoutes {
       '/api/asesi/sertifikat/$id/upload-ttd';
   static String asesiSertifikatDownload(int id) =>
       '/api/asesi/sertifikat/$id/download';
+  static const String asesiECertificate = '/api/asesi/e-certificate';
+  static String asesiECertificateView({int? idAsesi, String? token}) {
+    final query = <String>[];
+    if (idAsesi != null && idAsesi > 0) query.add('id_asesi=$idAsesi');
+    if (token != null && token.isNotEmpty) query.add('token=$token');
+    return query.isEmpty
+        ? '/api/asesi/e-certificate/view'
+        : '/api/asesi/e-certificate/view?${query.join('&')}';
+  }
+  static String asesiECertificateDownload({int? idAsesi, String? token}) {
+    final query = <String>[];
+    if (idAsesi != null && idAsesi > 0) query.add('id_asesi=$idAsesi');
+    if (token != null && token.isNotEmpty) query.add('token=$token');
+    return query.isEmpty
+        ? '/api/asesi/e-certificate/download'
+        : '/api/asesi/e-certificate/download?${query.join('&')}';
+  }
 
   // ============================================================================
   // Asesor Routes
