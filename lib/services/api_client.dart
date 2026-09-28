@@ -128,10 +128,15 @@ class ApiClient {
                         if (status == 401 || status == 403) {
                           await TokenStorage.instance.clear();
                           AuthRepository.notifyTokenExpired();
-                        } else if (kDebugMode) {
-                          debugPrint(
-                            '⚠️ Refresh sementara gagal (HTTP $status), session dipertahankan',
-                          );
+                        } else {
+                          // Server bermasalah (5xx/429): session tetap hidup, tapi
+                          // user harus tahu kenapa data gagal dimuat.
+                          AuthRepository.notifyTransientServerTrouble();
+                          if (kDebugMode) {
+                            debugPrint(
+                              '⚠️ Refresh sementara gagal (HTTP $status), session dipertahankan',
+                            );
+                          }
                         }
                         return handler.next(error);
                       }
@@ -157,10 +162,15 @@ class ApiClient {
                     if (rejected) {
                       await TokenStorage.instance.clear();
                       AuthRepository.notifyTokenExpired();
-                    } else if (kDebugMode) {
-                      debugPrint(
-                        '⚠️ Refresh gagal sementara (network/HTTP $status), token dipertahankan',
-                      );
+                    } else {
+                      // Server/jaringan bermasalah: session tetap hidup, tapi user
+                      // harus tahu kenapa data gagal dimuat supaya tidak dikira bug.
+                      AuthRepository.notifyTransientServerTrouble();
+                      if (kDebugMode) {
+                        debugPrint(
+                          '⚠️ Refresh gagal sementara (network/HTTP $status), token dipertahankan',
+                        );
+                      }
                     }
                   } finally {
                     _isRefreshing = false;

@@ -235,6 +235,26 @@ class AuthRepository {
     NotificationService.onNotificationReceived.add(null);
   }
 
+  /// Dipakai ApiClient saat refresh gagal karena server bermasalah (bukan
+  /// session mati). UI mendengarkan ini untuk menjelaskan ke user kenapa data
+  /// gagal dimuat — tanpa menendang dia keluar dari aplikasi.
+  static final ValueNotifier<int> onTransientServerTrouble =
+      ValueNotifier<int>(0);
+
+  static DateTime? _lastTransientNoticeAt;
+
+  /// Throttle 20 detik supaya satu DB spike (banyak request gagal sekaligus)
+  /// hanya memunculkan satu banner, bukan puluhan.
+  static void notifyTransientServerTrouble() {
+    final now = DateTime.now();
+    final last = _lastTransientNoticeAt;
+    if (last != null && now.difference(last) < const Duration(seconds: 20)) {
+      return;
+    }
+    _lastTransientNoticeAt = now;
+    onTransientServerTrouble.value++;
+  }
+
   static void notifyTokenExpired() {
     if (kDebugMode) {
       debugPrint('🔴 Token expired - notifying ${onTokenExpiredCallbacks.length} callbacks');

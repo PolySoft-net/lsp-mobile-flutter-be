@@ -18,6 +18,7 @@ import '../../screens/sertifikat/skema_sertifikasi_screen.dart';
 import '../../screens/sertifikat/validasi_sertifikat_screen.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../widgets/common/bottom_menu_bar.dart';
+import '../../widgets/common/top_notification_banner.dart';
 
 // Global keys for notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -45,6 +46,7 @@ class MainNavigatorState extends State<MainNavigator> {
   void initState() {
     super.initState();
     AuthRepository.registerTokenExpiredCallback(_handleTokenExpired);
+    AuthRepository.onTransientServerTrouble.addListener(_handleTransientTrouble);
 
     final isGuest = AuthRepository.currentUserInstance == null;
     if (isGuest) {
@@ -108,7 +110,27 @@ class MainNavigatorState extends State<MainNavigator> {
   void dispose() {
     _isDisposed = true;
     AuthRepository.unregisterTokenExpiredCallback(_handleTokenExpired);
+    AuthRepository.onTransientServerTrouble.removeListener(
+      _handleTransientTrouble,
+    );
     super.dispose();
+  }
+
+  /// Dijelaskan ke user saat server/DB sedang bermasalah: sesi tetap aktif,
+  /// jadi cukup beri tahu bahwa data gagal dimuat sementara — bukan logout.
+  void _handleTransientTrouble() {
+    if (!mounted) return;
+    final overlayState = navigatorKey.currentState?.overlay;
+    if (overlayState == null) return;
+
+    TopNotificationBanner.show(
+      overlayState: overlayState,
+      title: 'Server Sedang Sibuk',
+      body: 'Sesi login Anda masih aman. Sebagian data gagal dimuat — coba lagi sebentar lagi.',
+      icon: Icons.cloud_off_rounded,
+      color: const Color(0xFFEF6C00),
+      onTap: () {},
+    );
   }
 
   void _handleTokenExpired() {
