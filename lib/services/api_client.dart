@@ -177,6 +177,16 @@ class ApiClient {
                   }
                 }
 
+                // DB/server bermasalah pada request biasa (500/503/timeout):
+                // tidak ada 401, jadi blok refresh di atas tidak jalan dan user
+                // hanya melihat "Gagal memuat" tanpa penjelasan. Banner dipasang
+                // di sini; throttle 20 detik di notifier menahan spam.
+                if (!isAuthPath &&
+                    (error.response == null ||
+                        (error.response?.statusCode ?? 0) >= 500)) {
+                  AuthRepository.notifyTransientServerTrouble();
+                }
+
                 return handler.next(error);
               },
             ),

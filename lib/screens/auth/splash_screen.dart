@@ -122,7 +122,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     bool serverReady = await HealthService.readyCheck();
     if (!serverReady) {
       debugPrint('⚠️ Server not ready (DB issue)');
-      await _showNoConnectionDialog();
+      await _showNoConnectionDialog(serverBusy: true);
       return;
     }
 
@@ -275,7 +275,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       );
   }
 
-  Future<void> _showNoConnectionDialog() async {
+  /// [serverBusy] membedakan dua sebab yang berbeda: endpoint tidak terjangkau
+  /// (internet user) vs server/DB sedang bermasalah (503 dari /api/ready).
+  /// Dulu keduanya berbunyi "periksa koneksi internet Anda", sehingga saat DB
+  /// spike app menyalahkan internet user — dan user tidak tahu sesinya aman.
+  Future<void> _showNoConnectionDialog({bool serverBusy = false}) async {
     if (!mounted) return;
     await showDialog(
       context: context,
@@ -340,10 +344,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             ),
             const SizedBox(height: 28),
             // Message styled like the reference (bold title and clean font)
-            const Text(
-              'Koneksi Internet Terputus',
+            Text(
+              serverBusy ? 'Server Sedang Sibuk' : 'Koneksi Internet Terputus',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFF1E1E1E),
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -351,10 +355,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Silakan periksa koneksi internet Anda.',
+            Text(
+              serverBusy
+                  ? 'Server LSP sedang sibuk. Sesi login Anda tetap aman dan tidak perlu login ulang. Silakan coba lagi sebentar lagi.'
+                  : 'Silakan periksa koneksi internet Anda.',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black54,
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -390,6 +396,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            // Jalan keluar: barrierDismissible=false, jadi tanpa ini user
+            // terjebak loop retry selama server belum pulih.
+            TextButton(
+              onPressed: () => SystemNavigator.pop(),
+              child: const Text(
+                'Keluar Aplikasi',
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
