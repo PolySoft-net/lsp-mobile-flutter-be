@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../core/navigation/main_navigator.dart';
 import '../../services/auth/token_storage.dart';
@@ -173,14 +172,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       }
     } catch (e) {
       debugPrint('Session loading failed: $e');
-      
-      bool shouldForceLogout = false;
-      if (e is DioException) {
-        final statusCode = e.response?.statusCode;
-        if (statusCode == 401 || statusCode == 403) {
-          shouldForceLogout = true;
-        }
-      }
+
+      // ApiClient interceptor adalah satu-satunya otoritas matinya session:
+      // token hanya dihapus di sana saat refresh ditolak (401/403) atau request
+      // retry masih 401. Jadi di sini cukup cek keberadaan token — 401 yang
+      // lolos ke sini karena refresh gagal sementara (DB spike/network) tidak
+      // boleh menghapus session user.
+      final stillHaveToken = await TokenStorage.instance.getAccessToken();
+      final shouldForceLogout = stillHaveToken == null || stillHaveToken.isEmpty;
 
       if (shouldForceLogout) {
         try {

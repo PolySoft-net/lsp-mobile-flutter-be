@@ -121,12 +121,19 @@ class ApiClient {
                           await _dioInstance!.fetch(error.requestOptions),
                         );
                       } else {
-                        throw DioException(
-                          requestOptions: refreshResponse.requestOptions,
-                          response: refreshResponse,
-                          message:
-                              'Token refresh returned non-200 status code: ${refreshResponse.statusCode}',
-                        );
+                        // 401/403 = refresh token benar-benar ditolak (session mati).
+                        // Selain itu (429/5xx) = backend sedang bermasalah: token
+                        // dipertahankan supaya user tidak di-logout massal.
+                        final status = refreshResponse.statusCode ?? 0;
+                        if (status == 401 || status == 403) {
+                          await TokenStorage.instance.clear();
+                          AuthRepository.notifyTokenExpired();
+                        } else if (kDebugMode) {
+                          debugPrint(
+                            '⚠️ Refresh sementara gagal (HTTP $status), session dipertahankan',
+                          );
+                        }
+                        return handler.next(error);
                       }
                     } else {
                       throw DioException(
@@ -136,8 +143,25 @@ class ApiClient {
                     }
                   } catch (e) {
                     if (kDebugMode) debugPrint('🔴 Token refresh failed: $e');
-                    await TokenStorage.instance.clear();
-                    AuthRepository.notifyTokenExpired();
+                    // Hanya hapus session kalau refresh memang DITOLAK backend atau
+                    // refresh token tidak ada. Network error / 5xx (DB spike) bukan
+                    // alasan menghapus login user — cukup gagalkan request ini.
+                    final status = e is DioException
+                        ? e.response?.statusCode
+                        : null;
+                    final rejected =
+                        status == 401 ||
+                        status == 403 ||
+                        (e is DioException &&
+                            e.message == 'No refresh token available');
+                    if (rejected) {
+                      await TokenStorage.instance.clear();
+                      AuthRepository.notifyTokenExpired();
+                    } else if (kDebugMode) {
+                      debugPrint(
+                        '⚠️ Refresh gagal sementara (network/HTTP $status), token dipertahankan',
+                      );
+                    }
                   } finally {
                     _isRefreshing = false;
                   }
