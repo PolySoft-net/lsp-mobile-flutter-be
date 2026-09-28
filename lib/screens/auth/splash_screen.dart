@@ -200,6 +200,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         } catch (cacheEx) {
           debugPrint('Failed to load cached user profile: $cacheEx');
         }
+
+        // Token masih ada, tapi profil tidak bisa dimuat sama sekali (belum ada
+        // salinan lokal + server bermasalah). Jangan lanjut: `loggedInUser == null`
+        // akan membuat MainNavigator tampil sebagai GUEST SHELL — itu tampilan
+        // "session hilang" yang dikeluhkan user, padahal sesinya utuh.
+        if (loggedInUser == null) {
+          debugPrint('⚠️ Session intact but profile unavailable; not entering guest shell');
+          await _showNoConnectionDialog(sessionUnavailable: true);
+          return;
+        }
       }
     }
 
@@ -279,8 +289,33 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   /// (internet user) vs server/DB sedang bermasalah (503 dari /api/ready).
   /// Dulu keduanya berbunyi "periksa koneksi internet Anda", sehingga saat DB
   /// spike app menyalahkan internet user — dan user tidak tahu sesinya aman.
-  Future<void> _showNoConnectionDialog({bool serverBusy = false}) async {
+  ///
+  /// [sessionUnavailable] dipakai saat token masih ada tapi profil user tidak
+  /// bisa dimuat (belum ada salinan lokal + server bermasalah). Copy-nya sengaja
+  /// netral, bukan "server sibuk", karena jalur `_isRefreshing` di interceptor
+  /// juga meneruskan 401 asli tanpa menghapus token.
+  Future<void> _showNoConnectionDialog({
+    bool serverBusy = false,
+    bool sessionUnavailable = false,
+  }) async {
     if (!mounted) return;
+
+    final String title;
+    final String message;
+    if (sessionUnavailable) {
+      title = 'Sesi Belum Dapat Dimuat';
+      message =
+          'Sesi login Anda belum dapat dimuat. Silakan coba lagi — Anda tidak '
+          'perlu login ulang.';
+    } else if (serverBusy) {
+      title = 'Server Sedang Sibuk';
+      message =
+          'Server LSP sedang sibuk. Sesi login Anda tetap aman dan tidak perlu '
+          'login ulang. Silakan coba lagi sebentar lagi.';
+    } else {
+      title = 'Koneksi Internet Terputus';
+      message = 'Silakan periksa koneksi internet Anda.';
+    }
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -345,7 +380,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             const SizedBox(height: 28),
             // Message styled like the reference (bold title and clean font)
             Text(
-              serverBusy ? 'Server Sedang Sibuk' : 'Koneksi Internet Terputus',
+              title,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Color(0xFF1E1E1E),
@@ -356,9 +391,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             ),
             const SizedBox(height: 8),
             Text(
-              serverBusy
-                  ? 'Server LSP sedang sibuk. Sesi login Anda tetap aman dan tidak perlu login ulang. Silakan coba lagi sebentar lagi.'
-                  : 'Silakan periksa koneksi internet Anda.',
+              message,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.black54,
