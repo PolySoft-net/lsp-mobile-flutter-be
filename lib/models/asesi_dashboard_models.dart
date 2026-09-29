@@ -108,9 +108,12 @@ class AsesiDashboardSummary {
       alertTitle: '',
       alertSubtitle: '',
       timelineTerakhir: AsesiTimelineTerakhir(),
-      sertifikatList: const [],
+      sertifikatList: [],
     );
   }
+
+  bool get hasSertifikatTerbit =>
+      sertifikatList.isNotEmpty || timelineTerakhir.isSertifikatTerbit;
 }
 
 // ============================================================================

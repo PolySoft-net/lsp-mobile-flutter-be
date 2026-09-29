@@ -394,6 +394,17 @@ class AsesiTimelineSection extends StatelessWidget {
                         color: Color(0xFF0F172A),
                       ),
                     ),
+                    if (item.nomorSertifikat.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        'No. Sertifikat : ${item.nomorSertifikat}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                     if (item.kategori.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
@@ -431,8 +442,6 @@ class AsesiTimelineSection extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Detail rows
-          _buildCertDetailRow('No. Sertifikat', item.nomorSertifikat.isNotEmpty ? item.nomorSertifikat : '-'),
-          const SizedBox(height: 8),
           _buildCertDetailRow('Nama Skema', item.skema.isNotEmpty ? item.skema : '-'),
           const SizedBox(height: 8),
           _buildCertDetailRow('No. Registrasi', item.nomorRegistrasi.isNotEmpty ? item.nomorRegistrasi : '-'),
@@ -562,45 +571,6 @@ class AsesiTimelineSection extends StatelessWidget {
     );
   }
 
-  Future<void> _openECertificate(BuildContext context, AsesiTimelineTerakhir data) async {
-    final token = await TokenStorage.instance.getAccessToken();
-    final baseUrl = ApiClient.baseUrl;
-    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
-    final previewUrl = '$baseUrl/api/asesi/e-certificate/view?id_asesi=${data.asesiId}$tokenParam';
-    final downloadUrl = '$baseUrl/api/asesi/e-certificate/download?id_asesi=${data.asesiId}$tokenParam';
-
-    if (!context.mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ECertificateWebViewScreen(
-          title: 'E-Certificate - ${data.namaSkema}',
-          previewUrl: previewUrl,
-          downloadUrl: downloadUrl,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _downloadECertificate(BuildContext context, AsesiTimelineTerakhir data) async {
-    final token = await TokenStorage.instance.getAccessToken();
-    final baseUrl = ApiClient.baseUrl;
-    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
-    final downloadUrl = '$baseUrl/api/asesi/e-certificate/download?id_asesi=${data.asesiId}$tokenParam';
-
-    final uri = Uri.parse(downloadUrl);
-    try {
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tidak dapat membuka tautan unduh.')),
-        );
-      }
-    }
-  }
 
   Widget _buildEmptyState(BuildContext context) {
     return Padding(
