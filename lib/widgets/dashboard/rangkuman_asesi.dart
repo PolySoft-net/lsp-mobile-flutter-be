@@ -252,7 +252,7 @@ class _RangkumanAsesiState extends State<RangkumanAsesi> {
                 title: 'Sertifikat',
                 value: isLoading
                     ? '...'
-                    : NumberFormatHelper.formatWithDots(data.sertifikatAktif),
+                    : NumberFormatHelper.formatWithDots(data.totalSertifikat),
                 subtitle: 'Sertifikat dimiliki',
                 icon: Icons.workspace_premium_rounded,
                 iconColor: const Color(0xFFFF9800),
@@ -264,9 +264,9 @@ class _RangkumanAsesiState extends State<RangkumanAsesi> {
                 value: isLoading
                     ? '...'
                     : NumberFormatHelper.formatWithDots(
-                        data.totalJadwalDiikuti,
+                        data.asesmenAktif,
                       ),
-                subtitle: 'Jadwal yang diikuti',
+                subtitle: 'Uji sedang diikuti',
                 icon: Icons.assignment_turned_in_rounded,
                 iconColor: const Color(0xFF1976D2),
                 iconBgColor: const Color(0xFFE3F2FD),

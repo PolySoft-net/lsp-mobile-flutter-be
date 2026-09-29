@@ -11,6 +11,8 @@ class AsesiDashboardSummary {
   final int sertifikatDiterima;
   final int tukTerdekat;
   final int skemaPernahDijalani;
+  final int asesmenAktif;
+  final int totalSertifikat;
   /// Profile ringkasan fields
   final int sertifikatAktif;
   final int skemaKompetensi;
@@ -27,6 +29,8 @@ class AsesiDashboardSummary {
     required this.sertifikatDiterima,
     required this.tukTerdekat,
     required this.skemaPernahDijalani,
+    this.asesmenAktif = 0,
+    this.totalSertifikat = 0,
     this.sertifikatAktif = 0,
     this.skemaKompetensi = 0,
     this.sertifikatKadaluarsa = 0,
@@ -77,11 +81,27 @@ class AsesiDashboardSummary {
         }
       }
     }
+
+    final rawAsesmenAktif = summary['asesmen_aktif'];
+    final asesmenAktif = rawAsesmenAktif != null
+        ? JsonHelper.asInt(rawAsesmenAktif)
+        : (timeline.isSertifikatTerbit || timeline.statusJadwal == '1' || !timeline.hasUji
+            ? 0
+            : 1);
+
+    final rawTotalSertifikat = summary['total_sertifikat'];
+    final totalSertifikat = rawTotalSertifikat != null
+        ? JsonHelper.asInt(rawTotalSertifikat)
+        : (parsedCerts.isNotEmpty
+            ? parsedCerts.length
+            : (timeline.isSertifikatTerbit ? 1 : sertAktif));
     return AsesiDashboardSummary(
       totalJadwalDiikuti: skemaDiikuti,
       sertifikatDiterima: sertAktif,
       tukTerdekat: tuk,
       skemaPernahDijalani: hasil,
+      asesmenAktif: asesmenAktif,
+      totalSertifikat: totalSertifikat,
       sertifikatAktif: sertAktif,
       skemaKompetensi: skemaKomp,
       sertifikatKadaluarsa: sertKadal,
@@ -100,6 +120,8 @@ class AsesiDashboardSummary {
       sertifikatDiterima: 0,
       tukTerdekat: 0,
       skemaPernahDijalani: 0,
+      asesmenAktif: 0,
+      totalSertifikat: 0,
       sertifikatAktif: 0,
       skemaKompetensi: 0,
       sertifikatKadaluarsa: 0,
@@ -113,7 +135,9 @@ class AsesiDashboardSummary {
   }
 
   bool get hasSertifikatTerbit =>
-      sertifikatList.isNotEmpty || timelineTerakhir.isSertifikatTerbit;
+      totalSertifikat > 0 ||
+      sertifikatList.isNotEmpty ||
+      timelineTerakhir.isSertifikatTerbit;
 }
 
 // ============================================================================
