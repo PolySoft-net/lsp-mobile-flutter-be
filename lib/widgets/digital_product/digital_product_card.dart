@@ -41,7 +41,7 @@ class DigitalProductCard extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: AspectRatio(
-                aspectRatio: 16 / 11,
+                aspectRatio: 16 / 9,
                 child: SizedBox(
                   width: double.infinity,
                   child: _buildThumbnail(),
@@ -164,12 +164,12 @@ class DigitalProductCard extends StatelessWidget {
             ),
             child: const SizedBox(
               width: double.infinity,
-              height: 34,
+              height: 42,
               child: Center(
                 child: Text(
                   'Lihat',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF0F172A),
                   ),
