@@ -11,7 +11,6 @@ import '../../services/api_client.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../services/auth/token_storage.dart';
 import '../../utils/date_format_helper.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class AsesiTimelineSection extends StatelessWidget {
   final AsesiTimelineTerakhir? timeline;
@@ -452,45 +451,26 @@ class AsesiTimelineSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Action Buttons: Buka Sertifikat & Download
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.badge_outlined, size: 16),
-                  label: const Text(
-                    'Buka Sertifikat',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () => _openECertificateByItem(context, item),
-                ),
+          // Action Button: Buka Sertifikat
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.badge_outlined, size: 16),
+              label: const Text(
+                'Buka Sertifikat',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 8),
-              Container(
-                height: 44,
-                width: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  border: Border.all(color: const Color(0xFFCBD5E1)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2563EB),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: IconButton(
-                  icon: const Icon(Icons.download_rounded, size: 20, color: Color(0xFF334155)),
-                  tooltip: 'Unduh E-Certificate',
-                  padding: EdgeInsets.zero,
-                  onPressed: () => _downloadECertificateByItem(context, item),
-                ),
               ),
-            ],
+              onPressed: () => _openECertificateByItem(context, item),
+            ),
           ),
         ],
       ),
@@ -519,27 +499,6 @@ class AsesiTimelineSection extends StatelessWidget {
     );
   }
 
-  Future<void> _downloadECertificateByItem(BuildContext context, SertifikatItem item) async {
-    final token = await TokenStorage.instance.getAccessToken();
-    final baseUrl = ApiClient.baseUrl;
-    final tokenParam = token != null && token.isNotEmpty ? '&token=$token' : '';
-    final downloadUrl = item.fileSertifikatDownload.isNotEmpty
-        ? item.fileSertifikatDownload
-        : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
-
-    final uri = Uri.parse(downloadUrl);
-    try {
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
-      }
-    } catch (_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tidak dapat membuka tautan unduh.')),
-        );
-      }
-    }
-  }
 
   Widget _buildCertDetailRow(String label, String value) {
     return Row(
