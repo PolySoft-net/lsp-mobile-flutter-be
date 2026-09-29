@@ -278,6 +278,8 @@ class ApiRoutes {
       '/api/digital-products/$id/favorite';
   static String digitalProductPopular({int limit = 10}) =>
       '/api/digital-products/popular?limit=$limit';
+  static String digitalProductReviews(dynamic id) =>
+      '/api/digital-products/$id/reviews';
 
   // ============================================================================
   // Health Routes

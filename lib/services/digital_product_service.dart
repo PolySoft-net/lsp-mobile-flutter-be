@@ -182,6 +182,79 @@ class DigitalProductService {
     );
   }
 
+  static Future<DigitalProductReviewsData> getReviews(
+    String id, {
+    int limit = 20,
+    int offset = 0,
+    int? page,
+  }) async {
+    final qParams = <String, dynamic>{
+      'limit': limit,
+      'offset': offset,
+    };
+    if (page != null) {
+      qParams['page'] = page;
+    }
+    final response = await _dio.get(
+      ApiRoutes.digitalProductReviews(id),
+      queryParameters: qParams,
+    );
+    final data = response.data is Map ? response.data['data'] : null;
+    return DigitalProductReviewsData.fromJson(
+      Map<String, dynamic>.from(data as Map? ?? const {}),
+    );
+  }
+
+  static Future<void> submitReview(
+    String id, {
+    required int rating,
+    String? comment,
+    List<String> imagePaths = const [],
+  }) async {
+    try {
+      if (imagePaths.isNotEmpty) {
+        final compressedFiles =
+            await ImageCompressHelper.compressAll(imagePaths);
+        final formData = FormData.fromMap({
+          'rating': rating,
+          if (comment != null && comment.trim().isNotEmpty)
+            'comment': comment.trim(),
+          'images': [
+            for (final path in compressedFiles)
+              await MultipartFile.fromFile(path, filename: _fileName(path)),
+          ],
+        });
+        await _dio.post(ApiRoutes.digitalProductReviews(id), data: formData);
+      } else {
+        await _dio.post(
+          ApiRoutes.digitalProductReviews(id),
+          data: {
+            'rating': rating,
+            if (comment != null && comment.trim().isNotEmpty)
+              'comment': comment.trim(),
+          },
+        );
+      }
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      String? message;
+      if (resData is Map) {
+        message = (resData['message'] ?? resData['error'])?.toString();
+      }
+      if (e.response?.statusCode == 400) {
+        throw Exception(
+          message ??
+              'Data ulasan tidak valid atau Anda mencoba mengulas produk sendiri.',
+        );
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Sesi login telah berakhir. Silakan login kembali.');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Produk tidak ditemukan.');
+      }
+      throw Exception(message ?? 'Gagal mengirim ulasan.');
+    }
+  }
+
   static String absoluteUrl(String value) {
     if (value.isEmpty ||
         value.startsWith('http://') ||

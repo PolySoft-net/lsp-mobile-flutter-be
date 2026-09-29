@@ -353,7 +353,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  mainAxisExtent: 250,
+                  mainAxisExtent: 268,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) => DigitalProductCard(

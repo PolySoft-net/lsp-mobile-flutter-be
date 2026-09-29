@@ -25,6 +25,8 @@ class DigitalProductItem {
   final bool negotiable;
   final String unit;
   final String createdAt;
+  final double ratingAvg;
+  final int ratingCount;
 
   const DigitalProductItem({
     required this.id,
@@ -51,8 +53,9 @@ class DigitalProductItem {
     this.negotiable = false,
     this.unit = '',
     this.createdAt = '',
+    this.ratingAvg = 0.0,
+    this.ratingCount = 0,
   });
-
   factory DigitalProductItem.fromJson(Map<String, dynamic> json) {
     return DigitalProductItem(
       id: json['id']?.toString() ?? '',
@@ -81,6 +84,8 @@ class DigitalProductItem {
       negotiable: JsonHelper.asBool(json['negotiable']),
       unit: (json['price_unit'] ?? json['unit'] ?? json['satuan'])?.toString() ?? '',
       createdAt: json['created_at']?.toString() ?? '',
+      ratingAvg: JsonHelper.asDouble(json['rating_avg']),
+      ratingCount: JsonHelper.asInt(json['rating_count']),
     );
   }
 
@@ -135,6 +140,8 @@ class DigitalProductItem {
     int? salesCount,
     bool? negotiable,
     String? unit,
+    double? ratingAvg,
+    int? ratingCount,
   }) {
     return DigitalProductItem(
       id: id,
@@ -161,9 +168,10 @@ class DigitalProductItem {
       negotiable: negotiable ?? this.negotiable,
       unit: unit ?? this.unit,
       createdAt: createdAt,
+      ratingAvg: ratingAvg ?? this.ratingAvg,
+      ratingCount: ratingCount ?? this.ratingCount,
     );
   }
-
   static String _titleCase(String value) =>
       value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
 }
@@ -329,4 +337,104 @@ List<T> _mapList<T>(dynamic value, T Function(Map<String, dynamic>) parser) {
       .whereType<Map>()
       .map((item) => parser(Map<String, dynamic>.from(item)))
       .toList();
+}
+
+class DigitalProductReviewUser {
+  final int id;
+  final String name;
+  final String photo;
+
+  const DigitalProductReviewUser({
+    required this.id,
+    required this.name,
+    required this.photo,
+  });
+
+  factory DigitalProductReviewUser.fromJson(Map<String, dynamic> json) {
+    return DigitalProductReviewUser(
+      id: JsonHelper.asInt(json['id']),
+      name: json['name']?.toString() ?? '',
+      photo: json['photo']?.toString() ?? '',
+    );
+  }
+}
+
+class DigitalProductReviewItem {
+  final int id;
+  final int productId;
+  final DigitalProductReviewUser user;
+  final int rating;
+  final String comment;
+  final List<String> images;
+  final String createdAt;
+
+  const DigitalProductReviewItem({
+    required this.id,
+    required this.productId,
+    required this.user,
+    required this.rating,
+    required this.comment,
+    required this.images,
+    required this.createdAt,
+  });
+
+  factory DigitalProductReviewItem.fromJson(Map<String, dynamic> json) {
+    final rawImages = json['images'];
+    final List<String> parsedImages = rawImages is List
+        ? rawImages
+            .map((e) => e?.toString() ?? '')
+            .where((e) => e.isNotEmpty)
+            .toList()
+        : const [];
+
+    return DigitalProductReviewItem(
+      id: JsonHelper.asInt(json['id']),
+      productId: JsonHelper.asInt(json['product_id']),
+      user: DigitalProductReviewUser.fromJson(
+        Map<String, dynamic>.from(json['user'] as Map? ?? const {}),
+      ),
+      rating: JsonHelper.asInt(json['rating']),
+      comment: json['comment']?.toString() ?? '',
+      images: parsedImages,
+      createdAt: json['created_at']?.toString() ?? '',
+    );
+  }
+}
+
+class DigitalProductReviewsData {
+  final double averageRating;
+  final int totalReviews;
+  final List<DigitalProductReviewItem> reviews;
+
+  const DigitalProductReviewsData({
+    required this.averageRating,
+    required this.totalReviews,
+    required this.reviews,
+  });
+
+  factory DigitalProductReviewsData.fromJson(Map<String, dynamic> json) {
+    final rawList = json['reviews'];
+    final List<DigitalProductReviewItem> list = rawList is List
+        ? rawList
+            .whereType<Map>()
+            .map(
+              (item) => DigitalProductReviewItem.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
+            .toList()
+        : const [];
+
+    return DigitalProductReviewsData(
+      averageRating: JsonHelper.asDouble(json['average_rating']),
+      totalReviews: JsonHelper.asInt(json['total_reviews']),
+      reviews: list,
+    );
+  }
+
+  static const empty = DigitalProductReviewsData(
+    averageRating: 0.0,
+    totalReviews: 0,
+    reviews: [],
+  );
 }

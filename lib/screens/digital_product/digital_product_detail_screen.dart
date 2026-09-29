@@ -4,8 +4,11 @@ import '../../models/digital_product_models.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/digital_product_service.dart';
 import 'digital_product_portofolio_screen.dart';
+import '../../services/auth/auth_repository.dart';
+import '../../services/auth/token_storage.dart';
 import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_image_viewer.dart';
+import '../../widgets/digital_product/digital_product_reviews_section.dart';
 import '../../widgets/digital_product/interactive_favorite_button.dart';
 
 class DigitalProductDetailScreen extends StatefulWidget {
@@ -22,14 +25,56 @@ class _DigitalProductDetailScreenState
     extends State<DigitalProductDetailScreen> {
   late bool _isFavorite;
   DigitalProductDetail? _detail;
+  DigitalProductReviewsData? _reviewsData;
+  bool _isLoadingReviews = true;
 
   DigitalProductItem get _item => _detail?.product ?? widget.item;
+
+  bool get _isOwner {
+    final currentUserIdStr = AuthRepository.currentUserInstance?.id;
+    final currentUserId = int.tryParse(currentUserIdStr ?? '') ?? 0;
+    if (currentUserId == 0) return false;
+    final sellerId = _detail?.seller.id ?? 0;
+    return currentUserId == _item.userId ||
+        (sellerId > 0 && currentUserId == sellerId);
+  }
 
   @override
   void initState() {
     super.initState();
     _isFavorite = widget.item.isFavorite;
     _loadDetail();
+    _loadReviews();
+    _ensureCurrentUser();
+  }
+
+  Future<void> _ensureCurrentUser() async {
+    if (AuthRepository.currentUserInstance == null) {
+      try {
+        final user = await TokenStorage.instance.getUserProfile();
+        if (user != null && mounted) {
+          setState(() {
+            AuthRepository.currentUserInstance = user;
+          });
+        }
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    try {
+      final reviews = await DigitalProductService.getReviews(widget.item.id);
+      if (mounted) {
+        setState(() {
+          _reviewsData = reviews;
+          _isLoadingReviews = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingReviews = false);
+      }
+    }
   }
 
   Future<void> _loadDetail() async {
@@ -72,6 +117,18 @@ class _DigitalProductDetailScreenState
                     // Portofolio Produk Card
                     _buildPortfolioCard(context),
                     _buildSellerCompetencyCard(),
+
+                    // Review barang dibawah Kompetensi Penjual
+                    DigitalProductReviewsSection(
+                      productId: _item.id,
+                      isOwner: _isOwner,
+                      reviewsData: _reviewsData,
+                      isLoading: _isLoadingReviews,
+                      onReviewSubmitted: () {
+                        _loadReviews();
+                        _loadDetail();
+                      },
+                    ),
 
                     // "Hubungi Penjual" Button Card
                     _buildHubungiPenjualButton(context),
@@ -257,7 +314,6 @@ class _DigitalProductDetailScreenState
             style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
           if (_item.salesCount > 0) ...[
-            const SizedBox(height: 2),
             Text(
               'Terjual : ${_item.salesCount} produk',
               style: const TextStyle(
@@ -267,6 +323,36 @@ class _DigitalProductDetailScreenState
               ),
             ),
           ],
+          const SizedBox(height: 2),
+
+          // Rating
+          Row(
+            children: [
+              const Icon(
+                Icons.star_rounded,
+                size: 15,
+                color: Color(0xFFF59E0B),
+              ),
+              const SizedBox(width: 3),
+              if (_item.ratingCount > 0)
+                Text(
+                  '${_item.ratingAvg.toStringAsFixed(1)} (${_item.ratingCount} ulasan)',
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF475569),
+                  ),
+                )
+              else
+                const Text(
+                  'Belum ada ulasan',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(height: 10),
 
           // Kategori
@@ -791,7 +877,7 @@ class _DigitalProductDetailScreenState
               crossAxisCount: 2,
               crossAxisSpacing: 12.0,
               mainAxisSpacing: 12.0,
-              mainAxisExtent: 250.0,
+              mainAxisExtent: 268.0,
             ),
             itemBuilder: (context, index) {
               final recItem = recommendations[index];

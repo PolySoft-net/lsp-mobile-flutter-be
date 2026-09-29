@@ -125,6 +125,36 @@ class DigitalProductCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
 
+                // Rating
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: Color(0xFFF59E0B),
+                    ),
+                    const SizedBox(width: 3),
+                    if (item.ratingCount > 0)
+                      Text(
+                        '${item.ratingAvg.toStringAsFixed(1)} (${item.ratingCount})',
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF475569),
+                        ),
+                      )
+                    else
+                      const Text(
+                        'Belum ada ulasan',
+                        style: TextStyle(
+                          fontSize: 9.5,
+                          color: Color(0xFF94A3B8),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+
                 // By
                 Text(
                   'By : ${item.author}',
@@ -135,7 +165,7 @@ class DigitalProductCard extends StatelessWidget {
                     color: Color(0xFF64748B),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
 
                 // Skema Sertifikasi
                 Text(
