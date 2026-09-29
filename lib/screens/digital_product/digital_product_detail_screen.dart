@@ -27,6 +27,8 @@ class _DigitalProductDetailScreenState
   DigitalProductDetail? _detail;
   DigitalProductReviewsData? _reviewsData;
   bool _isLoadingReviews = true;
+  bool _hasReviewsError = false;
+  bool _isLoadingMoreReviews = false;
 
   DigitalProductItem get _item => _detail?.product ?? widget.item;
 
@@ -35,7 +37,7 @@ class _DigitalProductDetailScreenState
     final currentUserId = int.tryParse(currentUserIdStr ?? '') ?? 0;
     if (currentUserId == 0) return false;
     final sellerId = _detail?.seller.id ?? 0;
-    return currentUserId == _item.userId ||
+    return (_item.userId > 0 && currentUserId == _item.userId) ||
         (sellerId > 0 && currentUserId == sellerId);
   }
 
@@ -62,17 +64,52 @@ class _DigitalProductDetailScreenState
   }
 
   Future<void> _loadReviews() async {
+    setState(() {
+      _isLoadingReviews = true;
+      _hasReviewsError = false;
+    });
     try {
       final reviews = await DigitalProductService.getReviews(widget.item.id);
       if (mounted) {
         setState(() {
           _reviewsData = reviews;
           _isLoadingReviews = false;
+          _hasReviewsError = false;
         });
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _isLoadingReviews = false);
+        setState(() {
+          _isLoadingReviews = false;
+          _hasReviewsError = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMoreReviews() async {
+    final currentReviews = _reviewsData?.reviews ?? const [];
+    if (_isLoadingMoreReviews || currentReviews.isEmpty) return;
+    setState(() => _isLoadingMoreReviews = true);
+    try {
+      final moreData = await DigitalProductService.getReviews(
+        widget.item.id,
+        limit: 20,
+        offset: currentReviews.length,
+      );
+      if (mounted) {
+        setState(() {
+          _reviewsData = DigitalProductReviewsData(
+            averageRating: moreData.averageRating,
+            totalReviews: moreData.totalReviews,
+            reviews: [...currentReviews, ...moreData.reviews],
+          );
+          _isLoadingMoreReviews = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingMoreReviews = false);
       }
     }
   }
@@ -124,6 +161,10 @@ class _DigitalProductDetailScreenState
                       isOwner: _isOwner,
                       reviewsData: _reviewsData,
                       isLoading: _isLoadingReviews,
+                      hasError: _hasReviewsError,
+                      onRetry: _loadReviews,
+                      onLoadMore: _loadMoreReviews,
+                      isLoadingMore: _isLoadingMoreReviews,
                       onReviewSubmitted: () {
                         _loadReviews();
                         _loadDetail();
@@ -314,6 +355,7 @@ class _DigitalProductDetailScreenState
             style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
           if (_item.salesCount > 0) ...[
+            const SizedBox(height: 2),
             Text(
               'Terjual : ${_item.salesCount} produk',
               style: const TextStyle(

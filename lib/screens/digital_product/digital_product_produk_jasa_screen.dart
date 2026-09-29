@@ -154,11 +154,15 @@ class _DigitalProductProdukJasaScreenState
         itemCount: products.length,
         itemBuilder: (context, index) => DigitalProductCard(
           item: products[index],
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => DigitalProductDetailScreen(item: products[index]),
-            ),
-          ),
+          onTap: () async {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    DigitalProductDetailScreen(item: products[index]),
+              ),
+            );
+            if (mounted) _load();
+          },
         ),
       ),
     );

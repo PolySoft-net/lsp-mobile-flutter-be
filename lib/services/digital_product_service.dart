@@ -211,6 +211,12 @@ class DigitalProductService {
     String? comment,
     List<String> imagePaths = const [],
   }) async {
+    final options = Options(
+      receiveDataWhenStatusError: true,
+      sendTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 60),
+    );
+
     try {
       if (imagePaths.isNotEmpty) {
         final compressedFiles =
@@ -224,7 +230,11 @@ class DigitalProductService {
               await MultipartFile.fromFile(path, filename: _fileName(path)),
           ],
         });
-        await _dio.post(ApiRoutes.digitalProductReviews(id), data: formData);
+        await _dio.post(
+          ApiRoutes.digitalProductReviews(id),
+          data: formData,
+          options: options,
+        );
       } else {
         await _dio.post(
           ApiRoutes.digitalProductReviews(id),
@@ -233,6 +243,7 @@ class DigitalProductService {
             if (comment != null && comment.trim().isNotEmpty)
               'comment': comment.trim(),
           },
+          options: options,
         );
       }
     } on DioException catch (e) {

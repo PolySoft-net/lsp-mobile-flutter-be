@@ -21,7 +21,7 @@ class UploadFileValidator {
   static const int certificateMaxMB = 5;
   static const int asesiDocMaxMB = 2;
   static const int ia04EvidenceMaxMB = 25;
-
+  static const int reviewImageMaxMB = 50;
   /// Returns true when [file] exists on disk and fits within [maxSizeMB].
   /// Shows a concise warning naming the file and the limit otherwise.
   static Future<bool> isValid(
