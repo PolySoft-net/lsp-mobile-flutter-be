@@ -41,7 +41,7 @@ class DigitalProductCard extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: AspectRatio(
-                aspectRatio: 16 / 9,
+                aspectRatio: 16 / 11,
                 child: SizedBox(
                   width: double.infinity,
                   child: _buildThumbnail(),
@@ -52,7 +52,7 @@ class DigitalProductCard extends StatelessWidget {
 
           // Content
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -84,7 +84,7 @@ class DigitalProductCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 6),
 
                 // Harga & Terjual
                 Row(
@@ -123,7 +123,7 @@ class DigitalProductCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
 
                 // By
                 Text(
@@ -135,7 +135,7 @@ class DigitalProductCard extends StatelessWidget {
                     color: Color(0xFF64748B),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
 
                 // Skema Sertifikasi
                 Text(
@@ -164,12 +164,12 @@ class DigitalProductCard extends StatelessWidget {
             ),
             child: const SizedBox(
               width: double.infinity,
-              height: 30,
+              height: 34,
               child: Center(
                 child: Text(
                   'Lihat',
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF0F172A),
                   ),

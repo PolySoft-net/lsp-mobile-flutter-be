@@ -149,7 +149,7 @@ class _DigitalProductProdukJasaScreenState
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          mainAxisExtent: 216,
+          mainAxisExtent: 260,
         ),
         itemCount: products.length,
         itemBuilder: (context, index) => DigitalProductCard(

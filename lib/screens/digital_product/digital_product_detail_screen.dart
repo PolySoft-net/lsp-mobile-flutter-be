@@ -791,7 +791,7 @@ class _DigitalProductDetailScreenState
               crossAxisCount: 2,
               crossAxisSpacing: 12.0,
               mainAxisSpacing: 12.0,
-              mainAxisExtent: 216.0,
+              mainAxisExtent: 260.0,
             ),
             itemBuilder: (context, index) {
               final recItem = recommendations[index];

@@ -139,7 +139,7 @@ class _DigitalProductFavoritScreenState
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          mainAxisExtent: 216,
+          mainAxisExtent: 260,
         ),
         itemCount: _products.length,
         itemBuilder: (context, index) {
