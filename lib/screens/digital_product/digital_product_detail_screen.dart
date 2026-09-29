@@ -134,6 +134,7 @@ class _DigitalProductDetailScreenState
         _detail?.sellerProducts ?? const <DigitalProductItem>[];
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Column(
