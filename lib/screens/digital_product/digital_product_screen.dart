@@ -27,6 +27,7 @@ class DigitalProductScreen extends StatefulWidget {
 
 class _DigitalProductScreenState extends State<DigitalProductScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   List<DigitalProductItem> _products = const [];
   List<DigitalProductItem> _popularProducts = const [];
   String? _selectedCategory;
@@ -44,6 +45,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   @override
   void dispose() {
     _searchDebounce?.cancel();
+    _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -89,9 +91,8 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   }
 
   void _onSearchChanged(String _) {
-    setState(() {});
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 400), _loadProducts);
+    _searchDebounce = Timer(const Duration(milliseconds: 350), _loadProducts);
   }
 
   void _onCategorySelected(String category) {
@@ -159,8 +160,12 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
       _loadProducts();
     }
     setState(() => _currentBottomNavIndex = index);
+    if (index == 2) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _searchFocusNode.requestFocus();
+      });
+    }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -177,6 +182,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
                 if (mounted) _loadProducts();
               },
             ),
+            if (_currentBottomNavIndex == 2) _buildSearchBar(),
             Expanded(child: _buildContent()),
           ],
         ),
@@ -187,10 +193,97 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
       ),
     );
   }
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(21),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                const Icon(
+                  LucideIcons.search,
+                  size: 18,
+                  color: Color(0xFF64748B),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    focusNode: _searchFocusNode,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF1E293B),
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Cari produk atau layanan digital...',
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _searchController,
+                  builder: (context, value, _) {
+                    if (value.text.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return GestureDetector(
+                      onTap: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                      child: const Icon(
+                        LucideIcons.x,
+                        size: 16,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          if (_loading) ...[
+            const SizedBox(height: 6),
+            const ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+              child: LinearProgressIndicator(
+                minHeight: 2.5,
+                backgroundColor: Color(0xFFE2E8F0),
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildContent() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error.isNotEmpty) {
+    final isSearching =
+        _searchController.text.trim().isNotEmpty || _currentBottomNavIndex == 2;
+    final showBanner = !isSearching && _currentBottomNavIndex != 1;
+
+    if (_loading && _products.isEmpty && !isSearching) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error.isNotEmpty && _products.isEmpty && !isSearching) {
       return Center(
         child: TextButton(
           onPressed: _loadProducts,
@@ -198,73 +291,11 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
         ),
       );
     }
-    final isSearching =
-        _searchController.text.trim().isNotEmpty || _currentBottomNavIndex == 2;
-    final showBanner = !isSearching && _currentBottomNavIndex != 1;
-
     return RefreshIndicator(
       onRefresh: _loadProducts,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          if (_currentBottomNavIndex == 2)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(21),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        LucideIcons.search,
-                        size: 18,
-                        color: Color(0xFF64748B),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: _onSearchChanged,
-                          autofocus: true,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF1E293B),
-                          ),
-                          decoration: const InputDecoration(
-                            hintText: 'Cari produk atau layanan digital...',
-                            hintStyle: TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF94A3B8),
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                      ),
-                      if (_searchController.text.isNotEmpty)
-                        GestureDetector(
-                          onTap: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                          child: const Icon(
-                            LucideIcons.x,
-                            size: 16,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           if (showBanner)
             SliverToBoxAdapter(
               child: Padding(
@@ -294,7 +325,22 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
               ),
             ),
           ),
-          if (_products.isEmpty)
+          if (_loading && _products.isEmpty)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_error.isNotEmpty && _products.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: TextButton(
+                  onPressed: _loadProducts,
+                  child: Text('$_error. Coba lagi'),
+                ),
+              ),
+            )
+          else if (_products.isEmpty)
             const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(child: Text('Belum ada produk pada skema ini')),
