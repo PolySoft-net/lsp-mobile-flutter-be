@@ -10,6 +10,9 @@ import '../../widgets/digital_product/digital_product_card.dart';
 import '../../widgets/digital_product/digital_product_image_viewer.dart';
 import '../../widgets/digital_product/digital_product_reviews_section.dart';
 import '../../widgets/digital_product/interactive_favorite_button.dart';
+import '../../services/digital_product_cart_service.dart';
+import '../../widgets/digital_product/fade_page_route.dart';
+import 'digital_product_favorit_screen.dart';
 
 class DigitalProductDetailScreen extends StatefulWidget {
   final DigitalProductItem item;
@@ -171,6 +174,9 @@ class _DigitalProductDetailScreenState
                         _loadDetail();
                       },
                     ),
+
+                    // "Pesan & Negosiasi Produk (Draf Kontrak)" Button Card
+                    _buildPesanDanNegoButton(context),
 
                     // "Hubungi Penjual" Button Card
                     _buildHubungiPenjualButton(context),
@@ -829,6 +835,429 @@ class _DigitalProductDetailScreenState
                 ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPesanDanNegoButton(BuildContext context) {
+    final isNegotiable = _item.negotiable;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 10.0),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => _showOrderAndContractModal(context),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14.0, vertical: 13.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  LucideIcons.file_text,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isNegotiable
+                          ? 'Nego Harga & Buat Kontrak'
+                          : 'Pesan & Buat Kontrak',
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isNegotiable
+                          ? 'Ajukan harga tawaran & buat draf kesepakatan'
+                          : 'Draf kontrak perjanjian dibuat otomatis',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 13,
+                color: Colors.white,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showOrderAndContractModal(BuildContext context) {
+    final buyerName =
+        AuthRepository.currentUserInstance?.name ?? 'Pengguna LSP';
+    final isNegotiable = _item.negotiable;
+    final initialPrice = _item.priceValue;
+
+    final priceController = TextEditingController(
+      text: initialPrice > 0 ? initialPrice.toString() : '',
+    );
+    final notesController = TextEditingController();
+    bool agreed = true;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            return SafeArea(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.88,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFCBD5E1),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                LucideIcons.file_text,
+                                size: 20,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isNegotiable
+                                        ? 'Pemesanan & Negosiasi'
+                                        : 'Pemesanan & Kontrak',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const Text(
+                                    'Draf kontrak kerjasama transaksi digital',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _item.title,
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Harga Katalog: ${_item.price}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  if (_item.unit.isNotEmpty)
+                                    Text(
+                                      ' ${_item.priceUnit}',
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        if (isNegotiable) ...[
+                          const Text(
+                            'Ajukan Harga Negosiasi (Rp)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: priceController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintText: 'Contoh: 15000000',
+                              prefixText: 'Rp ',
+                              filled: true,
+                              fillColor: const Color(0xFFF8FAFC),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFCBD5E1),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                        const Text(
+                          'Catatan / Ruang Lingkup Pesanan',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: notesController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            hintText:
+                                'Tuliskan spesifikasi, timeline, atau detail kebutuhan Anda...',
+                            hintStyle: const TextStyle(fontSize: 12),
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFCBD5E1),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: const [
+                                  Icon(
+                                    LucideIcons.file_text,
+                                    size: 16,
+                                    color: Color(0xFF2563EB),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Draf Klausul Kontrak Kerjasama',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '• Pihak 1 (Penyedia): ${_item.sellerName.isNotEmpty ? _item.sellerName : 'Penyedia Layanan'}\n'
+                                '• Pihak 2 (Pembeli): $buyerName\n'
+                                '• Objek: ${_item.title}\n'
+                                '• Kontrak diterbitkan resmi oleh sistem LSP Digital Mobile dan mengikat kedua belah pihak.',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF475569),
+                                  height: 1.45,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: agreed,
+                              activeColor: const Color(0xFF2563EB),
+                              onChanged: (val) =>
+                                  setModalState(() => agreed = val ?? false),
+                            ),
+                            const Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  'Saya menyetujui draf kontrak perjanjian kerjasama digital untuk produk/jasa ini.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF334155),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 46,
+                          child: ElevatedButton(
+                            onPressed: agreed
+                                ? () async {
+                                    final rawPrice = priceController.text
+                                        .replaceAll(RegExp(r'[^0-9]'), '');
+                                    final finalPrice =
+                                        int.tryParse(rawPrice) ?? initialPrice;
+                                    final notes = notesController.text.trim();
+
+                                    final order = await DigitalProductCartService
+                                        .createOrderAndContract(
+                                      product: _item,
+                                      buyerName: buyerName,
+                                      offeredPrice: finalPrice,
+                                      isNegotiated: isNegotiable &&
+                                          finalPrice != initialPrice,
+                                      notes: notes,
+                                    );
+                                    if (ctx.mounted) {
+                                      Navigator.pop(ctx);
+                                    }
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Pesanan & Kontrak ${order.contractNumber} berhasil dibuat!',
+                                          ),
+                                          backgroundColor:
+                                              const Color(0xFF16A34A),
+                                          action: SnackBarAction(
+                                            label: 'Buka Keranjang',
+                                            textColor: Colors.white,
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                FadePageRoute(
+                                                  page:
+                                                      const DigitalProductFavoritScreen(
+                                                    initialTab: 0,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2563EB),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Konfirmasi & Masukkan ke Keranjang',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

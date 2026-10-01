@@ -25,8 +25,8 @@ class DigitalProductBottomBar extends StatelessWidget {
       label: 'Search',
     ),
     _BottomNavItem(
-      icon: LucideIcons.bookmark,
-      label: 'Save',
+      icon: LucideIcons.shopping_bag,
+      label: 'Keranjang',
     ),
     _BottomNavItem(
       icon: LucideIcons.circle_user_round,

@@ -34,7 +34,7 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   Timer? _searchDebounce;
   bool _loading = true;
   String _error = '';
-  int _currentBottomNavIndex = 0;
+  int _currentBottomNavIndex = 1;
 
   @override
   void initState() {
@@ -137,12 +137,33 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
   }
 
   Future<void> _onBottomNavTap(int index) async {
+    if (index == 0) {
+      // Home: Balik ke Beranda Utama aplikasi
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+    if (index == 1) {
+      // Explore: Beranda Katalog Produk Digital
+      if (_searchController.text.isNotEmpty || _selectedCategory != null) {
+        _searchController.clear();
+        _selectedCategory = null;
+        _loadProducts();
+      }
+      setState(() => _currentBottomNavIndex = 1);
+      return;
+    }
     if (index == 3) {
       final targetIndex = await Navigator.of(
         context,
       ).push<int>(FadePageRoute(page: const DigitalProductFavoritScreen()));
       if (targetIndex != null && mounted) {
-        setState(() => _currentBottomNavIndex = targetIndex);
+        if (targetIndex == 0) {
+          if (Navigator.canPop(context)) Navigator.of(context).pop();
+        } else {
+          _onBottomNavTap(targetIndex);
+        }
       }
       return;
     }
@@ -151,11 +172,17 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
         context,
       ).push<int>(FadePageRoute(page: const DigitalProductProfileScreen()));
       if (targetIndex != null && mounted) {
-        setState(() => _currentBottomNavIndex = targetIndex);
+        if (targetIndex == 0) {
+          if (Navigator.canPop(context)) Navigator.of(context).pop();
+        } else {
+          _onBottomNavTap(targetIndex);
+        }
       }
       return;
     }
-    if (_currentBottomNavIndex == 2 && index != 2 && _searchController.text.isNotEmpty) {
+    if (_currentBottomNavIndex == 2 &&
+        index != 2 &&
+        _searchController.text.isNotEmpty) {
       _searchController.clear();
       _loadProducts();
     }
