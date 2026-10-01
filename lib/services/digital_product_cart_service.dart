@@ -1,147 +1,145 @@
-import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../models/digital_product_order_model.dart';
+import 'package:dio/dio.dart';
+
 import '../models/digital_product_models.dart';
+import '../models/digital_product_order_model.dart';
+import '../utils/api_routes.dart';
+import 'api_client.dart';
 
 class DigitalProductCartService {
-  static const _storage = FlutterSecureStorage();
-  static const _cartKey = 'digital_product_cart_orders_v1';
-  static final List<DigitalProductOrder> _inMemoryOrders = [];
-  static bool _isLoaded = false;
+  static Dio get _dio => ApiClient.dio;
+  static Options get _options => Options(receiveDataWhenStatusError: true);
 
-  static Future<List<DigitalProductOrder>> getOrders() async {
-    if (!_isLoaded) {
-      await _loadFromStorage();
+  static Future<List<DigitalProductOrder>> getOrders({
+    String? status,
+    String? role,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final response = await _dio.get(
+      ApiRoutes.digitalProductOrders,
+      queryParameters: {
+        if (status != null && status.isNotEmpty && status != 'all')
+          'status': status,
+        if (role != null && role.isNotEmpty) 'role': role,
+        'limit': limit,
+        'offset': offset,
+      },
+      options: _options,
+    );
+    final data = response.data is Map ? response.data['data'] : null;
+    if (data is! List) {
+      throw const FormatException('Respons daftar pesanan tidak valid');
     }
-    return List.unmodifiable(_inMemoryOrders);
-  }
-
-  static Future<void> _loadFromStorage() async {
-    try {
-      final raw = await _storage.read(key: _cartKey);
-      if (raw != null && raw.isNotEmpty) {
-        final decoded = jsonDecode(raw);
-        if (decoded is List) {
-          _inMemoryOrders.clear();
-          for (final item in decoded) {
-            if (item is Map<String, dynamic>) {
-              _inMemoryOrders.add(DigitalProductOrder.fromJson(item));
-            } else if (item is Map) {
-              _inMemoryOrders.add(
-                DigitalProductOrder.fromJson(Map<String, dynamic>.from(item)),
-              );
-            }
-          }
-        }
-      }
-    } catch (_) {}
-    _isLoaded = true;
-  }
-
-  static Future<void> _saveToStorage() async {
-    try {
-      final encoded = jsonEncode(_inMemoryOrders.map((e) => e.toJson()).toList());
-      await _storage.write(key: _cartKey, value: encoded);
-    } catch (_) {}
+    return data.map((value) {
+      final order = DigitalProductOrder.fromJson(_object(value));
+      _requireId(order.id);
+      return order;
+    }).toList();
   }
 
   static Future<DigitalProductOrder> createOrderAndContract({
     required DigitalProductItem product,
-    required String buyerName,
     required int offeredPrice,
     required bool isNegotiated,
     required String notes,
   }) async {
-    if (!_isLoaded) {
-      await _loadFromStorage();
-    }
-
-    final orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch}';
-    final contractNo = generateContractNumber();
-    final contractTerms = generateContractTemplate(
-      contractNumber: contractNo,
-      buyerName: buyerName,
-      sellerName: product.sellerName.isNotEmpty ? product.sellerName : 'Penyedia',
-      productTitle: product.title,
-      price: offeredPrice,
-      notes: notes,
+    _requireId(product.id);
+    final response = await _dio.post(
+      ApiRoutes.digitalProductOrders,
+      data: {
+        'product_id': int.parse(product.id),
+        'offered_price': offeredPrice,
+        'is_negotiated': isNegotiated,
+        'notes': notes,
+      },
+      options: _options,
     );
-
-    final order = DigitalProductOrder(
-      id: orderId,
-      product: product,
-      offeredPrice: offeredPrice,
-      originalPrice: product.priceValue,
-      isNegotiated: isNegotiated,
-      notes: notes,
-      status: isNegotiated ? 'Menunggu Negosiasi' : 'Kontrak Dibuat',
-      contractNumber: contractNo,
-      contractDate: DateTime.now(),
-      buyerName: buyerName,
-      sellerName: product.sellerName,
-      contractTerms: contractTerms,
-    );
-
-    // Remove older duplicate order for the same product if any, and add latest on top
-    _inMemoryOrders.removeWhere((o) => o.product.id == product.id);
-    _inMemoryOrders.insert(0, order);
-    await _saveToStorage();
-
+    final order = DigitalProductOrder.fromJson(_data(response));
+    _requireId(order.id);
     return order;
   }
 
-  static Future<void> removeOrder(String orderId) async {
-    if (!_isLoaded) {
-      await _loadFromStorage();
+  static Future<DigitalProductContract> getContract(String orderId) async {
+    _requireId(orderId);
+    final response = await _dio.get(
+      ApiRoutes.digitalProductOrderContract(orderId),
+      options: _options,
+    );
+    final contract = DigitalProductContract.fromJson(_data(response));
+    _requireId(contract.id);
+    if (contract.orderId != orderId || contract.contractTerms.trim().isEmpty) {
+      throw const FormatException('Respons kontrak pesanan tidak valid');
     }
-    _inMemoryOrders.removeWhere((o) => o.id == orderId);
-    await _saveToStorage();
+    return contract;
   }
 
-  static String generateContractNumber() {
-    final now = DateTime.now();
-    final year = now.year;
-    final randomSuffix = (now.millisecondsSinceEpoch % 10000).toString().padLeft(4, '0');
-    return 'KTR/LSP-TD/$year/$randomSuffix';
+  static Future<DigitalProductOrder> negotiateOrder(
+    String orderId, {
+    required String action,
+    int? counterPrice,
+    String notes = '',
+  }) async {
+    _requireId(orderId);
+    if (!const ['accept', 'counter', 'reject'].contains(action)) {
+      throw ArgumentError.value(action, 'action');
+    }
+    if (action == 'counter' && (counterPrice == null || counterPrice <= 0)) {
+      throw ArgumentError('Harga penawaran wajib lebih dari nol');
+    }
+    final response = await _dio.put(
+      ApiRoutes.digitalProductOrderNegotiate(orderId),
+      data: {
+        'action': action,
+        if (action == 'counter') 'counter_price': counterPrice,
+        'notes': notes,
+      },
+      options: _options,
+    );
+    final order = DigitalProductOrder.fromJson(_data(response));
+    if (order.id != orderId) {
+      throw const FormatException('Respons negosiasi pesanan tidak valid');
+    }
+    return order;
   }
 
-  static String generateContractTemplate({
-    required String contractNumber,
-    required String buyerName,
-    required String sellerName,
-    required String productTitle,
-    required int price,
-    required String notes,
-  }) {
-    final dateStr = DateTime.now().toLocal().toString().split(' ')[0];
-    final formattedPrice = 'Rp ${price.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => '.')}';
+  static String errorMessage(Object error) {
+    if (error is DioException) {
+      final body = error.response?.data;
+      if (body is Map) {
+        final message = (body['message'] ?? body['error'])?.toString();
+        if (message != null && message.trim().isNotEmpty) return message;
+      }
+      if (error.response?.statusCode == 401) {
+        return 'Silakan login kembali untuk mengakses pesanan.';
+      }
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout ||
+          error.type == DioExceptionType.connectionError) {
+        return 'Koneksi gagal. Periksa daftar pesanan sebelum mengirim ulang.';
+      }
+      return 'Permintaan pesanan gagal. Silakan coba lagi.';
+    }
+    if (error is FormatException) return error.message;
+    if (error is ArgumentError) {
+      return error.message?.toString() ?? 'Data pesanan tidak valid.';
+    }
+    return 'Permintaan pesanan gagal. Silakan coba lagi.';
+  }
 
-    return '''
-PERJANJIAN KERJASAMA PEMESANAN PRODUK/JASA DIGITAL
-Nomor: $contractNumber
-Tanggal: $dateStr
+  static Map<String, dynamic> _data(Response<dynamic> response) =>
+      _object(response.data is Map ? response.data['data'] : null);
 
-Antara:
-1. PIHAK PERTAMA (Penyedia):
-   Nama: $sellerName
-   Status: Penyedia Layanan / Penjual Resmi LSP Digital
+  static Map<String, dynamic> _object(dynamic value) {
+    if (value is! Map) {
+      throw const FormatException('Respons transaksi tidak valid');
+    }
+    return Map<String, dynamic>.from(value);
+  }
 
-2. PIHAK KEDUA (Pengguna / Pembeli):
-   Nama: $buyerName
-   Status: Pengguna Layanan / Pembeli
-
-PASAL 1: OBJEK PERJANJIAN
-Pihak Pertama sepakat untuk menyediakan dan menyerahkan produk/jasa digital berupa "$productTitle" kepada Pihak Kedua sesuai dengan spesifikasi dan standar kompetensi LSP.
-
-PASAL 2: NILAI KESEPAKATAN
-Nilai kesepakatan transaksi yang telah disepakati oleh Kedua Pihak adalah sebesar $formattedPrice.
-${notes.trim().isNotEmpty ? "Catatan / Ruang Lingkup Tambahan: $notes\n" : ""}
-PASAL 3: HAK DAN KEWAJIBAN
-1. Pihak Pertama berkewajiban menyerahkan hasil karya/jasa secara penuh dengan kualitas terjamin.
-2. Pihak Kedua berhak menerima hasil produk/jasa digital dan melakukan verifikasi hasil serah terima.
-3. Seluruh komunikasi dan negosiasi transaksi ini dilakukan melalui kontak layanan resmi.
-
-Perjanjian digital ini dibuat secara elektronik dan dinyatakan sah serta mengikat kedua belah pihak sejak tanggal pemesanan dikonfirmasi.
-''';
+  static void _requireId(String id) {
+    if ((int.tryParse(id) ?? 0) <= 0) {
+      throw const FormatException('ID transaksi tidak valid');
+    }
   }
 }

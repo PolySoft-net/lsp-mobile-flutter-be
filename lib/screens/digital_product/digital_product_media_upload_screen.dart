@@ -73,9 +73,7 @@ class _DigitalProductMediaUploadScreenState
   void _onPublishPressed() {
     if (_productFiles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Minimal satu foto produk wajib dipilih'),
-        ),
+        const SnackBar(content: Text('Minimal satu foto produk wajib dipilih')),
       );
       return;
     }
@@ -133,17 +131,19 @@ class _DigitalProductMediaUploadScreenState
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Icon(
+                    children: [
+                      const Icon(
                         Icons.info_outline_rounded,
                         size: 18,
                         color: Color(0xFF2563EB),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Nomor HP akun Anda akan ditampilkan sebagai nomor layanan (WhatsApp / Telepon / SMS) agar calon pembeli dapat menghubungi Anda.',
-                          style: TextStyle(
+                          widget.showPhone
+                              ? 'Nomor HP akun Anda akan ditampilkan sebagai nomor layanan (WhatsApp / telepon / SMS).'
+                              : 'Nomor HP akun Anda tidak akan ditampilkan kepada pembeli.',
+                          style: const TextStyle(
                             fontSize: 11.5,
                             color: Color(0xFF475569),
                             height: 1.4,
@@ -364,11 +364,7 @@ class _DigitalProductMediaUploadScreenState
               ],
             ),
             child: const Center(
-              child: Icon(
-                Icons.near_me_rounded,
-                size: 42,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.near_me_rounded, size: 42, color: Colors.white),
             ),
           ),
         ),
@@ -412,7 +408,10 @@ class _DigitalProductMediaUploadScreenState
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 children: [
                   // Section 1: Tambahkan Fortofolio
                   _sectionHeader(
@@ -483,8 +482,9 @@ class _DigitalProductMediaUploadScreenState
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF93C5FD),
                     foregroundColor: const Color(0xFF1E3A8A),
-                    disabledBackgroundColor:
-                        const Color(0xFF93C5FD).withValues(alpha: 0.6),
+                    disabledBackgroundColor: const Color(
+                      0xFF93C5FD,
+                    ).withValues(alpha: 0.6),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -614,10 +614,7 @@ class _DigitalProductMediaUploadScreenState
   Widget _helperCaption(String text) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 9.5,
-        color: Color(0xFF94A3B8),
-      ),
+      style: const TextStyle(fontSize: 9.5, color: Color(0xFF94A3B8)),
     );
   }
 

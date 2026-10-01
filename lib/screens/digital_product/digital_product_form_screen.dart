@@ -101,8 +101,9 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                           title: Text(
                             cat,
                             style: TextStyle(
-                              fontWeight:
-                                  isSelected ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                               color: isSelected
                                   ? const Color(0xFF2563EB)
                                   : const Color(0xFF0F172A),
@@ -168,14 +169,20 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                   title: Text(
                     type,
                     style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                       color: isSelected
                           ? const Color(0xFF2563EB)
                           : const Color(0xFF0F172A),
                     ),
                   ),
                   trailing: isSelected
-                      ? const Icon(Icons.check, color: Color(0xFF2563EB), size: 18)
+                      ? const Icon(
+                          Icons.check,
+                          color: Color(0xFF2563EB),
+                          size: 18,
+                        )
                       : null,
                   onTap: () {
                     setState(() => _serviceType = type);
@@ -252,7 +259,10 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
               child: Form(
                 key: _formKey,
                 child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   children: [
                     // Section 1: Nama Produk & Kategori
                     _buildFormCard(
@@ -265,8 +275,8 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                           ),
                           validator: (value) =>
                               value == null || value.trim().isEmpty
-                                  ? 'Nama wajib diisi'
-                                  : null,
+                              ? 'Nama wajib diisi'
+                              : null,
                         ),
                         const SizedBox(height: 14),
 
@@ -281,7 +291,9 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                           DropdownButtonFormField<MasterSkema>(
                             initialValue: _selectedScheme,
                             isExpanded: true,
-                            decoration: _inputDecoration('Pilih skema sertifikasi'),
+                            decoration: _inputDecoration(
+                              'Pilih skema sertifikasi',
+                            ),
                             items: _schemes
                                 .map(
                                   (scheme) => DropdownMenuItem(
@@ -346,8 +358,8 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                           ),
                           validator: (value) =>
                               value == null || value.trim().isEmpty
-                                  ? 'Deskripsi wajib diisi'
-                                  : null,
+                              ? 'Deskripsi wajib diisi'
+                              : null,
                         ),
                       ],
                     ),
@@ -436,8 +448,10 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        const Text(
-                          'Nomor handphone yang terdaftar pada profil Anda akan ditampilkan sebagai nomor layanan resmi produk/jasa ini. Calon pembeli dapat menghubungi Anda via WhatsApp, Telepon, atau SMS.',
+                        Text(
+                          _showPhone
+                              ? 'Nomor HP profil Anda akan ditampilkan sebagai nomor layanan produk/jasa ini untuk WhatsApp, telepon, dan SMS.'
+                              : 'Nomor HP profil Anda tidak akan ditampilkan kepada pembeli untuk produk/jasa ini.',
                           style: TextStyle(
                             fontSize: 12,
                             color: Color(0xFF475569),
@@ -576,10 +590,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
     ),
   );
 
-  Widget _buildSelector({
-    required String value,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildSelector({required String value, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
