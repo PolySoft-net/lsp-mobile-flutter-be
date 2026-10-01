@@ -833,13 +833,18 @@ class _DigitalProductDetailScreenState
   }
 
   Widget _buildHubungiPenjualButton(BuildContext context) {
+    final isPhoneVisible = _detail?.product.showPhone ?? _item.showPhone;
     final resolvedPhone = (_detail?.seller.phone.trim().isNotEmpty == true)
         ? _detail!.seller.phone.trim()
         : _item.sellerPhone.trim();
+
+    if (!isPhoneVisible || resolvedPhone.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     final resolvedSellerName = (_detail?.seller.name.trim().isNotEmpty == true)
         ? _detail!.seller.name.trim()
         : _item.sellerName.trim();
-
     return Container(
       margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 14.0),
       decoration: BoxDecoration(

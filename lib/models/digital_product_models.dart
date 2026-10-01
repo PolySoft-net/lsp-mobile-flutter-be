@@ -27,6 +27,7 @@ class DigitalProductItem {
   final String createdAt;
   final double ratingAvg;
   final int ratingCount;
+  final bool showPhone;
 
   const DigitalProductItem({
     required this.id,
@@ -55,6 +56,7 @@ class DigitalProductItem {
     this.createdAt = '',
     this.ratingAvg = 0.0,
     this.ratingCount = 0,
+    this.showPhone = true,
   });
   factory DigitalProductItem.fromJson(Map<String, dynamic> json) {
     return DigitalProductItem(
@@ -86,6 +88,7 @@ class DigitalProductItem {
       createdAt: json['created_at']?.toString() ?? '',
       ratingAvg: JsonHelper.asDouble(json['rating_avg']),
       ratingCount: JsonHelper.asInt(json['rating_count']),
+      showPhone: JsonHelper.asBool(json['show_phone'], true),
     );
   }
 
@@ -142,6 +145,7 @@ class DigitalProductItem {
     String? unit,
     double? ratingAvg,
     int? ratingCount,
+    bool? showPhone,
   }) {
     return DigitalProductItem(
       id: id,
@@ -170,6 +174,7 @@ class DigitalProductItem {
       createdAt: createdAt,
       ratingAvg: ratingAvg ?? this.ratingAvg,
       ratingCount: ratingCount ?? this.ratingCount,
+      showPhone: showPhone ?? this.showPhone,
     );
   }
   static String _titleCase(String value) =>

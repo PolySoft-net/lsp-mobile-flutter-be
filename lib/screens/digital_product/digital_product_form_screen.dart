@@ -26,6 +26,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
   String _category = DigitalProductCategoryChips.categories.first;
   String _serviceType = 'Online';
   bool _negotiable = false;
+  bool _showPhone = true;
   bool _loadingSchemes = true;
 
   @override
@@ -216,6 +217,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
           price: price,
           negotiable: _negotiable,
           priceUnit: _unitController.text.trim(),
+          showPhone: _showPhone,
         ),
       ),
     );
@@ -441,6 +443,40 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                             color: Color(0xFF475569),
                             height: 1.45,
                           ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tampilkan nomor layanan ke pembeli',
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'WhatsApp, telepon, dan SMS dapat dihubungi',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _showPhone,
+                              activeThumbColor: const Color(0xFF2563EB),
+                              onChanged: (val) =>
+                                  setState(() => _showPhone = val),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 10),
                         Container(

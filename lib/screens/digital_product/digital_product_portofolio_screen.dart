@@ -457,6 +457,12 @@ class _DigitalProductPortofolioScreenState
     required String sellerName,
     required String productTitle,
   }) {
+    final isPhoneVisible =
+        _detail?.product.showPhone ?? widget.product?.showPhone ?? true;
+    if (!isPhoneVisible || phone.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(

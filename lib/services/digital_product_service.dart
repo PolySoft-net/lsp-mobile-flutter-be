@@ -147,6 +147,7 @@ class DigitalProductService {
     required int price,
     required bool negotiable,
     String priceUnit = '',
+    bool showPhone = true,
     required List<String> productFiles,
     required List<String> portfolioFiles,
   }) async {
@@ -166,6 +167,8 @@ class DigitalProductService {
       'negotiable': negotiable,
       'price_unit': priceUnit,
       'satuan': priceUnit,
+      'tampilkan_nomor_layanan': showPhone ? '1' : '0',
+      'allow_phone_contact': showPhone ? '1' : '0',
       'seller_status': 'Open to hire / Freelance',
       'product_files': [
         for (final path in compressedProductFiles)
