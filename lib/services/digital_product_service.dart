@@ -237,13 +237,24 @@ class DigitalProductService {
     }
 
     final formData = FormData.fromMap(map);
-    final response = await _dio.put(
-      ApiRoutes.digitalProductUpdate(id),
-      data: formData,
-    );
-    return DigitalProductDetail.fromJson(
-      Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
-    );
+    try {
+      final response = await _dio.put(
+        ApiRoutes.digitalProductUpdate(id),
+        data: formData,
+      );
+      return DigitalProductDetail.fromJson(
+        Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+      );
+    } on DioException catch (e) {
+      final resData = e.response?.data;
+      String? message;
+      if (resData is Map) {
+        message = (resData['message'] ?? resData['error'])?.toString();
+      }
+      throw Exception(
+        message ?? 'Gagal memperbarui produk (${e.response?.statusCode})',
+      );
+    }
   }
 
   static Future<List<DigitalProductChatRoom>> getChatRooms({
