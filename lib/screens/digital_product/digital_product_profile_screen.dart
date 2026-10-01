@@ -338,8 +338,20 @@ class _DigitalProductProfileScreenState
             ),
             title: 'Koleksi',
             onTap: () => Navigator.of(context).push(
-              FadePageRoute(page: const DigitalProductFavoritScreen()),
+              FadePageRoute(
+                page: const DigitalProductFavoritScreen(initialTab: 1),
+              ),
             ),
+          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+          _menuItem(
+            icon: const Icon(
+              LucideIcons.shopping_bag,
+              size: 22,
+              color: Color(0xFF0F172A),
+            ),
+            title: 'Order',
+            onTap: () => _onBottomNavTap(3),
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
           _menuItem(
