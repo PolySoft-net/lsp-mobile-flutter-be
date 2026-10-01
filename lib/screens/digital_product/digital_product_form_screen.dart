@@ -403,6 +403,78 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+
+                    // Section 3: Keterangan Nomor Layanan
+                    _buildFormCard(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.support_agent_rounded,
+                                size: 18,
+                                color: Color(0xFF2563EB),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Nomor Layanan & Kontak',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Nomor handphone yang terdaftar pada profil Anda akan ditampilkan sebagai nomor layanan resmi produk/jasa ini. Calon pembeli dapat menghubungi Anda via WhatsApp, Telepon, atau SMS.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF475569),
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.verified_user_outlined,
+                                size: 15,
+                                color: Color(0xFF16A34A),
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Nomor hanya digunakan sebagai kontak layanan transaksi produk/jasa.',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),

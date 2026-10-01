@@ -119,8 +119,39 @@ class _DigitalProductMediaUploadScreenState
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
+                // Keterangan Nomor Layanan
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 18,
+                        color: Color(0xFF2563EB),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Nomor HP akun Anda akan ditampilkan sebagai nomor layanan (WhatsApp / Telepon / SMS) agar calon pembeli dapat menghubungi Anda.',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Color(0xFF475569),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
                 // Action Buttons: Batal & Kirim
                 Row(
                   children: [

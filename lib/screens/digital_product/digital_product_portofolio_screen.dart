@@ -58,15 +58,203 @@ class _DigitalProductPortofolioScreenState
     }
   }
 
-  Future<void> _contactSeller(BuildContext context, String phone) async {
+  Future<void> _contactSeller(
+    BuildContext context, {
+    required String phone,
+    required String sellerName,
+    required String productTitle,
+  }) async {
     final cleaned = phone.trim();
-    if (cleaned.isEmpty || !await launchUrl(Uri(scheme: 'tel', path: cleaned))) {
+    if (cleaned.isEmpty) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Nomor penjual belum tersedia')),
         );
       }
+      return;
     }
+
+    var waPhone = cleaned.replaceAll(RegExp(r'[^0-9]'), '');
+    if (waPhone.startsWith('0')) {
+      waPhone = '62${waPhone.substring(1)}';
+    }
+
+    final greeting = sellerName.trim().isNotEmpty ? 'Halo $sellerName' : 'Halo';
+    final productText =
+        productTitle.trim().isNotEmpty ? ' mengenai "$productTitle"' : '';
+    final defaultMessage =
+        '$greeting, saya tertarik dengan produk/jasa Anda$productText di LSP Digital Mobile. Apakah masih tersedia?';
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Hubungi Penjual',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Nomor Layanan: $cleaned',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildContactOptionTile(
+                  icon: Icons.chat_rounded,
+                  iconColor: const Color(0xFF22C55E),
+                  iconBgColor: const Color(0xFFDCFCE7),
+                  title: 'WhatsApp',
+                  subtitle: 'Kirim pesan langsung via WhatsApp',
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final waUri = Uri.parse(
+                      'https://wa.me/$waPhone?text=${Uri.encodeComponent(defaultMessage)}',
+                    );
+                    if (!await launchUrl(waUri,
+                        mode: LaunchMode.externalApplication)) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Tidak dapat membuka WhatsApp')),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildContactOptionTile(
+                  icon: Icons.phone_rounded,
+                  iconColor: const Color(0xFF2563EB),
+                  iconBgColor: const Color(0xFFDBEAFE),
+                  title: 'Panggilan Telepon',
+                  subtitle: 'Panggilan suara ke nomor layanan',
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final telUri = Uri(scheme: 'tel', path: cleaned);
+                    if (!await launchUrl(telUri,
+                        mode: LaunchMode.externalApplication)) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Tidak dapat melakukan panggilan telepon')),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 10),
+                _buildContactOptionTile(
+                  icon: Icons.sms_rounded,
+                  iconColor: const Color(0xFFF59E0B),
+                  iconBgColor: const Color(0xFFFEF3C7),
+                  title: 'Kirim SMS',
+                  subtitle: 'Kirim pesan teks reguler (SMS)',
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final smsUri = Uri(
+                      scheme: 'sms',
+                      path: cleaned,
+                      queryParameters: {'body': defaultMessage},
+                    );
+                    if (!await launchUrl(smsUri,
+                        mode: LaunchMode.externalApplication)) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('Tidak dapat membuka aplikasi SMS')),
+                        );
+                      }
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildContactOptionTile({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onTap: onTap,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: iconBgColor,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 11.5,
+            color: Color(0xFF64748B),
+          ),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios_rounded,
+          color: Color(0xFF94A3B8),
+          size: 13,
+        ),
+      ),
+    );
   }
 
   static String _titleCase(String text) {
@@ -143,7 +331,14 @@ class _DigitalProductPortofolioScreenState
                               fallbackThumbnailUrl: fallbackThumb,
                             ),
                             const SizedBox(height: 14),
-                            _buildContactSellerButton(context, resolvedPhone),
+                            _buildContactSellerButton(
+                              context,
+                              phone: resolvedPhone,
+                              sellerName: resolvedSellerName,
+                              productTitle: widget.product?.title ??
+                                  _detail?.product.title ??
+                                  '',
+                            ),
 
                             // Hanya tampilkan jika sellerProducts benar-benar ada dari server
                             if (sellerProducts.isNotEmpty) ...[
@@ -256,10 +451,14 @@ class _DigitalProductPortofolioScreenState
     );
   }
 
-  Widget _buildContactSellerButton(BuildContext context, String phone) {
+  Widget _buildContactSellerButton(
+    BuildContext context, {
+    required String phone,
+    required String sellerName,
+    required String productTitle,
+  }) {
     return Container(
       width: double.infinity,
-      height: 48,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -276,25 +475,51 @@ class _DigitalProductPortofolioScreenState
         ],
       ),
       child: InkWell(
-        onTap: () => _contactSeller(context, phone),
+        onTap: () => _contactSeller(
+          context,
+          phone: phone,
+          sellerName: sellerName,
+          productTitle: productTitle,
+        ),
         borderRadius: BorderRadius.circular(10),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: const [
               Icon(
-                Icons.phone,
+                Icons.phone_in_talk_rounded,
                 size: 20,
                 color: Color(0xFF0F172A),
               ),
               SizedBox(width: 14),
-              Text(
-                'Hubungi Penjual',
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Hubungi Penjual',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    Text(
+                      'WhatsApp, Telepon & SMS',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 13,
+                color: Color(0xFF94A3B8),
               ),
             ],
           ),
