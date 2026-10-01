@@ -208,7 +208,6 @@ class DigitalProductService {
 
     final map = <String, dynamic>{
       'id': id,
-      '_method': 'PUT',
       'scheme_id': schemeId,
       'product_type': productType,
       'category': category,
@@ -238,9 +237,10 @@ class DigitalProductService {
 
     final formData = FormData.fromMap(map);
     try {
-      final response = await _dio.post(
-        ApiRoutes.digitalProducts,
+      final response = await _dio.put(
+        ApiRoutes.digitalProductUpdate(id),
         data: formData,
+        options: Options(receiveDataWhenStatusError: true),
       );
       return DigitalProductDetail.fromJson(
         Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
