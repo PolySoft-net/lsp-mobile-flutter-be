@@ -282,9 +282,9 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
       final updated = await DigitalProductService.updateProduct(
         id: widget.initialProduct!.product.id,
         schemeId: scheme.id,
-        productType: widget.productType,
+        productType: widget.productType.toLowerCase(),
         category: _category,
-        serviceType: _serviceType,
+        serviceType: _serviceType.toLowerCase(),
         title: _nameController.text.trim(),
         description: _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()

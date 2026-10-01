@@ -32,7 +32,7 @@ class ApiClient {
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 15),
               sendTimeout: const Duration(seconds: 10),
-              receiveDataWhenStatusError: false,
+              receiveDataWhenStatusError: true,
             ),
           )
           ..interceptors.add(

@@ -238,8 +238,8 @@ class DigitalProductService {
 
     final formData = FormData.fromMap(map);
     try {
-      final response = await _dio.put(
-        ApiRoutes.digitalProductUpdate(id),
+      final response = await _dio.post(
+        ApiRoutes.digitalProducts,
         data: formData,
       );
       return DigitalProductDetail.fromJson(
