@@ -48,9 +48,19 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
       _priceController.text =
           p.priceValue > 0 ? p.priceValue.toString() : '';
       _unitController.text = p.unit;
-      _category = p.category.isNotEmpty
-          ? p.category
-          : DigitalProductCategoryChips.categories.first;
+      final matchCat = DigitalProductCategoryChips.categories.where(
+        (c) => c.toLowerCase() == p.category.toLowerCase(),
+      );
+      if (matchCat.isNotEmpty) {
+        _category = matchCat.first;
+      } else if (p.category.toLowerCase() == 'development') {
+        _category = 'Software';
+      } else if (p.category.toLowerCase() == 'desain' ||
+          p.category.toLowerCase() == 'design') {
+        _category = 'Template';
+      } else {
+        _category = DigitalProductCategoryChips.categories.first;
+      }
       _serviceType = p.serviceType.isNotEmpty ? p.serviceType : 'Online';
       _negotiable = p.negotiable;
       _showPhone = p.showPhone;
