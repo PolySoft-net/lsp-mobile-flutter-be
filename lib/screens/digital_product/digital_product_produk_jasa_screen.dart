@@ -157,8 +157,10 @@ class _DigitalProductProdukJasaScreenState
           onTap: () async {
             await Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) =>
-                    DigitalProductDetailScreen(item: products[index]),
+                builder: (_) => DigitalProductDetailScreen(
+                  item: products[index],
+                  isFromProfile: true,
+                ),
               ),
             );
             if (mounted) _load();

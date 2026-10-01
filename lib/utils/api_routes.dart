@@ -285,6 +285,11 @@ class ApiRoutes {
       '/api/digital-products/orders/$id/contract';
   static String digitalProductOrderNegotiate(dynamic id) =>
       '/api/digital-products/orders/$id/negotiate';
+  static const String digitalProductChats = '/api/digital-products/chats';
+  static String digitalProductChatMessages(dynamic id) =>
+      '/api/digital-products/chats/$id/messages';
+  static String digitalProductUpdate(dynamic id) =>
+      '/api/digital-products/$id';
 
   // ============================================================================
   // Health Routes

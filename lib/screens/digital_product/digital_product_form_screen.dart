@@ -1,14 +1,22 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../models/digital_product_models.dart';
 import '../../models/master_models.dart';
 import '../../services/common/master_service.dart';
+import '../../services/digital_product_service.dart';
 import '../../widgets/digital_product/digital_product_category_chips.dart';
 import 'digital_product_media_upload_screen.dart';
-
 class DigitalProductFormScreen extends StatefulWidget {
   final String productType;
+  final DigitalProductDetail? initialProduct;
+  final bool isEdit;
 
-  const DigitalProductFormScreen({super.key, this.productType = 'Produk'});
+  const DigitalProductFormScreen({
+    super.key,
+    this.productType = 'Produk',
+    this.initialProduct,
+    this.isEdit = false,
+  });
 
   @override
   State<DigitalProductFormScreen> createState() =>
@@ -28,10 +36,25 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
   bool _negotiable = false;
   bool _showPhone = true;
   bool _loadingSchemes = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialProduct != null) {
+      final p = widget.initialProduct!.product;
+      _nameController.text = p.title;
+      _descriptionController.text = p.description;
+      _priceController.text =
+          p.priceValue > 0 ? p.priceValue.toString() : '';
+      _unitController.text = p.unit;
+      _category = p.category.isNotEmpty
+          ? p.category
+          : DigitalProductCategoryChips.categories.first;
+      _serviceType = p.serviceType.isNotEmpty ? p.serviceType : 'Online';
+      _negotiable = p.negotiable;
+      _showPhone = p.showPhone;
+    }
     _loadSchemes();
   }
 
@@ -49,7 +72,19 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
     if (mounted) {
       setState(() {
         _schemes = schemes;
-        if (schemes.isNotEmpty) {
+        if (widget.initialProduct != null) {
+          final p = widget.initialProduct!.product;
+          final match = schemes.where(
+            (s) =>
+                s.id == p.schemeId ||
+                (p.schemeCode.isNotEmpty && s.kodeSkema == p.schemeCode),
+          );
+          if (match.isNotEmpty) {
+            _selectedScheme = match.first;
+          } else if (schemes.isNotEmpty) {
+            _selectedScheme = schemes.first;
+          }
+        } else if (schemes.isNotEmpty) {
           _selectedScheme = schemes.first;
         }
         _loadingSchemes = false;
@@ -230,6 +265,58 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
     );
   }
 
+  Future<void> _saveEdit() async {
+    if (!_formKey.currentState!.validate()) return;
+    final scheme = _selectedScheme;
+    if (scheme == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih skema sertifikasi')),
+      );
+      return;
+    }
+    final rawPrice = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final price = int.tryParse(rawPrice) ?? 0;
+
+    setState(() => _isSaving = true);
+    try {
+      final updated = await DigitalProductService.updateProduct(
+        id: widget.initialProduct!.product.id,
+        schemeId: scheme.id,
+        productType: widget.productType,
+        category: _category,
+        serviceType: _serviceType,
+        title: _nameController.text.trim(),
+        description: _descriptionController.text.trim().isNotEmpty
+            ? _descriptionController.text.trim()
+            : _nameController.text.trim(),
+        price: price,
+        negotiable: _negotiable,
+        priceUnit: _unitController.text.trim(),
+        showPhone: _showPhone,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Produk berhasil diperbarui'),
+          backgroundColor: Color(0xFF16A34A),
+        ),
+      );
+      Navigator.of(context).pop(updated);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal memperbarui produk: ${e.toString().replaceAll("Exception: ", "")}',
+          ),
+          backgroundColor: const Color(0xFFDC2626),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -240,7 +327,9 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Buat ${widget.productType}',
+          widget.isEdit
+              ? 'Edit ${widget.productType}'
+              : 'Buat ${widget.productType}',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -538,7 +627,7 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _next,
+                  onPressed: _isSaving ? null : (widget.isEdit ? _saveEdit : _next),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF93C5FD),
                     foregroundColor: const Color(0xFF1E3A8A),
@@ -547,13 +636,22 @@ class _DigitalProductFormScreenState extends State<DigitalProductFormScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Selanjutnya',
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E3A8A)),
+                          ),
+                        )
+                      : Text(
+                          widget.isEdit ? 'Simpan Perubahan' : 'Selanjutnya',
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                 ),
               ),
             ),

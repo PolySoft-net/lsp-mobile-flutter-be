@@ -14,6 +14,7 @@ import '../profile/tiket_bantuan_screen.dart';
 import 'digital_product_favorit_screen.dart';
 import 'digital_product_pengaturan_profil_screen.dart';
 import 'digital_product_produk_jasa_screen.dart';
+import 'digital_product_chat_list_screen.dart';
 
 class DigitalProductProfileScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -352,6 +353,20 @@ class _DigitalProductProfileScreenState
             ),
             title: 'Order',
             onTap: () => _onBottomNavTap(3),
+          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+          _menuItem(
+            icon: const Icon(
+              LucideIcons.message_square,
+              size: 22,
+              color: Color(0xFF0F172A),
+            ),
+            title: 'Pesan',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const DigitalProductChatListScreen(),
+              ),
+            ),
           ),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
           _menuItem(

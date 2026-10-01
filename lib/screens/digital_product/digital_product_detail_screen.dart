@@ -13,12 +13,18 @@ import '../../widgets/digital_product/interactive_favorite_button.dart';
 import '../../widgets/digital_product/fade_page_route.dart';
 import 'digital_product_favorit_screen.dart';
 import '../../widgets/digital_product/digital_product_order_form.dart';
+import 'digital_product_chat_room_screen.dart';
+import 'digital_product_form_screen.dart';
 
 class DigitalProductDetailScreen extends StatefulWidget {
   final DigitalProductItem item;
+  final bool isFromProfile;
 
-  const DigitalProductDetailScreen({super.key, required this.item});
-
+  const DigitalProductDetailScreen({
+    super.key,
+    required this.item,
+    this.isFromProfile = false,
+  });
   @override
   State<DigitalProductDetailScreen> createState() =>
       _DigitalProductDetailScreenState();
@@ -42,6 +48,36 @@ class _DigitalProductDetailScreenState
     final sellerId = _detail?.seller.id ?? 0;
     return (_item.userId > 0 && currentUserId == _item.userId) ||
         (sellerId > 0 && currentUserId == sellerId);
+  }
+
+  bool get _shouldShowEditButton => _isOwner || widget.isFromProfile;
+
+  Future<void> _navigateToEditProduct() async {
+    if (_detail == null) {
+      await _loadDetail();
+    }
+    if (_detail == null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sedang memuat data produk, silakan coba lagi.'),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    final updated = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => DigitalProductFormScreen(
+          initialProduct: _detail,
+          productType:
+              _item.productType.isNotEmpty ? _item.productType : 'Produk',
+          isEdit: true,
+        ),
+      ),
+    );
+    if (updated != null && mounted) {
+      await _loadDetail();
+    }
   }
 
   @override
@@ -175,12 +211,15 @@ class _DigitalProductDetailScreenState
                       },
                     ),
 
-                    // "Pesan & Negosiasi Produk (Draf Kontrak)" Button Card
-                    _buildPesanDanNegoButton(context),
+                    if (_shouldShowEditButton) ...[
+                      _buildEditProdukCard(context),
+                    ] else ...[
+                      // "Pesan & Negosiasi Produk (Draf Kontrak)" Button Card
+                      _buildPesanDanNegoButton(context),
 
-                    // "Hubungi Penjual" Button Card
-                    _buildHubungiPenjualButton(context),
-
+                      // "Hubungi Penjual" Button Card
+                      _buildHubungiPenjualButton(context),
+                    ],
                     // "Rekomendasi Produk Serupa" Section
                     _buildRekomendasiSection(context, recommendations),
                   ],
@@ -197,31 +236,146 @@ class _DigitalProductDetailScreenState
     return Container(
       color: const Color(0xFFF8FAFC),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      alignment: Alignment.centerLeft,
-      child: InkWell(
-        onTap: () => Navigator.of(context).pop(),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(
-                Icons.chevron_left_rounded,
-                size: 24,
-                color: Color(0xFF0F172A),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          InkWell(
+            onTap: () => Navigator.of(context).pop(),
+            borderRadius: BorderRadius.circular(8),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.chevron_left_rounded,
+                    size: 24,
+                    color: Color(0xFF0F172A),
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Detail',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 4),
-              Text(
-                'Detail',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                  letterSpacing: -0.2,
+            ),
+          ),
+          if (_shouldShowEditButton)
+            InkWell(
+              onTap: _navigateToEditProduct,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDBEAFE),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.pencil,
+                      size: 13,
+                      color: Color(0xFF1E3A8A),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Edit Produk',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditProdukCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 14.0),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _navigateToEditProduct,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    LucideIcons.pencil,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Edit Produk / Jasa Ini',
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Perbarui nama, harga, deskripsi, atau info layanan',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: Color(0xFFDBEAFE),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -857,7 +1011,7 @@ class _DigitalProductDetailScreenState
         onTap: () => _showOrderAndContractModal(context),
         borderRadius: BorderRadius.circular(10),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 13.0),
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
           child: Row(
             children: [
               Container(
@@ -975,7 +1129,73 @@ class _DigitalProductDetailScreenState
         : _item.sellerPhone.trim();
 
     if (!isPhoneVisible || resolvedPhone.isEmpty) {
-      return const SizedBox.shrink();
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 14.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+        ),
+        child: InkWell(
+          onTap: () {
+            final pId = int.tryParse(_item.id) ?? 0;
+            if (pId > 0) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DigitalProductChatRoomScreen(productId: pId),
+                ),
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    LucideIcons.message_square,
+                    size: 18,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Chat Penjual di Aplikasi',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Kirim pesan instan dan diskusikan langsung',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     final resolvedSellerName = (_detail?.seller.name.trim().isNotEmpty == true)
@@ -1007,10 +1227,17 @@ class _DigitalProductDetailScreenState
           padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
           child: Row(
             children: [
-              const Icon(
-                Icons.phone_in_talk_rounded,
-                size: 18,
-                color: Color(0xFF0F172A),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.phone_in_talk_rounded,
+                  size: 18,
+                  color: Color(0xFF0F172A),
+                ),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -1021,7 +1248,7 @@ class _DigitalProductDetailScreenState
                     Text(
                       'Hubungi Penjual',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),
                       ),
@@ -1032,7 +1259,7 @@ class _DigitalProductDetailScreenState
                       style: TextStyle(
                         fontSize: 11,
                         color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
@@ -1040,7 +1267,7 @@ class _DigitalProductDetailScreenState
               ),
               const Icon(
                 Icons.arrow_forward_ios_rounded,
-                size: 12,
+                size: 13,
                 color: Color(0xFF94A3B8),
               ),
             ],
@@ -1064,9 +1291,21 @@ class _DigitalProductDetailScreenState
       return;
     }
 
-    var waPhone = cleaned.replaceAll(RegExp(r'[^0-9]'), '');
+    var digitsOnly = cleaned.replaceAll(RegExp(r'[^0-9]'), '');
+    var waPhone = digitsOnly;
     if (waPhone.startsWith('0')) {
       waPhone = '62${waPhone.substring(1)}';
+    }
+
+    String formattedPhone = cleaned;
+    if (digitsOnly.length >= 10 && digitsOnly.length <= 13) {
+      if (digitsOnly.startsWith('62')) {
+        formattedPhone =
+            '+62 ${digitsOnly.substring(2, 5)}-${digitsOnly.substring(5, 9)}-${digitsOnly.substring(9)}';
+      } else if (digitsOnly.startsWith('08')) {
+        formattedPhone =
+            '${digitsOnly.substring(0, 4)}-${digitsOnly.substring(4, 8)}-${digitsOnly.substring(8)}';
+      }
     }
 
     final greeting = sellerName.trim().isNotEmpty ? 'Halo $sellerName' : 'Halo';
@@ -1079,23 +1318,23 @@ class _DigitalProductDetailScreenState
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 16.0,
-            ),
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20.0, 14.0, 20.0, 24.0),
+          child: SafeArea(
+            top: false,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Center(
                   child: Container(
-                    width: 36,
+                    width: 38,
                     height: 4,
                     decoration: BoxDecoration(
                       color: const Color(0xFFCBD5E1),
@@ -1103,30 +1342,120 @@ class _DigitalProductDetailScreenState
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Hubungi Penjual',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => Navigator.pop(ctx),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF1F5F9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 14),
-                const Text(
-                  'Hubungi Penjual',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.storefront_rounded,
+                          size: 20,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              sellerName.trim().isNotEmpty
+                                  ? sellerName.trim()
+                                  : 'Penjual',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0F172A),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              formattedPhone,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2563EB),
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Nomor Layanan: $cleaned',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF64748B),
-                  ),
+                _buildContactOptionTile(
+                  icon: LucideIcons.message_square,
+                  iconColor: const Color(0xFF2563EB),
+                  iconBgColor: const Color(0xFFEFF6FF),
+                  title: 'Chat di Aplikasi LSP',
+                  subtitle: 'Kirim pesan instan dan diskusikan produk langsung',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    final pId = int.tryParse(_item.id) ?? 0;
+                    if (pId > 0) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              DigitalProductChatRoomScreen(productId: pId),
+                        ),
+                      );
+                    }
+                  },
                 ),
+                const SizedBox(height: 10),
                 const SizedBox(height: 16),
                 _buildContactOptionTile(
-                  icon: Icons.chat_rounded,
-                  iconColor: const Color(0xFF22C55E),
+                  icon: LucideIcons.message_circle,
+                  iconColor: const Color(0xFF16A34A),
                   iconBgColor: const Color(0xFFDCFCE7),
                   title: 'WhatsApp',
-                  subtitle: 'Kirim pesan langsung via WhatsApp',
+                  subtitle: 'Kirim pesan instan via WhatsApp',
                   onTap: () async {
                     Navigator.pop(ctx);
                     final waUri = Uri.parse(
@@ -1148,11 +1477,11 @@ class _DigitalProductDetailScreenState
                 ),
                 const SizedBox(height: 10),
                 _buildContactOptionTile(
-                  icon: Icons.phone_rounded,
+                  icon: LucideIcons.phone_call,
                   iconColor: const Color(0xFF2563EB),
                   iconBgColor: const Color(0xFFDBEAFE),
                   title: 'Panggilan Telepon',
-                  subtitle: 'Panggilan suara ke nomor layanan',
+                  subtitle: 'Hubungi langsung melalui panggilan suara',
                   onTap: () async {
                     Navigator.pop(ctx);
                     final telUri = Uri(scheme: 'tel', path: cleaned);
@@ -1174,87 +1503,113 @@ class _DigitalProductDetailScreenState
                 ),
                 const SizedBox(height: 10),
                 _buildContactOptionTile(
-                  icon: Icons.sms_rounded,
-                  iconColor: const Color(0xFFF59E0B),
+                  icon: LucideIcons.mail,
+                  iconColor: const Color(0xFFD97706),
                   iconBgColor: const Color(0xFFFEF3C7),
-                  title: 'Kirim SMS',
-                  subtitle: 'Kirim pesan teks reguler (SMS)',
+                  title: 'Kirim Pesan SMS',
+                  subtitle: 'Kirim pesan singkat reguler operator',
                   onTap: () async {
                     Navigator.pop(ctx);
                     final smsUri = Uri(
-                      scheme: 'sms',
-                      path: cleaned,
-                      queryParameters: {'body': defaultMessage},
-                    );
-                    if (!await launchUrl(
-                      smsUri,
-                      mode: LaunchMode.externalApplication,
-                    )) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tidak dapat membuka aplikasi SMS'),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+                       scheme: 'sms',
+                       path: cleaned,
+                       queryParameters: {'body': defaultMessage},
+                     );
+                     if (!await launchUrl(
+                       smsUri,
+                       mode: LaunchMode.externalApplication,
+                     )) {
+                       if (context.mounted) {
+                         ScaffoldMessenger.of(context).showSnackBar(
+                           const SnackBar(
+                             content: Text('Tidak dapat membuka aplikasi SMS'),
+                           ),
+                         );
+                       }
+                     }
+                   },
+                 ),
+               ],
+             ),
+           ),
+         );
+       },
+     );
+   }
 
-  Widget _buildContactOptionTile({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBgColor,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: ListTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        onTap: onTap,
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: iconBgColor,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
-        ),
-        trailing: const Icon(
-          Icons.arrow_forward_ios_rounded,
-          color: Color(0xFF94A3B8),
-          size: 13,
-        ),
-      ),
-    );
-  }
+   Widget _buildContactOptionTile({
+     required IconData icon,
+     required Color iconColor,
+     required Color iconBgColor,
+     required String title,
+     required String subtitle,
+     required VoidCallback onTap,
+   }) {
+     return Container(
+       decoration: BoxDecoration(
+         color: Colors.white,
+         borderRadius: BorderRadius.circular(10),
+         border: Border.all(color: const Color(0xFFE2E8F0)),
+         boxShadow: [
+           BoxShadow(
+             color: Colors.black.withValues(alpha: 0.02),
+             blurRadius: 4,
+             offset: const Offset(0, 1),
+           ),
+         ],
+       ),
+       child: InkWell(
+         borderRadius: BorderRadius.circular(10),
+         onTap: onTap,
+         child: Padding(
+           padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+           child: Row(
+             children: [
+               Container(
+                 width: 38,
+                 height: 38,
+                 decoration: BoxDecoration(
+                   color: iconBgColor,
+                   borderRadius: BorderRadius.circular(8),
+                 ),
+                 child: Icon(icon, color: iconColor, size: 18),
+               ),
+               const SizedBox(width: 12),
+               Expanded(
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Text(
+                       title,
+                       style: const TextStyle(
+                         fontSize: 13,
+                         fontWeight: FontWeight.bold,
+                         color: Color(0xFF0F172A),
+                       ),
+                     ),
+                     const SizedBox(height: 2),
+                     Text(
+                       subtitle,
+                       style: const TextStyle(
+                         fontSize: 11,
+                         color: Color(0xFF64748B),
+                         fontWeight: FontWeight.w400,
+                       ),
+                     ),
+                   ],
+                 ),
+               ),
+               const Icon(
+                 Icons.arrow_forward_ios_rounded,
+                 size: 12,
+                 color: Color(0xFF94A3B8),
+               ),
+             ],
+           ),
+         ),
+       ),
+     );
+   }
 
   Widget _buildRekomendasiSection(
     BuildContext context,

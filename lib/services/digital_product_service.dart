@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../models/digital_product_chat_model.dart';
 import '../models/digital_product_models.dart';
 import '../utils/api_routes.dart';
 import '../utils/image_compress_helper.dart';
@@ -182,6 +183,169 @@ class DigitalProductService {
     final response = await _dio.post(ApiRoutes.digitalProducts, data: data);
     return DigitalProductDetail.fromJson(
       Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+    );
+  }
+
+  static Future<DigitalProductDetail> updateProduct({
+    required String id,
+    required int schemeId,
+    required String productType,
+    required String category,
+    required String serviceType,
+    required String title,
+    required String description,
+    required int price,
+    required bool negotiable,
+    required String priceUnit,
+    required bool showPhone,
+    List<String> productFiles = const [],
+    List<String> portfolioFiles = const [],
+  }) async {
+    final compressedProductFiles =
+        await ImageCompressHelper.compressAll(productFiles);
+    final compressedPortfolioFiles =
+        await ImageCompressHelper.compressAll(portfolioFiles);
+
+    final map = <String, dynamic>{
+      'id': id,
+      '_method': 'PUT',
+      'scheme_id': schemeId,
+      'product_type': productType,
+      'category': category,
+      'service_type': serviceType,
+      'title': title,
+      'description': description,
+      'price': price,
+      'price_unit': priceUnit,
+      'satuan': priceUnit,
+      'negotiable': negotiable,
+      'tampilkan_nomor_layanan': showPhone ? 'true' : 'false',
+      'allow_phone_contact': showPhone ? 'true' : 'false',
+    };
+
+    if (compressedProductFiles.isNotEmpty) {
+      map['product_files'] = [
+        for (final path in compressedProductFiles)
+          await MultipartFile.fromFile(path, filename: _fileName(path)),
+      ];
+    }
+    if (compressedPortfolioFiles.isNotEmpty) {
+      map['portfolio_files'] = [
+        for (final path in compressedPortfolioFiles)
+          await MultipartFile.fromFile(path, filename: _fileName(path)),
+      ];
+    }
+
+    final formData = FormData.fromMap(map);
+    final response = await _dio.put(
+      ApiRoutes.digitalProductUpdate(id),
+      data: formData,
+    );
+    return DigitalProductDetail.fromJson(
+      Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+    );
+  }
+
+  static Future<List<DigitalProductChatRoom>> getChatRooms({
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final response = await _dio.get(
+      ApiRoutes.digitalProductChats,
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    final data = response.data is Map ? response.data['data'] : null;
+    final list = data is List ? data : const [];
+    return list
+        .whereType<Map>()
+        .map(
+          (e) => DigitalProductChatRoom.fromJson(
+            Map<String, dynamic>.from(e),
+          ),
+        )
+        .toList();
+  }
+
+  static Future<DigitalProductChatRoom> createOrGetChatRoom({
+    required int productId,
+    int? orderId,
+  }) async {
+    final response = await _dio.post(
+      ApiRoutes.digitalProductChats,
+      data: {
+        'product_id': productId,
+        if (orderId != null && orderId > 0) 'order_id': orderId,
+      },
+    );
+    final data = response.data is Map ? response.data['data'] : null;
+    return DigitalProductChatRoom.fromJson(
+      Map<String, dynamic>.from(data as Map? ?? const {}),
+    );
+  }
+
+  static Future<List<DigitalProductChatMessage>> getChatMessages(
+    dynamic roomId, {
+    int limit = 30,
+    int offset = 0,
+    dynamic beforeId,
+  }) async {
+    final response = await _dio.get(
+      ApiRoutes.digitalProductChatMessages(roomId),
+      queryParameters: {
+        'limit': limit,
+        'offset': offset,
+        if (beforeId != null && beforeId > 0) 'before_id': beforeId,
+      },
+    );
+    final data = response.data is Map ? response.data['data'] : null;
+    final list = data is List ? data : const [];
+    return list
+        .whereType<Map>()
+        .map(
+          (e) => DigitalProductChatMessage.fromJson(
+            Map<String, dynamic>.from(e),
+          ),
+        )
+        .toList();
+  }
+
+  static Future<DigitalProductChatMessage> sendChatMessage(
+    dynamic roomId, {
+    required String message,
+    String messageType = 'text',
+    String? attachmentUrl,
+    String? filePath,
+    dynamic metadata,
+  }) async {
+    Response response;
+    if (filePath != null && filePath.isNotEmpty) {
+      final formData = FormData.fromMap({
+        'message': message,
+        'message_type': messageType.isNotEmpty ? messageType : 'image',
+        'attachment': await MultipartFile.fromFile(
+          filePath,
+          filename: _fileName(filePath),
+        ),
+      });
+      response = await _dio.post(
+        ApiRoutes.digitalProductChatMessages(roomId),
+        data: formData,
+      );
+    } else {
+      response = await _dio.post(
+        ApiRoutes.digitalProductChatMessages(roomId),
+        data: {
+          'message': message,
+          'message_type': messageType,
+          if (attachmentUrl != null && attachmentUrl.isNotEmpty)
+            'attachment_url': attachmentUrl,
+          'metadata': ?metadata,
+        },
+      );
+    }
+    final data = response.data is Map ? response.data['data'] : null;
+    return DigitalProductChatMessage.fromJson(
+      Map<String, dynamic>.from(data as Map? ?? const {}),
     );
   }
 

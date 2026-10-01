@@ -277,33 +277,46 @@ class _DigitalProductFavoritScreenState
   }
 
   Widget _buildAppBar() => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    child: Row(
-      children: [
-        InkWell(
-          onTap: () => Navigator.of(context).pop(),
-          child: const Padding(
-            padding: EdgeInsets.all(4),
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          ),
+    color: const Color(0xFFF8FAFC),
+    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+    alignment: Alignment.centerLeft,
+    child: InkWell(
+      onTap: () => Navigator.of(context).pop(),
+      borderRadius: BorderRadius.circular(8),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.chevron_left_rounded,
+              size: 24,
+              color: Color(0xFF0F172A),
+            ),
+            SizedBox(width: 4),
+            Text(
+              'Pesanan & Favorit',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A),
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        const Text(
-          'Pesanan & Favorit',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
-        ),
-      ],
+      ),
     ),
   );
 
   Widget _buildTabSelector() => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    margin: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF1F5F9),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: const Color(0xFFE2E8F0)),
+    ),
     child: Row(
       children: [
         Expanded(
@@ -313,7 +326,7 @@ class _DigitalProductFavoritScreenState
             LucideIcons.file_text,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 4),
         Expanded(
           child: _buildTabButton(
             1,
@@ -327,17 +340,53 @@ class _DigitalProductFavoritScreenState
 
   Widget _buildTabButton(int index, String title, IconData icon) {
     final selected = _activeTabIndex == index;
-    return TextButton.icon(
-      onPressed: () => setState(() => _activeTabIndex = index),
-      icon: Icon(icon, size: 15),
-      label: Text(title, overflow: TextOverflow.ellipsis),
-      style: TextButton.styleFrom(
-        foregroundColor: selected
-            ? const Color(0xFF2563EB)
-            : const Color(0xFF64748B),
-        backgroundColor: selected
-            ? const Color(0xFFEFF6FF)
-            : Colors.transparent,
+    return InkWell(
+      onTap: () => setState(() => _activeTabIndex = index),
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+        decoration: BoxDecoration(
+          gradient: selected
+              ? const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.22),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: selected ? Colors.white : const Color(0xFF64748B),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                  color: selected ? Colors.white : const Color(0xFF64748B),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -361,12 +410,20 @@ class _DigitalProductFavoritScreenState
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-          child: Row(
-            children: [
-              Expanded(child: _roleButton('buyer', 'Pembelian')),
-              Expanded(child: _roleButton('seller', 'Penjualan')),
-            ],
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+          child: Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Expanded(child: _roleButton('buyer', 'Pembelian')),
+                Expanded(child: _roleButton('seller', 'Penjualan')),
+              ],
+            ),
           ),
         ),
         Expanded(
@@ -429,17 +486,25 @@ class _DigitalProductFavoritScreenState
 
   Widget _roleButton(String role, String title) {
     final selected = _role == role;
-    return TextButton(
-      onPressed: () => _selectRole(role),
-      style: TextButton.styleFrom(
-        foregroundColor: selected
-            ? const Color(0xFF2563EB)
-            : const Color(0xFF64748B),
-        backgroundColor: selected
-            ? const Color(0xFFEFF6FF)
-            : Colors.transparent,
+    return InkWell(
+      onTap: () => _selectRole(role),
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFEFF6FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            color: selected ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+          ),
+        ),
       ),
-      child: Text(title),
     );
   }
 
