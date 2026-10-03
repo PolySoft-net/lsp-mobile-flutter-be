@@ -167,14 +167,16 @@ class _AsesiPortofolioScreenState extends State<AsesiPortofolioScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openTambahModal,
-        backgroundColor: const Color(0xFF2563EB),
-        foregroundColor: Colors.white,
-        icon: const Icon(LucideIcons.plus, size: 18),
-        label: const Text(
-          'Tambah Portofolio',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+      floatingActionButton: SafeArea(
+        child: FloatingActionButton.extended(
+          onPressed: _openTambahModal,
+          backgroundColor: const Color(0xFF2563EB),
+          foregroundColor: Colors.white,
+          icon: const Icon(LucideIcons.plus, size: 18),
+          label: const Text(
+            'Tambah Portofolio',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
         ),
       ),
     );
@@ -334,10 +336,12 @@ class _AsesiPortofolioScreenState extends State<AsesiPortofolioScreen> {
       );
     }
 
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+
     return RefreshIndicator(
       onRefresh: _loadData,
       child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 90),
+        padding: EdgeInsets.fromLTRB(16, 14, 16, 90 + bottomPadding),
         itemCount: filtered.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {

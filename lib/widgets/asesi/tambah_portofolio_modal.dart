@@ -149,7 +149,9 @@ class _TambahPortofolioModalState extends State<TambahPortofolioModal> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final mediaQuery = MediaQuery.of(context);
+    final bottomInset = mediaQuery.viewInsets.bottom;
+    final effectiveBottom = bottomInset > 0 ? bottomInset + 16 : 20.0;
     final dateDisplay =
         '${_selectedDate.day.toString().padLeft(2, '0')}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.year}';
 
@@ -158,11 +160,16 @@ class _TambahPortofolioModalState extends State<TambahPortofolioModal> {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      padding: EdgeInsets.fromLTRB(20, 16, 20, bottomInset + 20),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, effectiveBottom),
+      child: SafeArea(
+        top: false,
+        left: false,
+        right: false,
+        bottom: bottomInset == 0,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -485,6 +492,7 @@ class _TambahPortofolioModalState extends State<TambahPortofolioModal> {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),
