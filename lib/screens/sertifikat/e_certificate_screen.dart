@@ -5,6 +5,7 @@ import '../../services/api_client.dart';
 import '../../services/auth/token_storage.dart';
 import 'e_certificate_webview_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/common/custom_app_bar.dart';
 
 class ECertificateScreen extends StatefulWidget {
   const ECertificateScreen({super.key});
@@ -139,27 +140,13 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1E293B)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'E-Certificate',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        color: const Color(0xFF2563EB),
+      body: SafeArea(
         child: Column(
           children: [
+            CustomAppBar(
+              title: 'E-Certificate',
+              onBack: () => Navigator.of(context).pop(),
+            ),
             // Search Bar
             Container(
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -192,7 +179,10 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
 
             // Content List
             Expanded(
-              child: _isLoading
+              child: RefreshIndicator(
+                onRefresh: _loadData,
+                color: const Color(0xFF2563EB),
+                child: _isLoading
                   ? const Center(
                       child: CircularProgressIndicator(color: Color(0xFF2563EB)),
                     )
@@ -270,6 +260,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
                                 return _buildECertificateCard(item);
                               },
                             ),
+              ),
             ),
           ],
         ),

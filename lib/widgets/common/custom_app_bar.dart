@@ -25,7 +25,7 @@ class CustomAppBar extends StatelessWidget {
             Positioned.fill(
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 56.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 64.0),
                   child: Text(
                     title,
                     textAlign: TextAlign.center,
