@@ -2,6 +2,7 @@ import 'package:flutter_lucide/flutter_lucide.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../widgets/common/custom_app_bar.dart';
 import '../../models/asesi/asesi_portofolio_model.dart';
 import '../../services/asesi/asesi_portofolio_service.dart';
 import '../../widgets/asesi/tambah_portofolio_modal.dart';
@@ -134,33 +135,13 @@ class _AsesiPortofolioScreenState extends State<AsesiPortofolioScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: const Text(
-          'Portofolio Saya',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        leading: InkWell(
-          onTap: () => Navigator.of(context).pop(),
-          child: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFF0F172A)),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.plus, color: Color(0xFF2563EB)),
-            tooltip: 'Tambah Portofolio',
-            onPressed: _openTambahModal,
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Column(
           children: [
+            CustomAppBar(
+              title: 'Portofolio Saya',
+              onBack: () => Navigator.of(context).pop(),
+            ),
             _buildFilterChips(),
             const Divider(height: 1, color: Color(0xFFE2E8F0)),
             Expanded(child: _buildContent()),
