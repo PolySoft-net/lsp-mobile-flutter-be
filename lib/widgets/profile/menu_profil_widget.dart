@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 class MenuProfilWidget extends StatelessWidget {
   final VoidCallback? onDataDiriTap;
+  final VoidCallback? onPortofolioTap;
   final VoidCallback? onInstansiTap;
   final VoidCallback? onInstansiEditTap;
   final bool isInstansiExpanded;
@@ -10,10 +11,10 @@ class MenuProfilWidget extends StatelessWidget {
   final VoidCallback? onKeamananTap;
   final VoidCallback? onReviewAppTap;
   final VoidCallback? onKeluarTap;
-
   const MenuProfilWidget({
     super.key,
     this.onDataDiriTap,
+    this.onPortofolioTap,
     this.onInstansiTap,
     this.onInstansiEditTap,
     this.isInstansiExpanded = false,
@@ -66,6 +67,13 @@ class MenuProfilWidget extends StatelessWidget {
                   title: 'Data Diri',
                   iconColor: const Color(0xFF378CE7),
                   onTap: onDataDiriTap,
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                _buildMenuItem(
+                  icon: Icons.folder_shared_rounded,
+                  title: 'Portofolio Saya',
+                  iconColor: const Color(0xFF7C3AED),
+                  onTap: onPortofolioTap,
                 ),
                 const Divider(height: 1, color: Color(0xFFF1F5F9)),
                 _buildMenuItem(

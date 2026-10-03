@@ -17,7 +17,7 @@ import '../../widgets/profile/ringkasan_widget.dart';
 import '../../widgets/profile/menu_profil_widget.dart';
 import 'public_profile_screen.dart';
 import '../../utils/url_helper.dart';
-
+import '../asesi/asesi_portofolio_screen.dart';
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
 
@@ -672,6 +672,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const DataDiriScreen(),
+                        ),
+                      );
+                    },
+                    onPortofolioTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AsesiPortofolioScreen(),
                         ),
                       );
                     },

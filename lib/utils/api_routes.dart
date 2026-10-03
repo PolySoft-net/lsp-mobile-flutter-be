@@ -194,6 +194,8 @@ class ApiRoutes {
         ? '/api/asesi/e-certificate/download'
         : '/api/asesi/e-certificate/download?${query.join('&')}';
   }
+  static const String asesiPortofolioList = '/api/asesi/portofolio';
+  static String asesiPortofolioDelete(int id) => '/api/asesi/portofolio/$id';
 
   // ============================================================================
   // Asesor Routes
