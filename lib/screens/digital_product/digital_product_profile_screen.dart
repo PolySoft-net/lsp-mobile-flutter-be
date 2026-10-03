@@ -371,7 +371,7 @@ class _DigitalProductProfileScreenState
           const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
           _menuItem(
             icon: _buildProdukJasaIcon(),
-            title: 'Produk/Jasa',
+            title: 'Produk & Jasa Saya',
             onTap: () => Navigator.of(context).push(
               FadePageRoute(page: const DigitalProductProdukJasaScreen()),
             ),

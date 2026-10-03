@@ -13,6 +13,7 @@ class DigitalProductService {
     String search = '',
     String filter = '',
     String sortBy = 'latest',
+    bool excludeMine = false,
   }) async {
     final response = await _dio.get(
       ApiRoutes.digitalProducts,
@@ -21,6 +22,7 @@ class DigitalProductService {
         if (filter.isNotEmpty && filter.toLowerCase() != 'semua')
           'filter': filter.toLowerCase(),
         if (sortBy.isNotEmpty) 'sort_by': sortBy,
+        if (excludeMine) 'exclude_mine': 'true',
       },
     );
     return _parseProducts(response.data);
@@ -28,17 +30,25 @@ class DigitalProductService {
 
   static Future<List<DigitalProductItem>> getPopularProducts({
     int limit = 10,
+    bool excludeMine = false,
   }) async {
     try {
       final response = await _dio.get(
         ApiRoutes.digitalProductPopular(limit: limit),
+        queryParameters: {
+          if (excludeMine) 'exclude_mine': 'true',
+        },
       );
       return _parseProducts(response.data);
     } catch (_) {
       try {
         final fallbackResponse = await _dio.get(
           ApiRoutes.digitalProducts,
-          queryParameters: {'filter': 'popular', 'limit': limit},
+          queryParameters: {
+            'filter': 'popular',
+            'limit': limit,
+            if (excludeMine) 'exclude_mine': 'true',
+          },
         );
         return _parseProducts(fallbackResponse.data);
       } catch (_) {

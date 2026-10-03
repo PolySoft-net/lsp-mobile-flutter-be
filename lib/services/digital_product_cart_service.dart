@@ -12,6 +12,7 @@ class DigitalProductCartService {
   static Future<List<DigitalProductOrder>> getOrders({
     String? status,
     String? role,
+    int? productId,
     int limit = 20,
     int offset = 0,
   }) async {
@@ -21,6 +22,7 @@ class DigitalProductCartService {
         if (status != null && status.isNotEmpty && status != 'all')
           'status': status,
         if (role != null && role.isNotEmpty) 'role': role,
+        if (productId != null && productId > 0) 'product_id': productId,
         'limit': limit,
         'offset': offset,
       },

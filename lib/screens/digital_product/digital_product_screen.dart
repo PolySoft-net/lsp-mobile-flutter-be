@@ -14,8 +14,8 @@ import '../../widgets/digital_product/fade_page_route.dart';
 import 'digital_product_create_screen.dart';
 import 'digital_product_detail_screen.dart';
 import 'digital_product_favorit_screen.dart';
+import 'digital_product_produk_jasa_screen.dart';
 import 'digital_product_profile_screen.dart';
-
 class DigitalProductScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
 
@@ -67,8 +67,12 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
           search: _searchController.text,
           filter: categoryFilter,
           sortBy: 'latest',
+          excludeMine: true,
         ),
-        DigitalProductService.getPopularProducts(limit: 10),
+        DigitalProductService.getPopularProducts(
+          limit: 10,
+          excludeMine: true,
+        ),
       ]);
       if (mounted) {
         final list = List<DigitalProductItem>.from(results[0]);
@@ -202,6 +206,18 @@ class _DigitalProductScreenState extends State<DigitalProductScreen> {
         child: Column(
           children: [
             DigitalProductHeader(
+              onMyProductsTap: () async {
+                final targetIndex = await Navigator.of(context).push<int>(
+                  FadePageRoute(
+                    page: const DigitalProductProdukJasaScreen(),
+                  ),
+                );
+                if (targetIndex != null && mounted) {
+                  _onBottomNavTap(targetIndex);
+                } else if (mounted) {
+                  _loadProducts();
+                }
+              },
               onAddProductTap: () async {
                 await Navigator.of(context).push(
                   FadePageRoute(page: const DigitalProductCreateScreen()),
