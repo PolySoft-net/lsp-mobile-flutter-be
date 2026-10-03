@@ -98,7 +98,7 @@ class DigitalProductSellerCard extends StatelessWidget {
           ),
 
           Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -107,24 +107,24 @@ class DigitalProductSellerCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 12.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF0F172A),
                     height: 1.25,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   item.priceUnit.isNotEmpty
                       ? '${item.price}${item.priceUnit}'
                       : item.price,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF2563EB),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
                 // Order Count Indicator & Action
                 if (orderCount > 0)
@@ -135,7 +135,7 @@ class DigitalProductSellerCard extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
-                        vertical: 5,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
@@ -147,7 +147,7 @@ class DigitalProductSellerCard extends StatelessWidget {
                         children: [
                           const Icon(
                             LucideIcons.shopping_bag,
-                            size: 13,
+                            size: 12,
                             color: Color(0xFF2563EB),
                           ),
                           const SizedBox(width: 4),
@@ -155,7 +155,7 @@ class DigitalProductSellerCard extends StatelessWidget {
                             child: Text(
                               '$orderCount Pesanan Masuk',
                               style: const TextStyle(
-                                fontSize: 10.5,
+                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF2563EB),
                               ),
@@ -171,7 +171,7 @@ class DigitalProductSellerCard extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
-                      vertical: 5,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
@@ -181,38 +181,36 @@ class DigitalProductSellerCard extends StatelessWidget {
                     child: const Text(
                       'Belum ada pesanan',
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: 10,
                         color: Color(0xFF94A3B8),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-                const SizedBox(height: 8),
+              ],
+            ),
+          ),
 
-                // Button Lihat Detail / Edit
-                SizedBox(
-                  width: double.infinity,
-                  height: 30,
-                  child: OutlinedButton(
-                    onPressed: onManageProduct,
-                    style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      side: const BorderSide(color: Color(0xFFCBD5E1)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: const Text(
-                      'Kelola Produk',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF334155),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+          const Spacer(),
+          const Divider(height: 1, thickness: 0.8, color: Color(0xFFE2E8F0)),
+
+          // Button Kelola Produk flush at bottom
+          InkWell(
+            onTap: onManageProduct,
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+            child: const SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: Center(
+                child: Text(
+                  'Kelola Produk',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1E3A8A),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ],
