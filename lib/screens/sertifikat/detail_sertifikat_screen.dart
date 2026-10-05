@@ -842,6 +842,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                                     ? widget.item.fileSertifikatDownload
                                     : previewDepan,
                                 publicUrl: ApiRoutes.digitalSignaturePublicUrl(widget.item.id),
+                                printUrl: ApiRoutes.digitalSignaturePrintUrl(widget.item.id),
                               ),
                             ),
                           );
@@ -875,6 +876,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                                     ? widget.item.fileSertifikatBelakangDownload
                                     : previewBelakang,
                                 publicUrl: ApiRoutes.digitalSignaturePublicUrl(widget.item.id, isBelakang: true),
+                                printUrl: ApiRoutes.digitalSignaturePrintUrl(widget.item.id),
                               ),
                             ),
                           );

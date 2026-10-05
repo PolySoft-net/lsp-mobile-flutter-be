@@ -496,6 +496,7 @@ class AsesiTimelineSection extends StatelessWidget {
           previewUrl: previewUrl,
           downloadUrl: downloadUrl,
           publicUrl: publicUrl,
+          printUrl: ApiRoutes.digitalSignaturePrintUrl(item.id),
         ),
       ),
     );

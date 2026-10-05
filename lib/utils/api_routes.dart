@@ -201,6 +201,11 @@ class ApiRoutes {
     final path = isBelakang ? '/digital-signature/belakang/$id' : '/digital-signature/depan/$id';
     return '$base$path';
   }
+  static String digitalSignaturePrintUrl(dynamic id) {
+    final rawBase = dotenv.env['BASE_URL'] ?? '';
+    final base = rawBase.endsWith('/') ? rawBase.substring(0, rawBase.length - 1) : rawBase;
+    return '$base/digital-signature/print/$id';
+  }
   static const String asesiPortofolioList = '/api/asesi/portofolio';
   static String asesiPortofolioDelete(int id) => '/api/asesi/portofolio/$id';
 

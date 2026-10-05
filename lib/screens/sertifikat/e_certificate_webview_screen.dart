@@ -9,6 +9,7 @@ class ECertificateWebViewScreen extends StatefulWidget {
   final String previewUrl;
   final String? downloadUrl;
   final String? publicUrl;
+  final String? printUrl;
 
   const ECertificateWebViewScreen({
     super.key,
@@ -16,6 +17,7 @@ class ECertificateWebViewScreen extends StatefulWidget {
     required this.previewUrl,
     this.downloadUrl,
     this.publicUrl,
+    this.printUrl,
   });
   @override
   State<ECertificateWebViewScreen> createState() => _ECertificateWebViewScreenState();
@@ -94,9 +96,19 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
   }
 
   Future<void> _handleDownload() async {
-    final targetUrl = (widget.downloadUrl != null && widget.downloadUrl!.isNotEmpty)
-        ? widget.downloadUrl!
-        : widget.previewUrl;
+    String targetUrl = widget.printUrl ?? '';
+    if (targetUrl.isEmpty) {
+      final uri = Uri.tryParse(widget.previewUrl);
+      final idAsesi = uri?.queryParameters['id_asesi'];
+      if (idAsesi != null && idAsesi.isNotEmpty) {
+        targetUrl = ApiRoutes.digitalSignaturePrintUrl(idAsesi);
+      } else if (widget.downloadUrl != null && widget.downloadUrl!.isNotEmpty) {
+        targetUrl = widget.downloadUrl!;
+      } else {
+        targetUrl = widget.previewUrl;
+      }
+    }
+
     final uri = Uri.parse(targetUrl);
     try {
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
@@ -105,7 +117,7 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tidak dapat membuka tautan unduh.')),
+          const SnackBar(content: Text('Tidak dapat membuka tautan cetak / unduh.')),
         );
       }
     }

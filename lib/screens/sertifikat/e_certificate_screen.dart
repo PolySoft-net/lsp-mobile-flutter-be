@@ -77,7 +77,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
     }
   }
 
-  void _openWebView(String title, String previewUrl, String downloadUrl, {String? publicUrl}) {
+  void _openWebView(String title, String previewUrl, String downloadUrl, {String? publicUrl, String? printUrl}) {
     if (previewUrl.isEmpty && downloadUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tautan E-Certificate tidak tersedia.')),
@@ -92,6 +92,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
           previewUrl: previewUrl.isNotEmpty ? previewUrl : downloadUrl,
           downloadUrl: downloadUrl.isNotEmpty ? downloadUrl : previewUrl,
           publicUrl: publicUrl,
+          printUrl: printUrl,
         ),
       ),
     );
@@ -122,9 +123,10 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
         ? item.fileSertifikatDownload
         : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
     final publicUrl = ApiRoutes.digitalSignaturePublicUrl(item.id);
+    final printUrl = ApiRoutes.digitalSignaturePrintUrl(item.id);
 
     if (!mounted) return;
-    _openWebView('E-Certificate - ${item.skema}', previewUrl, downloadUrl, publicUrl: publicUrl);
+    _openWebView('E-Certificate - ${item.skema}', previewUrl, downloadUrl, publicUrl: publicUrl, printUrl: printUrl);
   }
 
   Future<void> _downloadECertificate(SertifikatItem item) async {
