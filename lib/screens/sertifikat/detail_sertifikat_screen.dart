@@ -5,9 +5,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/sertifikat_models.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../services/api_service.dart';
+import '../../utils/api_routes.dart';
 import '../../utils/date_format_helper.dart';
 import 'e_certificate_webview_screen.dart';
-
 class DetailSertifikatScreen extends StatefulWidget {
   final SertifikatItem item;
   final bool isAsesiView;
@@ -836,11 +836,12 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => ECertificateWebViewScreen(
-                                 title: 'Sertifikat (Lembar Depan)',
+                                title: 'Sertifikat (Lembar Depan)',
                                 previewUrl: previewDepan,
                                 downloadUrl: widget.item.fileSertifikatDownload.isNotEmpty
                                     ? widget.item.fileSertifikatDownload
                                     : previewDepan,
+                                publicUrl: ApiRoutes.digitalSignaturePublicUrl(widget.item.id),
                               ),
                             ),
                           );
@@ -873,6 +874,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
                                 downloadUrl: widget.item.fileSertifikatBelakangDownload.isNotEmpty
                                     ? widget.item.fileSertifikatBelakangDownload
                                     : previewBelakang,
+                                publicUrl: ApiRoutes.digitalSignaturePublicUrl(widget.item.id, isBelakang: true),
                               ),
                             ),
                           );

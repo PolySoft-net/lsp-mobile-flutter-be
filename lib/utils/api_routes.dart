@@ -1,8 +1,9 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 // ============================================================================
 // API Routes Constants
 // ============================================================================
 // Konstanta untuk semua API routes yang digunakan dalam aplikasi
-
 class ApiRoutes {
   // ============================================================================
   // Dashboard Routes (Enhanced)
@@ -193,6 +194,12 @@ class ApiRoutes {
     return query.isEmpty
         ? '/api/asesi/e-certificate/download'
         : '/api/asesi/e-certificate/download?${query.join('&')}';
+  }
+  static String digitalSignaturePublicUrl(dynamic id, {bool isBelakang = false}) {
+    final rawBase = dotenv.env['BASE_URL'] ?? '';
+    final base = rawBase.endsWith('/') ? rawBase.substring(0, rawBase.length - 1) : rawBase;
+    final path = isBelakang ? '/digital-signature/belakang/$id' : '/digital-signature/depan/$id';
+    return '$base$path';
   }
   static const String asesiPortofolioList = '/api/asesi/portofolio';
   static String asesiPortofolioDelete(int id) => '/api/asesi/portofolio/$id';

@@ -3,10 +3,10 @@ import '../../models/sertifikat_models.dart';
 import '../../services/asesi/asesi_service.dart';
 import '../../services/api_client.dart';
 import '../../services/auth/token_storage.dart';
+import '../../utils/api_routes.dart';
 import 'e_certificate_webview_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/common/custom_app_bar.dart';
-
 class ECertificateScreen extends StatefulWidget {
   const ECertificateScreen({super.key});
 
@@ -77,7 +77,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
     }
   }
 
-  void _openWebView(String title, String previewUrl, String downloadUrl) {
+  void _openWebView(String title, String previewUrl, String downloadUrl, {String? publicUrl}) {
     if (previewUrl.isEmpty && downloadUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Tautan E-Certificate tidak tersedia.')),
@@ -91,6 +91,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
           title: title,
           previewUrl: previewUrl.isNotEmpty ? previewUrl : downloadUrl,
           downloadUrl: downloadUrl.isNotEmpty ? downloadUrl : previewUrl,
+          publicUrl: publicUrl,
         ),
       ),
     );
@@ -120,9 +121,10 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
     final downloadUrl = item.fileSertifikatDownload.isNotEmpty
         ? item.fileSertifikatDownload
         : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
+    final publicUrl = ApiRoutes.digitalSignaturePublicUrl(item.id);
 
     if (!mounted) return;
-    _openWebView('E-Certificate - ${item.skema}', previewUrl, downloadUrl);
+    _openWebView('E-Certificate - ${item.skema}', previewUrl, downloadUrl, publicUrl: publicUrl);
   }
 
   Future<void> _downloadECertificate(SertifikatItem item) async {

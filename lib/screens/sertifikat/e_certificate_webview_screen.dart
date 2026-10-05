@@ -1,20 +1,22 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../utils/api_routes.dart';
 import '../../widgets/common/custom_app_bar.dart';
-
 class ECertificateWebViewScreen extends StatefulWidget {
   final String title;
   final String previewUrl;
   final String? downloadUrl;
+  final String? publicUrl;
 
   const ECertificateWebViewScreen({
     super.key,
     required this.title,
     required this.previewUrl,
     this.downloadUrl,
+    this.publicUrl,
   });
-
   @override
   State<ECertificateWebViewScreen> createState() => _ECertificateWebViewScreenState();
 }
@@ -61,6 +63,36 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
       ..loadRequest(Uri.parse(widget.previewUrl));
   }
 
+  Future<void> _handleShare() async {
+    String shareLink = widget.publicUrl ?? '';
+    if (shareLink.isEmpty) {
+      final uri = Uri.tryParse(widget.previewUrl);
+      if (uri != null) {
+        final idAsesi = uri.queryParameters['id_asesi'];
+        if (idAsesi != null && idAsesi.isNotEmpty) {
+          shareLink = ApiRoutes.digitalSignaturePublicUrl(idAsesi);
+        } else {
+          final queryParams = Map<String, String>.from(uri.queryParameters);
+          queryParams.remove('token');
+          shareLink = uri.replace(queryParameters: queryParams.isEmpty ? null : queryParams).toString();
+        }
+      } else {
+        shareLink = widget.previewUrl;
+      }
+    }
+
+    await Clipboard.setData(ClipboardData(text: shareLink));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tautan verifikasi publik berhasil disalin.'),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF1E293B),
+        ),
+      );
+    }
+  }
+
   Future<void> _handleDownload() async {
     final targetUrl = (widget.downloadUrl != null && widget.downloadUrl!.isNotEmpty)
         ? widget.downloadUrl!
@@ -79,6 +111,24 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
     }
   }
 
+  Future<void> _handleOpenBrowser() async {
+    final targetUrl = (widget.publicUrl != null && widget.publicUrl!.isNotEmpty)
+        ? widget.publicUrl!
+        : widget.previewUrl;
+    final uri = Uri.parse(targetUrl);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat membuka browser eksternal.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,12 +139,33 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
             CustomAppBar(
               title: 'E-Certificate',
               onBack: () => Navigator.of(context).pop(),
-              rightWidget: IconButton(
-                icon: const Icon(Icons.open_in_new_rounded, color: Color(0xFF2563EB), size: 22),
-                tooltip: 'Unduh / Buka Eksternal',
-                onPressed: _handleDownload,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+              rightWidget: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.share_rounded, color: Color(0xFF64748B), size: 20),
+                    tooltip: 'Salin Tautan',
+                    onPressed: _handleShare,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                  const SizedBox(width: 2),
+                  IconButton(
+                    icon: const Icon(Icons.download_rounded, color: Color(0xFF2563EB), size: 20),
+                    tooltip: 'Unduh E-Certificate',
+                    onPressed: _handleDownload,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                  const SizedBox(width: 2),
+                  IconButton(
+                    icon: const Icon(Icons.open_in_new_rounded, color: Color(0xFF64748B), size: 20),
+                    tooltip: 'Buka di Browser',
+                    onPressed: _handleOpenBrowser,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                ],
               ),
             ),
             if (_isLoading)

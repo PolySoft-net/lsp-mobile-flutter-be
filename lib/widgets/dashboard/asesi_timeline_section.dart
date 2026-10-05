@@ -10,8 +10,8 @@ import '../../screens/sertifikat/e_certificate_webview_screen.dart';
 import '../../services/api_client.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../services/auth/token_storage.dart';
+import '../../utils/api_routes.dart';
 import '../../utils/date_format_helper.dart';
-
 class AsesiTimelineSection extends StatelessWidget {
   final AsesiTimelineTerakhir? timeline;
   final List<SertifikatItem> sertifikatList;
@@ -485,6 +485,7 @@ class AsesiTimelineSection extends StatelessWidget {
     final downloadUrl = item.fileSertifikatDownload.isNotEmpty
         ? item.fileSertifikatDownload
         : '$baseUrl/api/asesi/e-certificate/download?id_asesi=${item.id}$tokenParam';
+    final publicUrl = ApiRoutes.digitalSignaturePublicUrl(item.id);
 
     if (!context.mounted) return;
     Navigator.push(
@@ -494,6 +495,7 @@ class AsesiTimelineSection extends StatelessWidget {
           title: 'E-Certificate - ${item.skema}',
           previewUrl: previewUrl,
           downloadUrl: downloadUrl,
+          publicUrl: publicUrl,
         ),
       ),
     );
