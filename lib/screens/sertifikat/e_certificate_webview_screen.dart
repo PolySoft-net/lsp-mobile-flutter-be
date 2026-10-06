@@ -86,10 +86,13 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
 
     try {
       final text = 'Berikut adalah tautan verifikasi resmi E-Sertifikasi: $shareLink';
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
       await SharePlus.instance.share(
         ShareParams(
           text: text,
           subject: widget.title.isNotEmpty ? widget.title : 'E-Sertifikasi',
+          sharePositionOrigin: origin,
         ),
       );
     } catch (_) {
@@ -167,7 +170,7 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.share_rounded, color: Color(0xFF64748B), size: 20),
-                    tooltip: 'Salin Tautan',
+                    tooltip: 'Bagikan',
                     onPressed: _handleShare,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
