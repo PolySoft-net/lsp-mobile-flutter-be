@@ -782,7 +782,7 @@ class _DetailSertifikatScreenState extends State<DetailSertifikatScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Dokumen E-Certificate'),
+        _buildSectionHeader('Dokumen E-Sertifikasi'),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(16),

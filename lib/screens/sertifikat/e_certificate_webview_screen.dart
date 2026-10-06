@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/api_routes.dart';
@@ -83,15 +84,25 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
       }
     }
 
-    await Clipboard.setData(ClipboardData(text: shareLink));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tautan verifikasi publik berhasil disalin.'),
-          duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF1E293B),
+    try {
+      final text = 'Berikut adalah tautan verifikasi resmi E-Sertifikasi: $shareLink';
+      await SharePlus.instance.share(
+        ShareParams(
+          text: text,
+          subject: widget.title.isNotEmpty ? widget.title : 'E-Sertifikasi',
         ),
       );
+    } catch (_) {
+      await Clipboard.setData(ClipboardData(text: shareLink));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tautan verifikasi berhasil disalin.'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Color(0xFF1E293B),
+          ),
+        );
+      }
     }
   }
 
@@ -149,7 +160,7 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
         child: Column(
           children: [
             CustomAppBar(
-              title: 'E-Certificate',
+              title: 'E-Sertifikasi',
               onBack: () => Navigator.of(context).pop(),
               rightWidget: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -164,7 +175,7 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
                   const SizedBox(width: 2),
                   IconButton(
                     icon: const Icon(Icons.download_rounded, color: Color(0xFF2563EB), size: 20),
-                    tooltip: 'Unduh E-Certificate',
+                    tooltip: 'Unduh E-Sertifikasi',
                     onPressed: _handleDownload,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -201,7 +212,7 @@ class _ECertificateWebViewScreenState extends State<ECertificateWebViewScreen> {
                           CircularProgressIndicator(color: Color(0xFF2563EB)),
                           SizedBox(height: 14),
                           Text(
-                            'Memuat E-Certificate...',
+                            'Memuat E-Sertifikasi...',
                             style: TextStyle(
                               color: Color(0xFF64748B),
                               fontSize: 13,

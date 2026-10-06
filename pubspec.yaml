@@ -1,7 +1,7 @@
 name: lsp_digital_mobile
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.2.1-build.198+222
+version: 1.2.1-build.199+223
 environment:
   sdk: ^3.11.1
 
@@ -32,6 +32,7 @@ dependencies:
   google_places_sdk_plus: ^1.1.0
   flutter_markdown_plus: ^1.0.12
   flutter_image_compress: ^2.5.1
+  share_plus: ^13.3.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

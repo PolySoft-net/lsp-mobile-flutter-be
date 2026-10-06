@@ -57,7 +57,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
       setState(() {
         _allCertificates = [];
         _filteredCertificates = [];
-        _errorMessage = 'Gagal memuat daftar E-Certificate.';
+        _errorMessage = 'Gagal memuat daftar E-Sertifikasi.';
         _isLoading = false;
       });
     }
@@ -80,7 +80,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
   void _openWebView(String title, String previewUrl, String downloadUrl, {String? publicUrl, String? printUrl}) {
     if (previewUrl.isEmpty && downloadUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tautan E-Certificate tidak tersedia.')),
+        const SnackBar(content: Text('Tautan E-Sertifikasi tidak tersedia.')),
       );
       return;
     }
@@ -126,7 +126,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
     final printUrl = ApiRoutes.digitalSignaturePrintUrl(item.id);
 
     if (!mounted) return;
-    _openWebView('E-Certificate - ${item.skema}', previewUrl, downloadUrl, publicUrl: publicUrl, printUrl: printUrl);
+    _openWebView('E-Sertifikasi - ${item.skema}', previewUrl, downloadUrl, publicUrl: publicUrl, printUrl: printUrl);
   }
 
   Future<void> _downloadECertificate(SertifikatItem item) async {
@@ -148,7 +148,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
         child: Column(
           children: [
             CustomAppBar(
-              title: 'E-Certificate',
+              title: 'E-Sertifikasi',
               onBack: () => Navigator.of(context).pop(),
             ),
             // Search Bar
@@ -235,7 +235,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
                                     ),
                                     const SizedBox(height: 16),
                                     const Text(
-                                      'Belum Ada E-Certificate',
+                                      'Belum Ada E-Sertifikasi',
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
@@ -428,7 +428,7 @@ class _ECertificateScreenState extends State<ECertificateScreen> {
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.download_rounded, size: 20, color: Color(0xFF334155)),
-                  tooltip: 'Unduh E-Certificate',
+                  tooltip: 'Unduh E-Sertifikasi',
                   padding: EdgeInsets.zero,
                   onPressed: () => _downloadECertificate(item),
                 ),

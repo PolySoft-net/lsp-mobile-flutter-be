@@ -492,7 +492,7 @@ class AsesiTimelineSection extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => ECertificateWebViewScreen(
-          title: 'E-Certificate - ${item.skema}',
+          title: 'E-Sertifikasi - ${item.skema}',
           previewUrl: previewUrl,
           downloadUrl: downloadUrl,
           publicUrl: publicUrl,
