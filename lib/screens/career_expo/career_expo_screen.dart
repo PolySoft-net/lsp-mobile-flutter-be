@@ -46,9 +46,13 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         showBackButton: false,
         onBack: () => _onTabTapped(0),
       ),
-      const CareerExpoLamaranTab(),
+      CareerExpoLamaranTab(
+        onBack: () => _onTabTapped(0),
+      ),
       const CareerExpoNotifikasiTab(),
-      const CareerExpoProfileTab(),
+      CareerExpoProfileTab(
+        onNavigateToLamaran: () => _onTabTapped(2),
+      ),
     ];
 
     return Scaffold(
@@ -64,63 +68,69 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0x08000000),
-              blurRadius: 8,
-              offset: Offset(0, -2),
+              color: Color(0x06000000),
+              blurRadius: 10,
+              offset: Offset(0, -3),
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-          backgroundColor: Colors.white,
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF0066F6),
-          unselectedItemColor: const Color(0xFF64748B),
-          selectedFontSize: 11.5,
-          unselectedFontSize: 11.5,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-          elevation: 0,
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_filled),
-              label: 'Beranda',
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              children: [
+                _buildNavItem(0, Icons.home_filled, Icons.home_outlined),
+                _buildNavItem(1, Icons.search_rounded, Icons.search_rounded),
+                _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded),
+                _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: true),
+                _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
+              ],
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.search_rounded),
-              label: 'Cari',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.work_outline_rounded),
-              label: 'Lamaran',
-            ),
-            BottomNavigationBarItem(
-              icon: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(Icons.notifications_none_rounded),
-                  Positioned(
-                    right: -2,
-                    top: -2,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFEF4444),
-                        shape: BoxShape.circle,
-                      ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    int index,
+    IconData activeIcon,
+    IconData inactiveIcon, {
+    bool hasBadge = false,
+  }) {
+    final isSelected = _currentIndex == index;
+    final color = isSelected ? const Color(0xFF0066F6) : const Color(0xFF94A3B8);
+
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onTabTapped(index),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Center(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(
+                isSelected ? activeIcon : inactiveIcon,
+                color: color,
+                size: 26,
+              ),
+              if (hasBadge)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEF4444),
+                      shape: BoxShape.circle,
                     ),
                   ),
-                ],
-              ),
-              label: 'Notifikasi',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              label: 'Profil',
-            ),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
     );

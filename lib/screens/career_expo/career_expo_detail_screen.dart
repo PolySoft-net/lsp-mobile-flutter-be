@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
 import '../../utils/number_format_helper.dart';
-import '../../widgets/career_expo/career_apply_sheet.dart';
+import 'career_expo_apply_screen.dart';
 
 /// Halaman Detail Lowongan Career Expo sesuai desain UI
 class CareerExpoDetailScreen extends StatefulWidget {
@@ -44,83 +44,16 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
     );
   }
 
-  void _showApplyModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => CareerApplySheet(
-        job: widget.job,
-        onAppliedSuccess: () {
-          setState(() {
-            _isApplied = true;
-          });
-          _showSuccessDialog();
-        },
+  void _showApplyModal() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CareerExpoApplyScreen(job: widget.job),
       ),
     );
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.all(24),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: const BoxDecoration(
-                color: Color(0xFFDCFCE7),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle_rounded,
-                color: Color(0xFF16A34A),
-                size: 36,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Lamaran Terkirim!',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Lamaran Anda untuk posisi ${widget.job.title} di ${widget.job.companyName} telah berhasil dikirim.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0066F6),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text('OK, Mengerti'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    if (result == true && mounted) {
+      setState(() => _isApplied = true);
+    }
   }
 
   @override

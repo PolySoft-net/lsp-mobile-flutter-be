@@ -50,13 +50,18 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
     if (_selectedCategory == 'Semua Pekerjaan') {
       return _jobs;
     }
-    return _jobs.where((j) => j.category == _selectedCategory).toList();
+    return _jobs.where((j) =>
+        j.category == _selectedCategory ||
+        j.workplaceType == _selectedCategory ||
+        j.employmentType == _selectedCategory).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final popularJobs = _jobs.where((j) => j.isPopular).toList();
     final categoryFilteredJobs = _getFilteredByCategory();
+    final popularJobs = categoryFilteredJobs.where((j) => j.isPopular).isNotEmpty
+        ? categoryFilteredJobs.where((j) => j.isPopular).toList()
+        : categoryFilteredJobs;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -348,9 +353,11 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Pekerjaan Populer',
-                      style: TextStyle(
+                    Text(
+                      _selectedCategory == 'Semua Pekerjaan'
+                          ? 'Pekerjaan Populer'
+                          : 'Pekerjaan $_selectedCategory',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0F172A),
@@ -415,13 +422,13 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Section Header: Rekomendasi Berdasarkan Kategori
+              // Section Header: Daftar Lowongan
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   _selectedCategory == 'Semua Pekerjaan'
                       ? 'Semua Lowongan Tersedia'
-                      : 'Lowongan $_selectedCategory',
+                      : 'Lowongan $_selectedCategory (${categoryFilteredJobs.length})',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -472,14 +479,16 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
 
   Widget _buildCategoryItem(String title, IconData icon) {
     final isSelected = _selectedCategory == title;
-    return InkWell(
+    return GestureDetector(
       onTap: () {
         setState(() => _selectedCategory = title);
       },
-      borderRadius: BorderRadius.circular(16),
+      behavior: HitTestBehavior.opaque,
       child: Column(
         children: [
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
             width: 58,
             height: 58,
             decoration: BoxDecoration(
@@ -492,7 +501,7 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF0066F6).withValues(alpha: 0.3),
+                        color: const Color(0xFF0066F6).withValues(alpha: 0.25),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
