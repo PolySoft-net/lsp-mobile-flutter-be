@@ -32,6 +32,7 @@ import '../sertifikat/validasi_sertifikat_screen.dart';
 import 'berita_screen.dart';
 import '../ai/asesor_ai_screen.dart';
 import '../digital_product/digital_product_screen.dart';
+import '../career_expo/career_expo_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToJadwal;
@@ -969,11 +970,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         } else if (value == 'career_expo') {
-          _showComingSoonDialog(
+          Navigator.push(
             context,
-            'Career Expo',
-            Icons.work_outline_rounded,
-            const Color(0xFFEA580C),
+            MaterialPageRoute(
+              builder: (context) => const CareerExpoScreen(),
+            ),
           );
         } else if (value == 'magang_hub') {
           _showComingSoonDialog(
@@ -1010,7 +1011,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.work_outline_rounded,
           iconColor: const Color(0xFFEA580C),
           title: 'Career Expo',
-          badgeText: 'Segera Hadir',
         ),
         _buildHeaderDropdownItem(
           value: 'magang_hub',
