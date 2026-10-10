@@ -5,6 +5,7 @@ import '../../models/jadwal_models.dart';
 import '../../utils/date_format_helper.dart';
 import '../../services/common/app_notification_storage.dart';
 import '../../services/common/notification_service.dart';
+import '../../core/notifications/notification_guard.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../screens/jadwal/jadwal_detail_screen.dart';
 import 'notification_card.dart';
@@ -24,12 +25,19 @@ class _NotificationPanelState extends State<NotificationPanel> {
 
   List<AppNotification> _appNotifications = [];
   int _unreadAppCount = 0;
-  int _selectedTab = 0; // 0: Jadwal, 1: Aplikasi
+  int _selectedTab = 0; // 0: Jadwal (admin), 1: Aplikasi
   StreamSubscription<void>? _notificationSubscription;
+  StreamSubscription<void>? _storageSubscription;
+
+  /// Tab "Jadwal" berisi pengingat ACC jadwal yang memang admin-only, jadi
+  /// hanya admin yang boleh melihat tab & memanggil API-nya.
+  bool get _isAdmin => AuthRepository.currentUserInstance?.role == 'admin';
 
   @override
   void initState() {
     super.initState();
+    // Default tab: admin melihat pengingat jadwal, role lain notifikasi aplikasi.
+    _selectedTab = _isAdmin ? 0 : 1;
     _loadAllData();
     _notificationSubscription = NotificationService
         .onNotificationReceived
@@ -37,47 +45,89 @@ class _NotificationPanelState extends State<NotificationPanel> {
         .listen((_) {
           _loadAllData();
         });
+    // Tandai dibaca / hapus / bersihkan dari mana pun tetap menyegarkan panel
+    // walau panel sedang terbuka.
+    _storageSubscription = AppNotificationStorage.onChanged.stream.listen((_) {
+      _refreshAppNotifications();
+    });
   }
 
   @override
   void dispose() {
     _notificationSubscription?.cancel();
+    _storageSubscription?.cancel();
     super.dispose();
   }
 
   Future<void> _loadAllData() async {
+    final session = await AppNotificationStorage.instance
+        .resolveSessionIdentity();
+    if (!mounted) return;
+    if (session == null) {
+      // Tanpa sesi login, panel tidak menampilkan apa pun.
+      setState(() {
+        _schedules = [];
+        _totalWaiting = 0;
+        _appNotifications = [];
+        _unreadAppCount = 0;
+        _isLoading = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    final schedulesResponse = await ApiService.getWaitingSchedules(limit: 20);
+    // Pengingat waiting/draft (ACC jadwal) admin-only: role lain tidak boleh
+    // memanggil endpoint-nya sama sekali.
+    final schedulesResponse = session.role == 'admin'
+        ? await ApiService.getWaitingSchedules(limit: 20)
+        : null;
     final localNotifs = await AppNotificationStorage.instance
         .getNotifications();
     final unreadLocalCount = await AppNotificationStorage.instance
         .getUnreadCount();
 
-    if (mounted) {
-      setState(() {
-        _schedules = schedulesResponse.data;
-        _totalWaiting = schedulesResponse.meta.totalWaiting;
-        _appNotifications = localNotifs;
-        _unreadAppCount = unreadLocalCount;
-        _isLoading = false;
-      });
+    if (!mounted) return;
+
+    // Akun berubah selama await -> hasil akun lama tidak boleh bocor.
+    final after = await AppNotificationStorage.instance
+        .resolveSessionIdentity();
+    if (after == null ||
+        after.userId != session.userId ||
+        after.role != session.role) {
+      return;
     }
+
+    setState(() {
+      _schedules = schedulesResponse?.data ?? [];
+      _totalWaiting = schedulesResponse?.meta.totalWaiting ?? 0;
+      _appNotifications = localNotifs;
+      _unreadAppCount = unreadLocalCount;
+      _isLoading = false;
+    });
   }
 
   Future<void> _refreshAppNotifications() async {
+    final session = await AppNotificationStorage.instance
+        .resolveSessionIdentity();
+    if (!mounted || session == null) return;
+
     final localNotifs = await AppNotificationStorage.instance
         .getNotifications();
     final unreadLocalCount = await AppNotificationStorage.instance
         .getUnreadCount();
-    if (mounted) {
-      setState(() {
-        _appNotifications = localNotifs;
-        _unreadAppCount = unreadLocalCount;
-      });
-    }
+    if (!mounted) return;
+
+    final after = await AppNotificationStorage.instance
+        .resolveSessionIdentity();
+    if (after == null || after.userId != session.userId) return;
+
+    setState(() {
+      _appNotifications = localNotifs;
+      _unreadAppCount = unreadLocalCount;
+    });
   }
 
   Future<void> _markAllAsRead() async {
@@ -213,7 +263,9 @@ class _NotificationPanelState extends State<NotificationPanel> {
                 ),
                 child: Row(
                   children: [
-                    // Tab 0: Jadwal Asesmen
+                    // Tab 0: Jadwal Asesmen — pengingat ACC jadwal (admin-only),
+                    // jadi tab-nya tidak ditampilkan untuk role lain.
+                    if (_isAdmin)
                     Expanded(
                       child: GestureDetector(
                         onTap: () => setState(() => _selectedTab = 0),
@@ -430,6 +482,29 @@ class _NotificationPanelState extends State<NotificationPanel> {
                                   const SizedBox(height: 12),
                               itemBuilder: (context, index) {
                                 final notif = _appNotifications[index];
+                                // Tombol aksi hanya muncul bila tipe punya rute
+                                // nyata DAN identitas tersimpan (user_id +
+                                // target_role) cocok dengan sesi aktif —
+                                // supaya tidak ada tombol yang jadi no-op.
+                                final currentUser =
+                                    AuthRepository.currentUserInstance;
+                                final sessionIdentity = NotificationIdentity.of(
+                                  currentUser?.id,
+                                  currentUser?.role,
+                                );
+                                final notifIdentity =
+                                    NotificationIdentity.of(
+                                      notif.userId,
+                                      notif.data['target_role'] ??
+                                          notif.data['targetRole'],
+                                    );
+                                final hasAction =
+                                    (notifIdentity?.matches(sessionIdentity) ??
+                                        false) &&
+                                    NotificationGuard.hasAction(
+                                      notif.type,
+                                      isAsesi: currentUser?.role == 'asesi',
+                                    );
                                 return AppNotificationCard(
                                   notification: notif,
                                   onTap: () async {
@@ -437,14 +512,27 @@ class _NotificationPanelState extends State<NotificationPanel> {
                                         .markAsRead(notif.id);
                                     _refreshAppNotifications();
                                   },
-                                  onActionPressed: () {
-                                    Navigator.pop(context); // Close bottom sheet
-                                    NotificationService.navigateFromNotificationData(
-                                      context,
-                                      type: notif.type,
-                                      data: notif.data,
-                                    );
-                                  },
+                                  // Tombol aksi hanya untuk tipe yang punya
+                                  // rute nyata; tipe tak dikenal / tawaran
+                                  // pekerjaan / produk digital tanpa tombol.
+                                  onActionPressed: hasAction
+                                      ? () {
+                                          AppNotificationStorage.instance
+                                              .markAsRead(notif.id);
+                                          Navigator.pop(
+                                            context,
+                                          ); // Close bottom sheet
+                                          // Navigasi pakai navigator global:
+                                          // context bottom sheet sudah tidak
+                                          // aktif setelah pop.
+                                          NotificationService
+                                              .navigateFromNotificationData(
+                                                null,
+                                                type: notif.type,
+                                                data: notif.data,
+                                              );
+                                        }
+                                      : null,
                                   onDelete: () async {
                                     await AppNotificationStorage.instance
                                         .deleteNotification(notif.id);

@@ -13,9 +13,11 @@ class NotificationBell extends StatefulWidget {
   State<NotificationBell> createState() => _NotificationBellState();
 }
 
-class _NotificationBellState extends State<NotificationBell> {
+class _NotificationBellState extends State<NotificationBell>
+    with WidgetsBindingObserver {
   int _notificationCount = 0;
-  StreamSubscription<void>? _notificationSubscription;
+  StreamSubscription<void>? _pushSubscription;
+  StreamSubscription<void>? _storageSubscription;
 
   @override
   void initState() {
@@ -23,31 +25,80 @@ class _NotificationBellState extends State<NotificationBell> {
     // Skip notification setup for guests to avoid 401 Unauthorized errors
     if (AuthRepository.currentUserInstance == null) return;
 
+    WidgetsBinding.instance.addObserver(this);
+
     // Defer notification loading by 1s to avoid initial API burst
     Future.delayed(const Duration(milliseconds: 1000), () {
       if (mounted) {
         _loadNotificationCount();
       }
     });
-    _notificationSubscription = NotificationService.onNotificationReceived.stream.listen((_) {
+
+    // Notifikasi push baru (foreground) + perubahan sesi (logout/token mati).
+    _pushSubscription = NotificationService.onNotificationReceived.stream.listen(
+      (_) {
+        _loadNotificationCount();
+      },
+    );
+
+    // Perubahan lokal (tandai dibaca / hapus / bersihkan) — badge tetap
+    // tersinkron walau panel notifikasi sedang terbuka.
+    _storageSubscription = AppNotificationStorage.onChanged.stream.listen((_) {
       _loadNotificationCount();
     });
   }
 
   @override
   void dispose() {
-    _notificationSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _pushSubscription?.cancel();
+    _storageSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _loadNotificationCount() async {
-    final backendCount = await ApiService.getNotificationCount();
-    final unreadLocalCount = await AppNotificationStorage.instance.getUnreadCount();
-    if (mounted) {
-      setState(() {
-        _notificationCount = backendCount + unreadLocalCount;
-      });
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Notifikasi yang masuk saat aplikasi di background disimpan oleh isolate
+    // background; segarkan badge begitu aplikasi aktif kembali.
+    if (state == AppLifecycleState.resumed) {
+      _loadNotificationCount();
     }
+  }
+
+  Future<void> _loadNotificationCount() async {
+    if (!mounted) return;
+
+    final session = await AppNotificationStorage.instance
+        .resolveSessionIdentity();
+    if (!mounted) return;
+    if (session == null) {
+      // Sesi hilang (logout / token mati) -> badge langsung bersih.
+      setState(() => _notificationCount = 0);
+      return;
+    }
+
+    final unreadLocalCount = await AppNotificationStorage.instance
+        .getUnreadCount();
+    // Count backend hanya berisi pengingat ACC jadwal (admin-only), jadi role
+    // lain tidak boleh memanggil endpoint ini sama sekali.
+    final backendCount = session.role == 'admin'
+        ? await ApiService.getNotificationCount()
+        : 0;
+
+    if (!mounted) return;
+
+    // Akun berubah selama await -> hasil akun lama tidak boleh bocor.
+    final after = await AppNotificationStorage.instance
+        .resolveSessionIdentity();
+    if (after == null ||
+        after.userId != session.userId ||
+        after.role != session.role) {
+      return;
+    }
+
+    setState(() {
+      _notificationCount = backendCount + unreadLocalCount;
+    });
   }
 
   void _showNotificationPanel() {

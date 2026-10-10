@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import '../utils/json_helper.dart';
+
 List<String> _parseAsesor(dynamic jsonVal) {
   if (jsonVal == null) {
     return [];
@@ -363,7 +365,7 @@ class NotificationCount {
   const NotificationCount({required this.count});
 
   factory NotificationCount.fromJson(Map<String, dynamic> json) {
-    return NotificationCount(count: json['count'] ?? 0);
+    return NotificationCount(count: JsonHelper.asInt(json['count']));
   }
 }
 
@@ -482,10 +484,10 @@ class NotificationMeta {
 
   factory NotificationMeta.fromJson(Map<String, dynamic> json) {
     return NotificationMeta(
-      totalWaiting: json['total_waiting'] ?? 0,
-      limit: json['limit'] ?? 20,
-      sortBy: json['sort_by'] ?? 'tanggal',
-      sortOrder: json['sort_order'] ?? 'desc',
+      totalWaiting: JsonHelper.asInt(json['total_waiting']),
+      limit: JsonHelper.asInt(json['limit'], 20),
+      sortBy: JsonHelper.asString(json['sort_by'], 'tanggal'),
+      sortOrder: JsonHelper.asString(json['sort_order'], 'desc'),
     );
   }
 }

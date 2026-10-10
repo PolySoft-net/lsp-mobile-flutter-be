@@ -37,6 +37,11 @@ Dokumen ini adalah checklist uji manual untuk aplikasi LSP Digital Mobile. Jalan
 | U-06 | Tombol kembali | Dari setiap tab, detail, dan dialog gunakan tombol kembali | Kembali ke konteks sebelumnya; dari tab non-beranda kembali ke Beranda; dari Beranda tampil konfirmasi keluar |  |  |  |
 | U-07 | Notifikasi | Izinkan notifikasi, buka lonceng notifikasi, lalu buka item notifikasi | Badge, daftar, status dibaca, dan tujuan navigasi item sesuai |  |  |  |
 | U-08 | Sesi kedaluwarsa | Gunakan token kedaluwarsa atau cabut sesi dari perangkat lain | Dialog sesi berakhir tampil dan pengguna diarahkan untuk login kembali |  |  |  |
+| U-09 | Scope notifikasi | Kirim payload dengan `user_id` akun lain, `target_role` role lain, lalu payload tanpa scope; ulangi saat foreground, background, dan ketuk push | Payload ditolak; tidak masuk daftar/badge/banner dan tidak membuka layar |  |  |  |
+| U-10 | Notifikasi sesuai role | Kirim SPT ke Asesor dan umpan balik/status kompeten ke Asesi; coba kirim masing-masing ke role yang salah | Backend menolak tipe dengan role penerima yang salah; payload sah membawa `user_id`, `type`, dan `target_role` kanonikal |  |  |  |
+| U-11 | Antrean jadwal Admin | Buka lonceng sebagai Admin, Asesor, lalu Asesi | Admin melihat daftar dan jumlah Draft/Waiting yang konsisten; Asesor/Asesi hanya melihat notifikasi aplikasi, tanpa tab/request antrean ACC Admin |  |  |  |
+| U-12 | Pergantian akun dan badge | Muat daftar lalu logout/login akun lain; tandai dibaca, hapus item, dan hapus semua; kembali dari background | Hasil async akun lama tidak tampil; badge mengikuti notifikasi sesi aktif dan perubahan status dibaca/hapus |  |  |  |
+| U-13 | Navigasi notifikasi | Buka FAQ dan sertifikat yang juga membawa `jadwal_id`; buka tipe umum dan kirim tawaran pekerjaan dari akun perekrut | FAQ/sertifikat tidak membuka detail jadwal; tipe tanpa rute khusus tidak membuka jadwal; perekrut tidak memperoleh salinan notifikasi penerima |  |  |  |
 
 ## Publik
 
@@ -153,10 +158,10 @@ Dokumen ini adalah checklist uji manual untuk aplikasi LSP Digital Mobile. Jalan
 
 | Peran | Total Kasus | Lulus | Gagal | Tertunda | Penguji | Tanggal |
 |---|---:|---:|---:|---:|---|---|
-| Umum | 8 |  |  |  |  |  |
+| Umum | 13 |  |  |  |  |  |
 | Publik | 15 |  |  |  |  |  |
 | Admin | 21 |  |  |  |  |  |
 | Asesor | 17 |  |  |  |  |  |
 | Asesi | 27 |  |  |  |  |  |
 | Otorisasi lintas peran | 6 |  |  |  |  |  |
-| **Total** | **94** |  |  |  |  |  |
+| **Total** | **99** |  |  |  |  |  |

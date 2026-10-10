@@ -14,6 +14,13 @@ class JsonHelper {
     return double.tryParse(v?.toString() ?? '') ?? fallback;
   }
 
+  /// Mengonversi nilai dynamic ke String dengan aman (null/kosong -> fallback).
+  static String asString(dynamic v, [String fallback = '']) {
+    if (v == null) return fallback;
+    if (v is String) return v;
+    return v.toString();
+  }
+
   /// Mengonversi nilai dynamic (bool, int 1/0, string '1'/'0'/'true') ke bool dengan aman.
   static bool asBool(dynamic v, [bool fallback = false]) {
     if (v is bool) return v;

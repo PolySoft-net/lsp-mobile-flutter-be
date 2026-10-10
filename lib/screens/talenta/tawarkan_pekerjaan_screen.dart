@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import '../../models/talenta_models.dart';
 import '../../services/auth/auth_repository.dart';
-import '../../services/common/app_notification_storage.dart';
 import '../../services/talenta/talenta_service.dart';
 import '../../widgets/common/custom_app_bar.dart';
 
@@ -102,30 +101,6 @@ class _TawarkanPekerjaanScreenState extends State<TawarkanPekerjaanScreen> {
     setState(() => _isSubmitting = false);
 
     if (ok) {
-      // Simpan juga salinan notifikasi lokal untuk asesi jika akun yang sama dibuka di device ini
-      try {
-        final notifData = {
-          'type': 'tawaran_pekerjaan',
-          'asesi_id': widget.talenta.id.toString(),
-          'judul_pekerjaan': _posisiController.text.trim(),
-          'nama_perusahaan': _perusahaanController.text.trim(),
-          'deskripsi_pekerjaan': _deskripsiController.text.trim(),
-          'tipe_pekerjaan': _tipePekerjaan,
-          'lokasi_kerja': lokasiFinal,
-          'rentang_gaji': _gajiController.text.trim(),
-          'kontak_perekrut': _kontakController.text.trim(),
-          'email_perekrut': _emailController.text.trim(),
-          'catatan_tambahan': _catatanController.text.trim(),
-        };
-
-        await AppNotificationStorage.instance.saveNotification(
-          'Tawaran Pekerjaan: ${_posisiController.text.trim()}',
-          '${_perusahaanController.text.trim()} menawarkan posisi ${_posisiController.text.trim()} kepada Anda.',
-          'tawaran_pekerjaan',
-          notifData,
-        );
-      } catch (_) {}
-
       _showSuccessDialog();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
