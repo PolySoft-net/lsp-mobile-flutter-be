@@ -182,7 +182,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
                 ),
                 child: const Text(
                   'Lihat Status Lamaran',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
             ),
@@ -213,30 +213,27 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Company & Job Summary Card
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x06000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+              // Company & Job Summary Card
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
                       children: [
                         Container(
                           width: 44,
@@ -310,67 +307,75 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
                   if (_currentStep == 1) _buildStep1DataDiri(),
                   if (_currentStep == 2) _buildStep2CvPortfolio(),
                   if (_currentStep == 3) _buildStep3Konfirmasi(),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ),
-          // Bottom Action Button
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(color: Color(0xFFF1F5F9), width: 1.2),
-              ),
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0066F6),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
+                    const SizedBox(height: 24),
+                  ],
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _currentStep == 1
-                                ? 'Lanjut ke CV & Portofolio'
-                                : _currentStep == 2
-                                    ? 'Lanjut ke Konfirmasi'
-                                    : 'Kirim Lamaran Sekarang',
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Icon(
-                            _currentStep == 3 ? Icons.send_rounded : Icons.arrow_forward_rounded,
-                            size: 16,
-                          ),
-                        ],
-                      ),
               ),
             ),
-          ),
-        ],
+            // Bottom Action Button with Safe Area
+            SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(color: Color(0xFFF1F5F9), width: 1.2),
+                  ),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _nextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0066F6),
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: const Color(0xFF0066F6).withValues(alpha: 0.7),
+                      disabledForegroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _currentStep == 1
+                                    ? 'Lanjut ke CV & Portofolio'
+                                    : _currentStep == 2
+                                        ? 'Lanjut ke Konfirmasi'
+                                        : 'Kirim Lamaran Sekarang',
+                                style: const TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                _currentStep == 3 ? Icons.send_rounded : Icons.arrow_forward_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -466,6 +471,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
           controller: _phoneController,
           hint: 'Masukkan nomor HP',
           keyboardType: TextInputType.phone,
+          textInputAction: TextInputAction.done,
         ),
       ],
     );
@@ -709,6 +715,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
     required TextEditingController controller,
     required String hint,
     TextInputType keyboardType = TextInputType.text,
+    TextInputAction textInputAction = TextInputAction.next,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -725,6 +732,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
+          textInputAction: textInputAction,
           style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
           decoration: InputDecoration(
             hintText: hint,

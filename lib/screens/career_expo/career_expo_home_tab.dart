@@ -598,15 +598,6 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                 color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFE2E8F0),
                 width: 1.2,
               ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: const Color(0xFF0066F6).withValues(alpha: 0.25),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ]
-                  : null,
             ),
             child: Icon(
               icon,

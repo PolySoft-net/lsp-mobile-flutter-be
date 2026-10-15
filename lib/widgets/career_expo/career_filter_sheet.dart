@@ -38,6 +38,9 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -47,12 +50,14 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
         top: 16,
         left: 20,
         right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: keyboardInset + (bottomPadding > 0 ? bottomPadding : 16) + 8,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Drag handle
           Center(
             child: Container(
@@ -96,15 +101,20 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
             ],
           ),
           const Divider(height: 24, color: Color(0xFFF1F5F9)),
-          // Section Tipe Pekerjaan
-          const Text(
-            'Tipe Pekerjaan',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF334155),
-            ),
-          ),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Section Tipe Pekerjaan
+                  const Text(
+                    'Tipe Pekerjaan',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF334155),
+                    ),
+                  ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -209,7 +219,11 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 28),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
           // Apply Button
           SizedBox(
             width: double.infinity,
@@ -232,11 +246,13 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

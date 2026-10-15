@@ -9,10 +9,12 @@ import 'career_expo_apply_screen.dart';
 /// Halaman Detail Lowongan Career Expo sesuai desain UI
 class CareerExpoDetailScreen extends StatefulWidget {
   final CareerJobItem job;
+  final String? applicationStatus;
 
   const CareerExpoDetailScreen({
     super.key,
     required this.job,
+    this.applicationStatus,
   });
 
   @override
@@ -24,12 +26,34 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
   bool _isFavorite = false;
   bool _isAboutExpanded = false;
   late bool _isApplied;
+  String _applicationStatus = '';
 
   @override
   void initState() {
     super.initState();
     _isBookmarked = widget.job.isBookmarked;
-    _isApplied = widget.job.isApplied;
+    final initialStatus = (widget.applicationStatus != null && widget.applicationStatus!.isNotEmpty)
+        ? widget.applicationStatus!
+        : widget.job.applicationStatus;
+    _isApplied = widget.job.isApplied || initialStatus.isNotEmpty;
+    _applicationStatus = initialStatus;
+    _loadLiveDetail();
+  }
+
+  Future<void> _loadLiveDetail() async {
+    try {
+      final detail = await CareerExpoService.getDetail(widget.job.id);
+      if (!mounted) return;
+      setState(() {
+        _isBookmarked = detail.isBookmarked;
+        if (detail.isApplied) {
+          _isApplied = true;
+          if (detail.applicationStatus.isNotEmpty) {
+            _applicationStatus = detail.applicationStatus;
+          }
+        }
+      });
+    } catch (_) {}
   }
 
   Future<void> _toggleBookmark() async {
@@ -74,7 +98,10 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
       ),
     );
     if (result == true && mounted) {
-      setState(() => _isApplied = true);
+      setState(() {
+        _isApplied = true;
+        _applicationStatus = 'Terkirim';
+      });
     }
   }
 
@@ -113,6 +140,8 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
+              } else if (val == 'hapus_lamaran') {
+                _confirmHapusLamaran();
               }
             },
             itemBuilder: (ctx) => [
@@ -126,6 +155,17 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                   ],
                 ),
               ),
+              if (_isApplied)
+                const PopupMenuItem(
+                  value: 'hapus_lamaran',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFDC2626)),
+                      SizedBox(width: 8),
+                      Text('Hapus Lamaran', style: TextStyle(color: Color(0xFFDC2626))),
+                    ],
+                  ),
+                ),
               const PopupMenuItem(
                 value: 'report',
                 child: Row(
@@ -140,8 +180,10 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -154,13 +196,6 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                   decoration: BoxDecoration(
                     color: widget.job.logoBgColor,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.job.logoBgColor.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -271,12 +306,23 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: _isApplied ? null : _showApplyModal,
+                onPressed: _isApplied
+                    ? () {
+                        final statusText = _appliedStatusLabel;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Status lamaran: $statusText. Lamaran Anda sudah diterima sistem.'),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    : _showApplyModal,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0066F6),
+                  backgroundColor: _isApplied
+                      ? _appliedButtonColor
+                      : const Color(0xFF0066F6),
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFF10B981),
-                  disabledForegroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -286,15 +332,17 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      _isApplied ? Icons.check_circle_outline_rounded : Icons.send_rounded,
+                      _isApplied ? _appliedButtonIcon : Icons.send_rounded,
                       size: 18,
+                      color: Colors.white,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _isApplied ? 'Lamaran Terkirim' : 'Lamar Sekarang',
+                      _isApplied ? _appliedStatusLabel : 'Lamar Sekarang',
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -334,6 +382,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 28),
             // Section: Tentang Perusahaan
             const Text(
@@ -509,6 +558,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -567,5 +617,87 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
         ],
       ),
     );
+  }
+  String get _appliedStatusLabel {
+    final status = _applicationStatus.trim();
+    if (status.isEmpty) return 'Proses Menunggu';
+    final lower = status.toLowerCase();
+    if (lower == 'diterima') return 'Lamaran Diterima';
+    if (lower == 'ditolak') return 'Lamaran Ditolak';
+    if (lower == 'diproses') return 'Proses Menunggu';
+    if (lower == 'terkirim') return 'Proses Menunggu';
+    return status;
+  }
+
+  Color get _appliedButtonColor {
+    final lower = _applicationStatus.trim().toLowerCase();
+    if (lower == 'diterima') return const Color(0xFF16A34A);
+    if (lower == 'ditolak') return const Color(0xFFDC2626);
+    return const Color(0xFFD97706);
+  }
+
+  IconData get _appliedButtonIcon {
+    final lower = _applicationStatus.trim().toLowerCase();
+    if (lower == 'diterima') return Icons.check_circle_outline_rounded;
+    if (lower == 'ditolak') return Icons.highlight_off_rounded;
+    return Icons.hourglass_top_rounded;
+  }
+  void _confirmHapusLamaran() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Hapus Lamaran?',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin membatalkan dan menghapus lamaran untuk posisi ${widget.job.title} di ${widget.job.companyName}?',
+          style: const TextStyle(fontSize: 13.5, color: Color(0xFF475569)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Hapus Lamaran'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await CareerExpoService.batalLamar(widget.job.id);
+      if (!mounted) return;
+      setState(() {
+        _isApplied = false;
+        _applicationStatus = '';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lamaran berhasil dihapus.'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal menghapus lamaran. Silakan coba lagi.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }

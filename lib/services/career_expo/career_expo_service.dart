@@ -105,4 +105,14 @@ class CareerExpoService {
       await _dio.delete(ApiRoutes.careerExpoTersimpan(lowonganId));
     }
   }
+
+  /// DELETE /api/career-expo/lowongan/:id/lamar — batalkan lamaran.
+  static Future<void> batalLamar(String lowonganId) async {
+    await _dio.delete(ApiRoutes.careerExpoLamar(lowonganId));
+  }
+
+  /// DELETE /api/career-expo/lamaran/:id — hapus riwayat lamaran.
+  static Future<void> hapusLamaran(String lamaranId) async {
+    await _dio.delete(ApiRoutes.careerExpoDeleteLamaran(lamaranId));
+  }
 }

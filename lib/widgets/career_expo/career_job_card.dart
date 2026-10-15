@@ -31,13 +31,6 @@ class CareerJobCard extends StatelessWidget {
           color: const Color(0xFFE2E8F0),
           width: 1.2,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
       ),
       child: Material(
         color: Colors.white,
@@ -62,13 +55,6 @@ class CareerJobCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: job.logoBgColor,
                       shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: job.logoBgColor.withValues(alpha: 0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
                     alignment: Alignment.center,
                     child: Text(

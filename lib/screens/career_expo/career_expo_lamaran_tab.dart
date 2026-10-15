@@ -53,12 +53,22 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
     }
   }
 
+  bool _matchesStatus(CareerApplicationItem item, String filter) {
+    if (filter == 'Semua') return true;
+    final s = item.status.trim().toLowerCase();
+    final f = filter.toLowerCase();
+    if (f == 'proses menunggu') {
+      return s == 'terkirim' || s == 'diproses' || s == 'menunggu' || s == 'proses menunggu';
+    }
+    return s == f;
+  }
+
   List<(String, int)> get _filterCategories {
-    int count(String status) =>
-        _applications.where((a) => a.status == status).length;
+    int count(String filter) =>
+        _applications.where((a) => _matchesStatus(a, filter)).length;
     return [
       ('Semua', _applications.length),
-      ('Diproses', count('Diproses')),
+      ('Proses Menunggu', count('Proses Menunggu')),
       ('Diterima', count('Diterima')),
       ('Ditolak', count('Ditolak')),
     ];
@@ -66,7 +76,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
 
   List<CareerApplicationItem> get _filteredApplications {
     if (_selectedStatus == 'Semua') return _applications;
-    return _applications.where((a) => a.status == _selectedStatus).toList();
+    return _applications.where((a) => _matchesStatus(a, _selectedStatus)).toList();
   }
 
   String _dateLabel(CareerApplicationItem item) {
@@ -167,9 +177,11 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      body: SafeArea(
+        top: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Filter Chips Row
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -243,7 +255,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     itemCount: filtered.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
@@ -253,26 +265,23 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x06000000),
-                              blurRadius: 6,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
                         ),
                         child: Material(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => CareerExpoDetailScreen(job: item.job),
+                                  builder: (_) => CareerExpoDetailScreen(
+                                    job: item.job,
+                                    applicationStatus: item.status,
+                                  ),
                                 ),
                               );
+                              if (mounted) _loadApplications();
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -353,7 +362,8 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                     },
                   ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -361,16 +371,21 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
   Widget _buildStatusBadge(String status) {
     Color bg;
     Color text;
-    if (status == 'Diterima') {
+    String label = status;
+    final lower = status.trim().toLowerCase();
+    if (lower == 'diterima') {
       bg = const Color(0xFFDCFCE7);
       text = const Color(0xFF16A34A);
-    } else if (status == 'Ditolak') {
+      label = 'Diterima';
+    } else if (lower == 'ditolak') {
       bg = const Color(0xFFFEE2E2);
       text = const Color(0xFFDC2626);
+      label = 'Ditolak';
     } else {
-      // Terkirim, Diproses, Wawancara
+      // Terkirim, Diproses, Menunggu
       bg = const Color(0xFFFEF3C7);
       text = const Color(0xFFD97706);
+      label = 'Proses Menunggu';
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -379,7 +394,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        status,
+        label,
         style: TextStyle(
           color: text,
           fontSize: 11,

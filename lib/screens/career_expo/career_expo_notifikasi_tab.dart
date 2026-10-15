@@ -108,9 +108,11 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      body: SafeArea(
+        top: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Filter Chips Row
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -150,7 +152,7 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
           // Notifications List
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               itemCount: filtered.length,
               separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
@@ -161,13 +163,6 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x05000000),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,7 +226,8 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
               },
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

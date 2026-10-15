@@ -21,6 +21,8 @@ class CareerExpoScreen extends StatefulWidget {
 
 class _CareerExpoScreenState extends State<CareerExpoScreen> {
   late int _currentIndex;
+  int _lamaranKeyCounter = 0;
+  int _profileKeyCounter = 0;
 
   @override
   void initState() {
@@ -31,6 +33,8 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
+      if (index == 2) _lamaranKeyCounter++;
+      if (index == 4) _profileKeyCounter++;
     });
   }
 
@@ -47,14 +51,15 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         onBack: () => _onTabTapped(0),
       ),
       CareerExpoLamaranTab(
+        key: ValueKey('lamaran_$_lamaranKeyCounter'),
         onBack: () => _onTabTapped(0),
       ),
       const CareerExpoNotifikasiTab(),
       CareerExpoProfileTab(
+        key: ValueKey('profile_$_profileKeyCounter'),
         onNavigateToLamaran: () => _onTabTapped(2),
       ),
     ];
-
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -66,26 +71,22 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
           border: Border(
             top: BorderSide(color: Color(0xFFE2E8F0), width: 1),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x06000000),
-              blurRadius: 10,
-              offset: Offset(0, -3),
-            ),
-          ],
         ),
         child: SafeArea(
           top: false,
-          child: SizedBox(
-            height: 56,
-            child: Row(
-              children: [
-                _buildNavItem(0, Icons.home_filled, Icons.home_outlined),
-                _buildNavItem(1, Icons.search_rounded, Icons.search_rounded),
-                _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded),
-                _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: true),
-                _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
-              ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: SizedBox(
+              height: 52,
+              child: Row(
+                children: [
+                  _buildNavItem(0, Icons.home_filled, Icons.home_outlined),
+                  _buildNavItem(1, Icons.search_rounded, Icons.search_rounded),
+                  _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded),
+                  _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: true),
+                  _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
+                ],
+              ),
             ),
           ),
         ),

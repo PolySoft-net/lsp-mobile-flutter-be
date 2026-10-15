@@ -16,6 +16,7 @@ class CareerJobItem {
   final bool isBookmarked;
   final bool isPopular;
   final bool isApplied;
+  final String applicationStatus;
   final String category; // Semua, Remote, On Site, Magang
   final String experience;
   final String education;
@@ -41,6 +42,7 @@ class CareerJobItem {
     this.isBookmarked = false,
     this.isPopular = false,
     this.isApplied = false,
+    this.applicationStatus = '',
     required this.category,
     required this.experience,
     required this.education,
@@ -68,6 +70,7 @@ class CareerJobItem {
       postedAt: json['posted_label']?.toString() ?? '',
       isBookmarked: _asBool(json['is_bookmarked']),
       isApplied: _asBool(json['is_applied']),
+      applicationStatus: json['application_status']?.toString() ?? '',
       isPopular: _asBool(json['is_popular']),
       category: json['category']?.toString() ?? 'Remote',
       experience: json['experience']?.toString() ?? '',
