@@ -1010,7 +1010,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           value: 'career_expo',
           icon: Icons.work_outline_rounded,
           iconColor: const Color(0xFFEA580C),
-          title: 'Career Expo',
+          title: 'Career Expo (WIP)',
         ),
         _buildHeaderDropdownItem(
           value: 'magang_hub',

@@ -38,7 +38,6 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Container(
@@ -50,7 +49,7 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
         top: 16,
         left: 20,
         right: 20,
-        bottom: keyboardInset + (bottomPadding > 0 ? bottomPadding : 16) + 8,
+        bottom: keyboardInset + 8,
       ),
       child: SafeArea(
         top: false,
