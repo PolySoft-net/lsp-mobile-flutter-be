@@ -55,6 +55,12 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            // Mematikan optimasi gambar PNG bawaan Android saat debug run
+            aaptOptions.cruncherEnabled = false
+            // Memastikan multidex instan bawaan ART runtime menyala
+            multiDexEnabled = true
+        }
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
