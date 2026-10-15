@@ -1,31 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../services/career_expo/career_expo_service.dart';
 import 'career_expo_detail_screen.dart';
 
-class _ApplicationDisplayItem {
-  final String id;
-  final String title;
-  final String company;
-  final String date;
-  final String status;
-  final Color logoBgColor;
-  final String logoText;
-  final CareerJobItem job;
-
-  const _ApplicationDisplayItem({
-    required this.id,
-    required this.title,
-    required this.company,
-    required this.date,
-    required this.status,
-    required this.logoBgColor,
-    required this.logoText,
-    required this.job,
-  });
-}
-
-/// Tab Lamaran Saya di Career Expo sesuai Screen 2
+/// Tab Lamaran Saya di Career Expo — data dari GET /api/career-expo/lamaran.
 class CareerExpoLamaranTab extends StatefulWidget {
   final VoidCallback? onBack;
 
@@ -39,91 +19,132 @@ class CareerExpoLamaranTab extends StatefulWidget {
 }
 
 class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
-  String _selectedFilter = 'Semua (5)';
-
-  final List<String> _filterCategories = [
-    'Semua (5)',
-    'Diproses (2)',
-    'Diterima (1)',
-    'Ditolak (2)',
-  ];
-
-  late final List<_ApplicationDisplayItem> _allApplications;
+  List<CareerApplicationItem> _applications = [];
+  bool _isLoading = true;
+  String? _error;
+  String _selectedStatus = 'Semua';
 
   @override
   void initState() {
     super.initState();
-    final defaultJobs = CareerExpoMockData.getJobs();
-    _allApplications = [
-      _ApplicationDisplayItem(
-        id: 'app-1',
-        title: 'UI/UX Designer',
-        company: 'PT. Kreatif Digital',
-        date: 'Dilamar 12 Jun 2025',
-        status: 'Diproses',
-        logoBgColor: const Color(0xFF0284C7),
-        logoText: 'KD',
-        job: defaultJobs[0],
-      ),
-      _ApplicationDisplayItem(
-        id: 'app-2',
-        title: 'Front End Developer',
-        company: 'CV. Solusi Tech',
-        date: 'Dilamar 10 Jun 2025',
-        status: 'Diproses',
-        logoBgColor: const Color(0xFF2563EB),
-        logoText: 'ST',
-        job: defaultJobs[3],
-      ),
-      _ApplicationDisplayItem(
-        id: 'app-3',
-        title: 'Web Developer',
-        company: 'PT. Inovasi Solusi Digital',
-        date: 'Dilamar 7 Jun 2025',
-        status: 'Diterima',
-        logoBgColor: const Color(0xFF0369A1),
-        logoText: 'IS',
-        job: defaultJobs[4],
-      ),
-      _ApplicationDisplayItem(
-        id: 'app-4',
-        title: 'Graphic Designer',
-        company: 'Ruang Digital Studio',
-        date: 'Dilamar 3 Jun 2025',
-        status: 'Ditolak',
-        logoBgColor: const Color(0xFF0D9488),
-        logoText: 'RD',
-        job: defaultJobs[1],
-      ),
-      _ApplicationDisplayItem(
-        id: 'app-5',
-        title: 'Fullstack Developer',
-        company: 'PT. Tech Nusantara',
-        date: 'Dilamar 1 Jun 2025',
-        status: 'Ditolak',
-        logoBgColor: const Color(0xFF1E293B),
-        logoText: 'TN',
-        job: defaultJobs[2],
-      ),
+    _loadApplications();
+  }
+
+  Future<void> _loadApplications() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final items = await CareerExpoService.getLamaran();
+      if (!mounted) return;
+      setState(() {
+        _applications = items;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e is DioException && e.response?.statusCode == 401
+            ? 'Silakan login untuk melihat lamaranmu.'
+            : 'Tidak bisa memuat lamaran. Periksa koneksi internetmu.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<(String, int)> get _filterCategories {
+    int count(String status) =>
+        _applications.where((a) => a.status == status).length;
+    return [
+      ('Semua', _applications.length),
+      ('Diproses', count('Diproses')),
+      ('Diterima', count('Diterima')),
+      ('Ditolak', count('Ditolak')),
     ];
   }
 
-  List<_ApplicationDisplayItem> _getFilteredApplications() {
-    if (_selectedFilter.startsWith('Semua')) {
-      return _allApplications;
-    } else if (_selectedFilter.startsWith('Diproses')) {
-      return _allApplications.where((a) => a.status == 'Diproses').toList();
-    } else if (_selectedFilter.startsWith('Diterima')) {
-      return _allApplications.where((a) => a.status == 'Diterima').toList();
-    } else if (_selectedFilter.startsWith('Ditolak')) {
-      return _allApplications.where((a) => a.status == 'Ditolak').toList();
-    }
-    return _allApplications;
+  List<CareerApplicationItem> get _filteredApplications {
+    if (_selectedStatus == 'Semua') return _applications;
+    return _applications.where((a) => a.status == _selectedStatus).toList();
+  }
+
+  String _dateLabel(CareerApplicationItem item) {
+    if (item.appliedLabel.isNotEmpty) return item.appliedLabel;
+    const bulan = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    final d = item.appliedDate;
+    return 'Dilamar ${d.day} ${bulan[d.month]} ${d.year}';
   }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _getFilteredApplications();
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF0066F6)),
+        ),
+      );
+    }
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text(
+            'Lamaran Saya',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+          leading: widget.onBack != null
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+                  onPressed: widget.onBack,
+                )
+              : null,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _loadApplications,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0066F6),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    final filtered = _filteredApplications;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -155,11 +176,11 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: _filterCategories.map((cat) {
-                final isSelected = _selectedFilter == cat;
+                final isSelected = _selectedStatus == cat.$1;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: InkWell(
-                    onTap: () => setState(() => _selectedFilter = cat),
+                    onTap: () => setState(() => _selectedStatus = cat.$1),
                     splashColor: Colors.transparent,
                     highlightColor: Colors.transparent,
                     borderRadius: BorderRadius.circular(20),
@@ -171,7 +192,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        cat,
+                        '${cat.$1} (${cat.$2})',
                         style: TextStyle(
                           color: isSelected ? Colors.white : const Color(0xFF475569),
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -262,12 +283,16 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                                     width: 44,
                                     height: 44,
                                     decoration: BoxDecoration(
-                                      color: item.logoBgColor,
+                                      color: item.job.logoBgColor,
                                       shape: BoxShape.circle,
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
-                                      item.logoText,
+                                      item.job.logoText.isNotEmpty
+                                          ? item.job.logoText
+                                          : item.job.companyName.isNotEmpty
+                                              ? item.job.companyName.substring(0, 1)
+                                              : '?',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -282,7 +307,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          item.title,
+                                          item.job.title,
                                           style: const TextStyle(
                                             fontSize: 14.5,
                                             fontWeight: FontWeight.bold,
@@ -293,7 +318,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
-                                          item.company,
+                                          item.job.companyName,
                                           style: const TextStyle(
                                             fontSize: 12,
                                             color: Color(0xFF64748B),
@@ -301,7 +326,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          item.date,
+                                          _dateLabel(item),
                                           style: const TextStyle(
                                             fontSize: 11,
                                             color: Color(0xFF94A3B8),
@@ -336,16 +361,16 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
   Widget _buildStatusBadge(String status) {
     Color bg;
     Color text;
-    if (status == 'Diproses') {
-      bg = const Color(0xFFFEF3C7);
-      text = const Color(0xFFD97706);
-    } else if (status == 'Diterima') {
+    if (status == 'Diterima') {
       bg = const Color(0xFFDCFCE7);
       text = const Color(0xFF16A34A);
-    } else {
-      // Ditolak
+    } else if (status == 'Ditolak') {
       bg = const Color(0xFFFEE2E2);
       text = const Color(0xFFDC2626);
+    } else {
+      // Terkirim, Diproses, Wawancara
+      bg = const Color(0xFFFEF3C7);
+      text = const Color(0xFFD97706);
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

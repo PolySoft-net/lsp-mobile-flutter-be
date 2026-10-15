@@ -50,6 +50,64 @@ class CareerJobItem {
     this.logoText = '',
   });
 
+  /// Endpoint API: GET /api/career-expo/lowongan (list) dan /:id (detail).
+  factory CareerJobItem.fromJson(Map<String, dynamic> json) {
+    return CareerJobItem(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      companyName: json['company_name']?.toString() ?? '',
+      companyCategory: json['company_category']?.toString() ?? '',
+      employmentType: json['employment_type']?.toString() ?? 'Full Time',
+      workplaceType: json['workplace_type']?.toString() ?? 'On Site',
+      location: json['location']?.toString() ?? '',
+      salaryMin: _asInt(json['salary_min']),
+      salaryMax: _asInt(json['salary_max']),
+      salaryPeriod: json['salary_period']?.toString() ?? 'bulan',
+      postedAt: json['posted_label']?.toString() ?? '',
+      isBookmarked: _asBool(json['is_bookmarked']),
+      isPopular: _asBool(json['is_popular']),
+      category: json['category']?.toString() ?? 'Remote',
+      experience: json['experience']?.toString() ?? '',
+      education: json['education']?.toString() ?? '',
+      aboutCompany: json['about_company']?.toString() ?? '',
+      jobDescription: _asStringList(json['job_description']),
+      requirements: _asStringList(json['requirements']),
+      benefits: _asStringList(json['benefits']),
+      logoBgColor: _parseHexColor(json['logo_color']) ??
+          const Color(0xFF0284C7),
+      logoText: json['logo_text']?.toString() ?? '',
+    );
+  }
+
+  static int _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static bool _asBool(dynamic value) {
+    if (value is bool) return value;
+    final raw = value?.toString().toLowerCase();
+    return raw == 'true' || raw == '1';
+  }
+
+  static List<String> _asStringList(dynamic value) {
+    if (value is List) {
+      return value.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
+    }
+    return const [];
+  }
+
+  /// Backend mengirim warna logo sebagai hex string, mis. '#0284C7'.
+  static Color? _parseHexColor(dynamic value) {
+    var hex = value?.toString().trim() ?? '';
+    if (hex.isEmpty) return null;
+    if (hex.startsWith('#')) hex = hex.substring(1);
+    final parsed = int.tryParse(hex, radix: 16);
+    if (parsed == null) return null;
+    return Color(0xFF000000 | parsed);
+  }
+
   CareerJobItem copyWith({
     String? id,
     String? title,
@@ -109,13 +167,36 @@ class CareerApplicationItem {
   final String status; // 'Terkirim', 'Diproses', 'Wawancara', 'Diterima', 'Ditolak'
   final String? note;
 
+  /// Label siap tampil dari backend, mis. 'Dilamar 12 Jun 2025'.
+  final String appliedLabel;
+
   const CareerApplicationItem({
     required this.id,
     required this.job,
     required this.appliedDate,
     required this.status,
     this.note,
+    this.appliedLabel = '',
   });
+
+  /// Endpoint API: GET /api/career-expo/lamaran.
+  factory CareerApplicationItem.fromJson(Map<String, dynamic> json) {
+    final rawDate = json['applied_at']?.toString() ?? '';
+    DateTime parsed =
+        DateTime.tryParse(rawDate) ??
+        DateTime.tryParse(rawDate.replaceFirst(' ', 'T')) ??
+        DateTime.now();
+    return CareerApplicationItem(
+      id: json['id']?.toString() ?? '',
+      job: CareerJobItem.fromJson(
+        Map<String, dynamic>.from(json['job'] as Map? ?? const {}),
+      ),
+      appliedDate: parsed,
+      status: json['status']?.toString() ?? 'Terkirim',
+      note: json['note']?.toString(),
+      appliedLabel: json['applied_label']?.toString() ?? '',
+    );
+  }
 }
 
 /// Mock data lowongan untuk Career Expo UI

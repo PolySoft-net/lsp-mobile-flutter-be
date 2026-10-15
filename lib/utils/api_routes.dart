@@ -445,4 +445,17 @@ class ApiRoutes {
   static String asesorAsesiIA11(int id) => '/api/asesor/asesi/$id/ia11';
   static String asesorAsesiIA04Upload(int id) =>
       '/api/asesor/asesi/$id/ia04/upload';
+
+  // ============================================================================
+  // Career Expo Routes
+  // ============================================================================
+
+  static const String careerExpoLowongan = '/api/career-expo/lowongan';
+  static String careerExpoLowonganDetail(dynamic id) =>
+      '/api/career-expo/lowongan/$id';
+  static String careerExpoLamar(dynamic id) =>
+      '/api/career-expo/lowongan/$id/lamar';
+  static const String careerExpoLamaran = '/api/career-expo/lamaran';
+  static String careerExpoTersimpan(dynamic id) =>
+      '/api/career-expo/lowongan/$id/tersimpan';
 }

@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../services/career_expo/career_expo_service.dart';
 import '../../widgets/career_expo/career_filter_sheet.dart';
 import '../../widgets/career_expo/career_job_card.dart';
 import 'career_expo_detail_screen.dart';
@@ -24,7 +28,10 @@ class CareerExpoSearchTab extends StatefulWidget {
 
 class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
   late TextEditingController _searchController;
-  late List<CareerJobItem> _allJobs;
+  List<CareerJobItem> _jobs = [];
+  bool _isLoading = true;
+  String? _error;
+  Timer? _debounce;
   String _selectedSortChip = 'Paling Relevan';
   String _empTypeFilter = 'Semua';
   String _workplaceTypeFilter = 'Semua';
@@ -34,13 +41,98 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.initialQuery);
-    _allJobs = CareerExpoMockData.getJobs();
+    _fetchJobs();
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  String get _sortValue {
+    switch (_selectedSortChip) {
+      case 'Terbaru':
+        return 'terbaru';
+      case 'Gaji':
+        return 'gaji';
+      default:
+        return 'relevan';
+    }
+  }
+
+  /// GET /api/career-expo/lowongan — pencarian, sort, dan filter di server.
+  Future<void> _fetchJobs() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final jobs = await CareerExpoService.getLowongan(
+        search: _searchController.text,
+        employmentType: _empTypeFilter,
+        workplaceType: _workplaceTypeFilter,
+        location: _locationFilter,
+        sortBy: _sortValue,
+      );
+      if (!mounted) return;
+      setState(() {
+        _jobs = jobs;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e is DioException && e.response != null
+            ? 'Gagal memuat lowongan (kode ${e.response?.statusCode}).'
+            : 'Tidak bisa terhubung ke server. Periksa koneksi internetmu.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Debounce ketikan agar tidak request API per karakter.
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 450), () {
+      if (mounted) _fetchJobs();
+    });
+  }
+
+  void _clearSearch() {
+    _debounce?.cancel();
+    _searchController.clear();
+    _fetchJobs();
+  }
+
+  /// Simpan/hapus bookmark lewat API; kalau gagal, kembalikan state lama.
+  Future<void> _toggleBookmark(CareerJobItem job, bool value) async {
+    void update(bool v) {
+      final idx = _jobs.indexWhere((j) => j.id == job.id);
+      if (idx != -1) {
+        _jobs[idx] = _jobs[idx].copyWith(isBookmarked: v);
+      }
+    }
+
+    setState(() => update(value));
+    try {
+      await CareerExpoService.setTersimpan(job.id, value);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => update(!value));
+      final unauthorized = e is DioException && e.response?.statusCode == 401;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            unauthorized
+                ? 'Silakan login terlebih dahulu untuk menyimpan lowongan.'
+                : 'Gagal memperbarui lowongan tersimpan. Coba lagi ya.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _openFilterSheet() {
@@ -58,43 +150,72 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
             _workplaceTypeFilter = wp;
             _locationFilter = loc;
           });
+          _fetchJobs();
         },
       ),
     );
   }
 
-  List<CareerJobItem> _getFilteredJobs() {
-    final query = _searchController.text.trim().toLowerCase();
-    return _allJobs.where((job) {
-      // Query search
-      if (query.isNotEmpty) {
-        final matchTitle = job.title.toLowerCase().contains(query);
-        final matchCompany = job.companyName.toLowerCase().contains(query);
-        final matchLocation = job.location.toLowerCase().contains(query);
-        if (!matchTitle && !matchCompany && !matchLocation) return false;
-      }
-      // Employment type filter
-      if (_empTypeFilter != 'Semua' &&
-          job.employmentType.toLowerCase() != _empTypeFilter.toLowerCase()) {
-        return false;
-      }
-      // Workplace filter
-      if (_workplaceTypeFilter != 'Semua' &&
-          job.workplaceType.toLowerCase() != _workplaceTypeFilter.toLowerCase()) {
-        return false;
-      }
-      // Location filter
-      if (_locationFilter != 'Semua' &&
-          job.location.toLowerCase() != _locationFilter.toLowerCase()) {
-        return false;
-      }
-      return true;
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final filteredJobs = _getFilteredJobs();
+    if (_isLoading && _jobs.isEmpty) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF0066F6)),
+        ),
+      );
+    }
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.wifi_off_rounded,
+                    size: 44,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _fetchJobs,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0066F6),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    final filteredJobs = _jobs;
     final hasActiveFilter =
         _empTypeFilter != 'Semua' || _workplaceTypeFilter != 'Semua' || _locationFilter != 'Semua';
 
@@ -135,7 +256,7 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                       ),
                       child: TextField(
                         controller: _searchController,
-                        onChanged: (_) => setState(() {}),
+                        onChanged: _onSearchChanged,
                         textInputAction: TextInputAction.search,
                         style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
                         decoration: InputDecoration(
@@ -150,10 +271,7 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                               ? IconButton(
                                   icon: const Icon(Icons.close_rounded, size: 18),
                                   color: const Color(0xFF64748B),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {});
-                                  },
+                                  onPressed: _clearSearch,
                                 )
                               : null,
                           border: InputBorder.none,
@@ -321,14 +439,7 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                               ),
                             );
                           },
-                          onBookmarkToggle: (val) {
-                            setState(() {
-                              final idx = _allJobs.indexWhere((j) => j.id == job.id);
-                              if (idx != -1) {
-                                _allJobs[idx] = _allJobs[idx].copyWith(isBookmarked: val);
-                              }
-                            });
-                          },
+                          onBookmarkToggle: (val) => _toggleBookmark(job, val),
                         );
                       },
                     ),
@@ -344,6 +455,7 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
     return InkWell(
       onTap: () {
         setState(() => _selectedSortChip = label);
+        _fetchJobs();
       },
       borderRadius: BorderRadius.circular(20),
       child: Container(

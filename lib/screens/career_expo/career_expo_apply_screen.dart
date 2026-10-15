@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../services/auth/auth_repository.dart';
+import '../../services/career_expo/career_expo_service.dart';
 
 /// Halaman Multi-Step Lamar Pekerjaan sesuai Screen 1
 class CareerExpoApplyScreen extends StatefulWidget {
@@ -18,18 +21,30 @@ class CareerExpoApplyScreen extends StatefulWidget {
 class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
   int _currentStep = 1; // 1: Data Diri, 2: CV & Portofolio, 3: Konfirmasi
 
-  final TextEditingController _nameController =
-      TextEditingController(text: 'Nurmalia Dwi Cahyani');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'nurmalia@gmail.com');
-  final TextEditingController _phoneController =
-      TextEditingController(text: '0812 3456 7890');
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _coverLetterController = TextEditingController();
 
   bool _attachLspCert = true;
   bool _attachPortfolio = true;
   bool _agreedToTerms = true;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillFromUser();
+  }
+
+  /// Prefill data diri dari profil user yang sedang login (kalau ada).
+  void _prefillFromUser() {
+    final user = AuthRepository.currentUserInstance;
+    if (user == null) return;
+    if (user.name.isNotEmpty) _nameController.text = user.name;
+    final email = user.email;
+    if (email != null && email.isNotEmpty) _emailController.text = email;
+  }
 
   @override
   void dispose() {
@@ -56,9 +71,55 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
     }
   }
 
-  void _submitApplication() async {
+  Future<void> _submitApplication() async {
+    final nama = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    if (nama.isEmpty || email.isEmpty || phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama, email, dan nomor HP wajib diisi.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(milliseconds: 700));
+    try {
+      // POST /api/career-expo/lowongan/:id/lamar
+      await CareerExpoService.lamar(
+        widget.job.id,
+        namaLengkap: nama,
+        email: email,
+        noHp: phone,
+        coverLetter: _coverLetterController.text.trim(),
+        linkPortofolio: '',
+        sertakanSertifikat: _attachLspCert,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      var message = 'Gagal mengirim lamaran. Coba lagi ya.';
+      if (e is DioException) {
+        final code = e.response?.statusCode;
+        if (code == 401) {
+          message = 'Silakan login terlebih dahulu.';
+        } else if (code == 409) {
+          message = 'Kamu sudah pernah melamar lowongan ini.';
+        } else if (e.response?.data is Map &&
+            (e.response?.data as Map)['errors'] != null) {
+          message = (e.response?.data as Map)['errors'].toString();
+        }
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (!mounted) return;
     setState(() => _isSubmitting = false);
 

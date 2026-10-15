@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../services/career_expo/career_expo_service.dart';
 import '../../widgets/career_expo/career_filter_sheet.dart';
 import '../../widgets/career_expo/career_job_card.dart';
 import 'career_expo_detail_screen.dart';
@@ -22,12 +24,67 @@ class CareerExpoHomeTab extends StatefulWidget {
 
 class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
   String _selectedCategory = 'Semua Pekerjaan';
-  late List<CareerJobItem> _jobs;
+  List<CareerJobItem> _jobs = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _jobs = CareerExpoMockData.getJobs();
+    _loadJobs();
+  }
+
+  /// Muat lowongan dari GET /api/career-expo/lowongan.
+  Future<void> _loadJobs() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final jobs = await CareerExpoService.getLowongan();
+      if (!mounted) return;
+      setState(() {
+        _jobs = jobs;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e is DioException && e.response != null
+            ? 'Gagal memuat lowongan (kode ${e.response?.statusCode}).'
+            : 'Tidak bisa terhubung ke server. Periksa koneksi internetmu.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Simpan/hapus bookmark lewat API; kalau gagal, kembalikan state lama.
+  Future<void> _toggleBookmark(CareerJobItem job, bool value) async {
+    void update(bool v) {
+      final idx = _jobs.indexWhere((j) => j.id == job.id);
+      if (idx != -1) {
+        _jobs[idx] = _jobs[idx].copyWith(isBookmarked: v);
+      }
+    }
+
+    setState(() => update(value));
+    try {
+      await CareerExpoService.setTersimpan(job.id, value);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => update(!value));
+      final unauthorized = e is DioException && e.response?.statusCode == 401;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            unauthorized
+                ? 'Silakan login terlebih dahulu untuk menyimpan lowongan.'
+                : 'Gagal memperbarui lowongan tersimpan. Coba lagi ya.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _openFilterSheet() {
@@ -58,6 +115,63 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF0066F6)),
+        ),
+      );
+    }
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.wifi_off_rounded,
+                    size: 44,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _loadJobs,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0066F6),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('Coba Lagi'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     final categoryFilteredJobs = _getFilteredByCategory();
     final popularJobs = categoryFilteredJobs.where((j) => j.isPopular).isNotEmpty
         ? categoryFilteredJobs.where((j) => j.isPopular).toList()
@@ -409,14 +523,7 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                           ),
                         );
                       },
-                      onBookmarkToggle: (val) {
-                        setState(() {
-                          final idx = _jobs.indexWhere((j) => j.id == job.id);
-                          if (idx != -1) {
-                            _jobs[idx] = _jobs[idx].copyWith(isBookmarked: val);
-                          }
-                        });
-                      },
+                      onBookmarkToggle: (val) => _toggleBookmark(job, val),
                     );
                   },
                 ),
@@ -457,14 +564,7 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                           ),
                         );
                       },
-                      onBookmarkToggle: (val) {
-                        setState(() {
-                          final idx = _jobs.indexWhere((j) => j.id == job.id);
-                          if (idx != -1) {
-                            _jobs[idx] = _jobs[idx].copyWith(isBookmarked: val);
-                          }
-                        });
-                      },
+                      onBookmarkToggle: (val) => _toggleBookmark(job, val),
                     );
                   },
                 ),

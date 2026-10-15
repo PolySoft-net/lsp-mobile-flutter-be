@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
 import 'career_expo_apply_screen.dart';
 
@@ -21,22 +23,42 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
   late bool _isBookmarked;
   bool _isFavorite = false;
   bool _isAboutExpanded = false;
-  bool _isApplied = false;
+  late bool _isApplied;
 
   @override
   void initState() {
     super.initState();
     _isBookmarked = widget.job.isBookmarked;
+    _isApplied = widget.job.isApplied;
   }
 
-  void _toggleBookmark() {
-    setState(() {
-      _isBookmarked = !_isBookmarked;
-    });
+  Future<void> _toggleBookmark() async {
+    final target = !_isBookmarked;
+    setState(() => _isBookmarked = target);
+    try {
+      await CareerExpoService.setTersimpan(widget.job.id, target);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isBookmarked = !target);
+      final unauthorized = e is DioException && e.response?.statusCode == 401;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            unauthorized
+                ? 'Silakan login terlebih dahulu untuk menyimpan lowongan.'
+                : 'Gagal memperbarui lowongan tersimpan. Coba lagi ya.',
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _isBookmarked ? 'Lowongan disimpan ke tersimpan' : 'Lowongan dihapus dari tersimpan',
+          target ? 'Lowongan disimpan ke tersimpan' : 'Lowongan dihapus dari tersimpan',
         ),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
