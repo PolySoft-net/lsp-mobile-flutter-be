@@ -460,4 +460,12 @@ class ApiRoutes {
       '/api/career-expo/lamaran/$id';
   static String careerExpoTersimpan(dynamic id) =>
       '/api/career-expo/lowongan/$id/tersimpan';
+  static const String careerExpoTersimpanList = '/api/career-expo/tersimpan';
+  static const String careerExpoNotifikasi = '/api/career-expo/notifikasi';
+  static const String careerExpoNotifikasiUnreadCount =
+      '/api/career-expo/notifikasi/unread-count';
+  static String careerExpoNotifikasiRead(dynamic id) =>
+      '/api/career-expo/notifikasi/$id/read';
+  static const String careerExpoNotifikasiReadAll =
+      '/api/career-expo/notifikasi/read-all';
 }

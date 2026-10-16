@@ -23,7 +23,6 @@ class CareerExpoDetailScreen extends StatefulWidget {
 
 class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
   late bool _isBookmarked;
-  bool _isFavorite = false;
   bool _isAboutExpanded = false;
   late bool _isApplied;
   String _applicationStatus = '';
@@ -123,12 +122,10 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
         actions: [
           IconButton(
             icon: Icon(
-              _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              color: _isFavorite ? const Color(0xFFEF4444) : const Color(0xFF0F172A),
+              _isBookmarked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              color: _isBookmarked ? const Color(0xFFEF4444) : const Color(0xFF0F172A),
             ),
-            onPressed: () {
-              setState(() => _isFavorite = !_isFavorite);
-            },
+            onPressed: _toggleBookmark,
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFF0F172A)),

@@ -115,4 +115,63 @@ class CareerExpoService {
   static Future<void> hapusLamaran(String lamaranId) async {
     await _dio.delete(ApiRoutes.careerExpoDeleteLamaran(lamaranId));
   }
+
+  /// GET /api/career-expo/tersimpan — daftar lowongan yang disimpan/favorit.
+  static Future<List<CareerJobItem>> getTersimpan({
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final response = await _dio.get(
+      ApiRoutes.careerExpoTersimpanList,
+      queryParameters: {
+        'limit': limit,
+        if (offset > 0) 'offset': offset,
+      },
+    );
+    return _parseJobs(response.data['data']);
+  }
+
+  /// GET /api/career-expo/notifikasi — daftar notifikasi Career Expo.
+  static Future<List<CareerNotificationItem>> getNotifikasi({
+    String kategori = 'Semua',
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final response = await _dio.get(
+      ApiRoutes.careerExpoNotifikasi,
+      queryParameters: {
+        if (kategori.isNotEmpty && kategori != 'Semua') 'kategori': kategori,
+        'limit': limit,
+        if (offset > 0) 'offset': offset,
+      },
+    );
+    final list = response.data['data'] is List ? response.data['data'] as List : const [];
+    return list
+        .map((e) => CareerNotificationItem.fromJson(
+            Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  /// GET /api/career-expo/notifikasi/unread-count — jumlah notifikasi belum dibaca.
+  static Future<int> getUnreadNotifikasiCount() async {
+    final response = await _dio.get(ApiRoutes.careerExpoNotifikasiUnreadCount);
+    final data = response.data['data'];
+    if (data is Map && data['unread_count'] != null) {
+      final count = data['unread_count'];
+      if (count is int) return count;
+      if (count is num) return count.toInt();
+      return int.tryParse(count.toString()) ?? 0;
+    }
+    return 0;
+  }
+
+  /// PUT /api/career-expo/notifikasi/:id/read — tandai notifikasi dibaca.
+  static Future<void> markNotifikasiRead(String id) async {
+    await _dio.put(ApiRoutes.careerExpoNotifikasiRead(id));
+  }
+
+  /// PUT /api/career-expo/notifikasi/read-all — tandai semua notifikasi dibaca.
+  static Future<void> markAllNotifikasiRead() async {
+    await _dio.put(ApiRoutes.careerExpoNotifikasiReadAll);
+  }
 }

@@ -68,7 +68,7 @@ class CareerJobItem {
       salaryMax: _asInt(json['salary_max']),
       salaryPeriod: json['salary_period']?.toString() ?? 'bulan',
       postedAt: json['posted_label']?.toString() ?? '',
-      isBookmarked: _asBool(json['is_bookmarked']),
+      isBookmarked: _asBool(json['is_bookmarked'] ?? json['is_favorite']),
       isApplied: _asBool(json['is_applied']),
       applicationStatus: json['application_status']?.toString() ?? '',
       isPopular: _asBool(json['is_popular']),
@@ -204,6 +204,96 @@ class CareerApplicationItem {
       note: json['note']?.toString(),
       appliedLabel: json['applied_label']?.toString() ?? '',
     );
+  }
+}
+
+/// Model untuk notifikasi di Career Expo
+class CareerNotificationItem {
+  final String id;
+  final String title;
+  final String message;
+  final String time;
+  final String category; // 'Lamaran', 'Pembaruan', 'Sistem'
+  final String type;
+  final String? lowonganId;
+  final String? lamaranId;
+  final bool isRead;
+  final String createdAt;
+
+  const CareerNotificationItem({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.time,
+    required this.category,
+    this.type = 'general',
+    this.lowonganId,
+    this.lamaranId,
+    this.isRead = false,
+    this.createdAt = '',
+  });
+
+  factory CareerNotificationItem.fromJson(Map<String, dynamic> json) {
+    return CareerNotificationItem(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      message: json['message']?.toString() ?? '',
+      time: json['time']?.toString() ?? '',
+      category: json['category']?.toString() ?? 'Lamaran',
+      type: json['type']?.toString() ?? 'general',
+      lowonganId: json['lowongan_id']?.toString(),
+      lamaranId: json['lamaran_id']?.toString(),
+      isRead: json['is_read'] == true || json['is_read'] == 1 || json['is_read']?.toString() == 'true',
+      createdAt: json['created_at']?.toString() ?? '',
+    );
+  }
+
+  IconData get icon {
+    if (category == 'Lamaran') {
+      if (type.contains('diterima') || message.toLowerCase().contains('diterima')) {
+        return Icons.check_circle_outline_rounded;
+      }
+      return Icons.work_outline_rounded;
+    }
+    if (category == 'Pembaruan') {
+      return Icons.notifications_none_rounded;
+    }
+    if (type.contains('pengingat') || title.toLowerCase().contains('pengingat')) {
+      return Icons.alarm_rounded;
+    }
+    return Icons.lightbulb_outline_rounded;
+  }
+
+  Color get iconColor {
+    if (category == 'Lamaran') {
+      if (type.contains('diterima') || message.toLowerCase().contains('diterima')) {
+        return const Color(0xFF16A34A);
+      }
+      return const Color(0xFF0066F6);
+    }
+    if (category == 'Pembaruan') {
+      return const Color(0xFF0284C7);
+    }
+    if (type.contains('pengingat') || title.toLowerCase().contains('pengingat')) {
+      return const Color(0xFF7C3AED);
+    }
+    return const Color(0xFF0066F6);
+  }
+
+  Color get iconBgColor {
+    if (category == 'Lamaran') {
+      if (type.contains('diterima') || message.toLowerCase().contains('diterima')) {
+        return const Color(0xFFDCFCE7);
+      }
+      return const Color(0xFFEFF6FF);
+    }
+    if (category == 'Pembaruan') {
+      return const Color(0xFFE0F2FE);
+    }
+    if (type.contains('pengingat') || title.toLowerCase().contains('pengingat')) {
+      return const Color(0xFFF3E8FF);
+    }
+    return const Color(0xFFEFF6FF);
   }
 }
 

@@ -5,6 +5,7 @@ import 'career_expo_lamaran_tab.dart';
 import 'career_expo_notifikasi_tab.dart';
 import 'career_expo_profile_tab.dart';
 import 'career_expo_search_tab.dart';
+import '../../services/career_expo/career_expo_service.dart';
 
 /// Screen utama Career Expo dengan Bottom Navigation Bar 5 Tab
 class CareerExpoScreen extends StatefulWidget {
@@ -22,18 +23,33 @@ class CareerExpoScreen extends StatefulWidget {
 class _CareerExpoScreenState extends State<CareerExpoScreen> {
   late int _currentIndex;
   int _lamaranKeyCounter = 0;
+  int _notifikasiKeyCounter = 0;
   int _profileKeyCounter = 0;
+  int _unreadNotifCount = 0;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialTabIndex;
+    _checkUnreadNotif();
+  }
+
+  Future<void> _checkUnreadNotif() async {
+    try {
+      final count = await CareerExpoService.getUnreadNotifikasiCount();
+      if (!mounted) return;
+      setState(() => _unreadNotifCount = count);
+    } catch (_) {}
   }
 
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
       if (index == 2) _lamaranKeyCounter++;
+      if (index == 3) {
+        _notifikasiKeyCounter++;
+        _unreadNotifCount = 0;
+      }
       if (index == 4) _profileKeyCounter++;
     });
   }
@@ -54,7 +70,9 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         key: ValueKey('lamaran_$_lamaranKeyCounter'),
         onBack: () => _onTabTapped(0),
       ),
-      const CareerExpoNotifikasiTab(),
+      CareerExpoNotifikasiTab(
+        key: ValueKey('notifikasi_$_notifikasiKeyCounter'),
+      ),
       CareerExpoProfileTab(
         key: ValueKey('profile_$_profileKeyCounter'),
         onNavigateToLamaran: () => _onTabTapped(2),
@@ -83,7 +101,7 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
                   _buildNavItem(0, Icons.home_filled, Icons.home_outlined),
                   _buildNavItem(1, Icons.search_rounded, Icons.search_rounded),
                   _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded),
-                  _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: true),
+                  _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: _unreadNotifCount > 0),
                   _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
                 ],
               ),

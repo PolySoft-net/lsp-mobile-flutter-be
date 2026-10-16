@@ -4,6 +4,7 @@ import '../../services/asesi/asesi_service.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../utils/url_helper.dart';
 import '../profile/data_diri_screen.dart';
+import 'career_expo_favorit_screen.dart';
 
 /// Tab Profil Pelamar Career Expo — mengambil data profil user yang sedang login
 class CareerExpoProfileTab extends StatefulWidget {
@@ -222,7 +223,14 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
               _buildProfileMenuItem(
                 icon: Icons.favorite_border_rounded,
                 title: 'Favorit',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CareerExpoFavoritScreen(),
+                    ),
+                  );
+                },
               ),
               _buildProfileMenuItem(
                 icon: Icons.notifications_none_rounded,
