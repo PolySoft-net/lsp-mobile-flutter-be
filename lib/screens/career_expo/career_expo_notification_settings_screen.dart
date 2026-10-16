@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:material_ui/material_ui.dart';
 import '../../services/auth/auth_repository.dart';
+import '../../services/common/app_notification_storage.dart';
 import '../../widgets/common/custom_app_bar.dart';
 class CareerExpoNotificationSettingsScreen extends StatefulWidget {
   const CareerExpoNotificationSettingsScreen({super.key});
@@ -13,8 +14,9 @@ class CareerExpoNotificationSettingsScreen extends StatefulWidget {
 
 class _CareerExpoNotificationSettingsScreenState
     extends State<CareerExpoNotificationSettingsScreen> {
-  String get _storageKey {
-    final uid = AuthRepository.currentUserInstance?.id ?? 'default';
+  Future<String> _resolveStorageKey() async {
+    final identity = await AppNotificationStorage.instance.resolveSessionIdentity();
+    final uid = identity?.userId ?? AuthRepository.currentUserInstance?.id ?? 'default';
     return 'career_expo_notif_prefs_$uid';
   }
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -34,7 +36,8 @@ class _CareerExpoNotificationSettingsScreenState
 
   Future<void> _loadPreferences() async {
     try {
-      final raw = await _storage.read(key: _storageKey);
+      final key = await _resolveStorageKey();
+      final raw = await _storage.read(key: key);
       if (raw != null && raw.isNotEmpty && mounted) {
         final decoded = jsonDecode(raw) as Map<String, dynamic>;
         setState(() {
@@ -55,6 +58,7 @@ class _CareerExpoNotificationSettingsScreenState
 
   Future<void> _savePreferences() async {
     try {
+      final key = await _resolveStorageKey();
       final payload = {
         'lowongan_baru': _lowonganBaru,
         'status_lamaran': _statusLamaran,
@@ -62,7 +66,7 @@ class _CareerExpoNotificationSettingsScreenState
         'info_karir': _infoKarir,
         'notif_email': _notifEmail,
       };
-      await _storage.write(key: _storageKey, value: jsonEncode(payload));
+      await _storage.write(key: key, value: jsonEncode(payload));
     } catch (_) {}
   }
 

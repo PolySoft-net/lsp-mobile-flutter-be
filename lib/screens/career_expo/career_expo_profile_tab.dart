@@ -5,6 +5,7 @@ import '../../services/auth/auth_repository.dart';
 import '../../utils/url_helper.dart';
 import '../dashboard/faq_screen.dart';
 import '../profile/data_diri_screen.dart';
+import '../profile/syarat_ketentuan_screen.dart';
 import '../profile/tentang_lsp_screen.dart';
 import 'career_expo_favorit_screen.dart';
 import 'career_expo_notification_settings_screen.dart';
@@ -274,7 +275,14 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
               _buildProfileMenuItem(
                 icon: Icons.description_outlined,
                 title: 'Syarat & Ketentuan',
-                onTap: () => UrlHelper.launchURL('https://mobile.lspdigital.id/privacy-policy'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SyaratKetentuanScreen(),
+                    ),
+                  );
+                },
               ),
               _buildProfileMenuItem(
                 icon: Icons.verified_user_outlined,
