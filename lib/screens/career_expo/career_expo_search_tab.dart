@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
+import '../../widgets/career_expo/career_bouncy_tap.dart';
 import '../../widgets/career_expo/career_filter_sheet.dart';
 import '../../widgets/career_expo/career_job_card.dart';
 import 'career_expo_detail_screen.dart';
@@ -17,7 +18,7 @@ class CareerExpoSearchTab extends StatefulWidget {
 
   const CareerExpoSearchTab({
     super.key,
-    this.initialQuery = 'UI/UX',
+    this.initialQuery = '',
     this.showBackButton = false,
     this.onBack,
   });
@@ -41,11 +42,17 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.initialQuery);
+    _searchController.addListener(_onControllerChange);
     _fetchJobs();
+  }
+
+  void _onControllerChange() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onControllerChange);
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -140,6 +147,12 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      sheetAnimationStyle: const AnimationStyle(
+        duration: Duration(milliseconds: 320),
+        reverseDuration: Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      ),
       builder: (ctx) => CareerFilterSheet(
         selectedEmploymentType: _empTypeFilter,
         selectedWorkplaceType: _workplaceTypeFilter,
@@ -282,10 +295,11 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                   ),
                   const SizedBox(width: 10),
                   // Filter icon button
-                  InkWell(
+                  CareerBouncyTap(
                     onTap: _openFilterSheet,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
@@ -295,7 +309,16 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                           color: hasActiveFilter
                               ? const Color(0xFF0066F6)
                               : const Color(0xFFCBD5E1),
+                          width: hasActiveFilter ? 1.5 : 1.0,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (hasActiveFilter ? const Color(0xFF0066F6) : Colors.black)
+                                .withValues(alpha: hasActiveFilter ? 0.25 : 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Icon(
                         Icons.tune_rounded,
@@ -320,10 +343,11 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                   _buildSortChip('Gaji'),
                   const SizedBox(width: 8),
                   // Filter dropdown chip
-                  InkWell(
+                  CareerBouncyTap(
                     onTap: _openFilterSheet,
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: hasActiveFilter ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
@@ -452,13 +476,15 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
 
   Widget _buildSortChip(String label) {
     final isSelected = _selectedSortChip == label;
-    return InkWell(
+    return CareerBouncyTap(
       onTap: () {
         setState(() => _selectedSortChip = label);
         _fetchJobs();
       },
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
+      scaleDown: 0.94,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFF8FAFC),

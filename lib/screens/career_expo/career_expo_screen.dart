@@ -62,7 +62,7 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         onNavigateToNotification: () => _onTabTapped(3),
       ),
       CareerExpoSearchTab(
-        initialQuery: 'UI/UX',
+        initialQuery: '',
         showBackButton: false,
         onBack: () => _onTabTapped(0),
       ),

@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
+import '../../widgets/career_expo/career_bouncy_tap.dart';
 import '../../widgets/career_expo/career_filter_sheet.dart';
 import '../../widgets/career_expo/career_job_card.dart';
 import 'career_expo_detail_screen.dart';
@@ -92,6 +93,12 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      sheetAnimationStyle: const AnimationStyle(
+        duration: Duration(milliseconds: 320),
+        reverseDuration: Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      ),
       builder: (ctx) => CareerFilterSheet(
         selectedEmploymentType: 'Semua',
         selectedWorkplaceType: 'Semua',
@@ -282,16 +289,24 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    InkWell(
+                    CareerBouncyTap(
                       onTap: _openFilterSheet,
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 240),
+                        curve: Curves.easeOutCubic,
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.tune_rounded,

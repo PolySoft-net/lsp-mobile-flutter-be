@@ -3,8 +3,11 @@ import '../../models/auth_models.dart';
 import '../../services/asesi/asesi_service.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../utils/url_helper.dart';
+import '../dashboard/faq_screen.dart';
 import '../profile/data_diri_screen.dart';
+import '../profile/tentang_lsp_screen.dart';
 import 'career_expo_favorit_screen.dart';
+import 'career_expo_notification_settings_screen.dart';
 
 /// Tab Profil Pelamar Career Expo — mengambil data profil user yang sedang login
 class CareerExpoProfileTab extends StatefulWidget {
@@ -235,27 +238,48 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
               _buildProfileMenuItem(
                 icon: Icons.notifications_none_rounded,
                 title: 'Pengaturan Notifikasi',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CareerExpoNotificationSettingsScreen(),
+                    ),
+                  );
+                },
               ),
               _buildProfileMenuItem(
                 icon: Icons.help_outline_rounded,
                 title: 'Pusat Bantuan',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FaqScreen(),
+                    ),
+                  );
+                },
               ),
               _buildProfileMenuItem(
                 icon: Icons.info_outline_rounded,
                 title: 'Tentang LSP Teknologi Digital',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TentangLspScreen(),
+                    ),
+                  );
+                },
               ),
               _buildProfileMenuItem(
                 icon: Icons.description_outlined,
                 title: 'Syarat & Ketentuan',
-                onTap: () {},
+                onTap: () => UrlHelper.launchURL('https://mobile.lspdigital.id/privacy-policy'),
               ),
               _buildProfileMenuItem(
                 icon: Icons.verified_user_outlined,
                 title: 'Kebijakan Privasi',
-                onTap: () {},
+                onTap: () => UrlHelper.launchURL('https://mobile.lspdigital.id/privacy-policy'),
               ),
               const SizedBox(height: 18),
               // Keluar Button
