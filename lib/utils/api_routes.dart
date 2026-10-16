@@ -451,6 +451,7 @@ class ApiRoutes {
   // ============================================================================
 
   static const String careerExpoLowongan = '/api/career-expo/lowongan';
+  static const String careerExpoFilterOptions = '/api/career-expo/filter-options';
   static String careerExpoLowonganDetail(dynamic id) =>
       '/api/career-expo/lowongan/$id';
   static String careerExpoLamar(dynamic id) =>

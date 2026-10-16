@@ -26,6 +26,11 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
   int _notifikasiKeyCounter = 0;
   int _profileKeyCounter = 0;
   int _unreadNotifCount = 0;
+  int _searchKeyCounter = 0;
+  String _searchQuery = '';
+  String _searchEmpType = 'Semua';
+  String _searchWorkplaceType = 'Semua';
+  String _searchLocation = 'Semua';
 
   @override
   void initState() {
@@ -54,15 +59,35 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
     });
   }
 
+  void _onNavigateToSearch({
+    String? query,
+    String? empType,
+    String? workplaceType,
+    String? location,
+  }) {
+    setState(() {
+      _searchQuery = query ?? '';
+      _searchEmpType = empType ?? 'Semua';
+      _searchWorkplaceType = workplaceType ?? 'Semua';
+      _searchLocation = location ?? 'Semua';
+      _searchKeyCounter++;
+      _currentIndex = 1;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> tabs = [
       CareerExpoHomeTab(
-        onNavigateToSearch: () => _onTabTapped(1),
+        onNavigateToSearch: _onNavigateToSearch,
         onNavigateToNotification: () => _onTabTapped(3),
       ),
       CareerExpoSearchTab(
-        initialQuery: '',
+        key: ValueKey('search_$_searchKeyCounter'),
+        initialQuery: _searchQuery,
+        initialEmploymentType: _searchEmpType,
+        initialWorkplaceType: _searchWorkplaceType,
+        initialLocation: _searchLocation,
         showBackButton: false,
         onBack: () => _onTabTapped(0),
       ),

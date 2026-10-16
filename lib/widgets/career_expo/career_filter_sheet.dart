@@ -1,10 +1,13 @@
 import 'package:material_ui/material_ui.dart';
+import '../../models/career_expo_models.dart';
+import '../../services/career_expo/career_expo_service.dart';
 
 /// Bottom Sheet untuk filter lowongan pekerjaan Career Expo
 class CareerFilterSheet extends StatefulWidget {
   final String selectedEmploymentType;
   final String selectedWorkplaceType;
   final String selectedLocation;
+  final CareerFilterOptions? filterOptions;
   final Function(String empType, String workplaceType, String location) onApply;
 
   const CareerFilterSheet({
@@ -12,6 +15,7 @@ class CareerFilterSheet extends StatefulWidget {
     required this.selectedEmploymentType,
     required this.selectedWorkplaceType,
     required this.selectedLocation,
+    this.filterOptions,
     required this.onApply,
   });
 
@@ -23,10 +27,9 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
   late String _empType;
   late String _workplaceType;
   late String _location;
-
-  final List<String> _empTypes = ['Semua', 'Full Time', 'Magang', 'Kontrak', 'Part Time'];
-  final List<String> _workplaceTypes = ['Semua', 'Remote', 'On Site', 'Hybrid'];
-  final List<String> _locations = ['Semua', 'Jakarta', 'Yogyakarta', 'Bandung', 'Surabaya'];
+  List<String> _empTypes = const ['Semua'];
+  List<String> _workplaceTypes = const ['Semua'];
+  List<String> _locations = const ['Semua'];
 
   @override
   void initState() {
@@ -34,6 +37,23 @@ class _CareerFilterSheetState extends State<CareerFilterSheet> {
     _empType = widget.selectedEmploymentType;
     _workplaceType = widget.selectedWorkplaceType;
     _location = widget.selectedLocation;
+    if (widget.filterOptions != null) {
+      _empTypes = widget.filterOptions!.employmentTypes;
+      _workplaceTypes = widget.filterOptions!.workplaceTypes;
+      _locations = widget.filterOptions!.locations;
+    } else {
+      _loadOptions();
+    }
+  }
+
+  Future<void> _loadOptions() async {
+    final opts = await CareerExpoService.getFilterOptions();
+    if (!mounted) return;
+    setState(() {
+      _empTypes = opts.employmentTypes;
+      _workplaceTypes = opts.workplaceTypes;
+      _locations = opts.locations;
+    });
   }
 
   @override

@@ -8,9 +8,11 @@ import '../../widgets/career_expo/career_filter_sheet.dart';
 import '../../widgets/career_expo/career_job_card.dart';
 import 'career_expo_detail_screen.dart';
 
+typedef CareerSearchNavigator = void Function({String? query, String? empType, String? workplaceType, String? location});
+
 /// Tab Beranda Career Expo sesuai Screen 1
 class CareerExpoHomeTab extends StatefulWidget {
-  final VoidCallback onNavigateToSearch;
+  final CareerSearchNavigator onNavigateToSearch;
   final VoidCallback onNavigateToNotification;
 
   const CareerExpoHomeTab({
@@ -26,9 +28,9 @@ class CareerExpoHomeTab extends StatefulWidget {
 class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
   String _selectedCategory = 'Semua Pekerjaan';
   List<CareerJobItem> _jobs = [];
+  CareerFilterOptions _filterOptions = const CareerFilterOptions();
   bool _isLoading = true;
   String? _error;
-
   @override
   void initState() {
     super.initState();
@@ -42,10 +44,14 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
       _error = null;
     });
     try {
-      final jobs = await CareerExpoService.getLowongan();
+      final results = await Future.wait([
+        CareerExpoService.getLowongan(),
+        CareerExpoService.getFilterOptions(),
+      ]);
       if (!mounted) return;
       setState(() {
-        _jobs = jobs;
+        _jobs = results[0] as List<CareerJobItem>;
+        _filterOptions = results[1] as CareerFilterOptions;
         _isLoading = false;
       });
     } catch (e) {
@@ -100,15 +106,24 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
         reverseCurve: Curves.easeInCubic,
       ),
       builder: (ctx) => CareerFilterSheet(
-        selectedEmploymentType: 'Semua',
-        selectedWorkplaceType: 'Semua',
+        selectedEmploymentType: _activeEmpType,
+        selectedWorkplaceType: _activeWorkplaceType,
         selectedLocation: 'Semua',
+        filterOptions: _filterOptions,
         onApply: (emp, wp, loc) {
-          widget.onNavigateToSearch();
+          widget.onNavigateToSearch(empType: emp, workplaceType: wp, location: loc);
         },
       ),
     );
   }
+  bool get _isEmpTypeCategory =>
+      _filterOptions.employmentTypes.any((e) => e.toLowerCase() == _selectedCategory.toLowerCase());
+
+  String get _activeEmpType =>
+      _isEmpTypeCategory ? _selectedCategory : 'Semua';
+
+  String get _activeWorkplaceType =>
+      (!_isEmpTypeCategory && _selectedCategory != 'Semua Pekerjaan') ? _selectedCategory : 'Semua';
 
   List<CareerJobItem> _getFilteredByCategory() {
     if (_selectedCategory == 'Semua Pekerjaan') {
@@ -254,7 +269,13 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                   children: [
                     Expanded(
                       child: InkWell(
-                        onTap: widget.onNavigateToSearch,
+                        onTap: () {
+                          widget.onNavigateToSearch(
+                            query: '',
+                            empType: _activeEmpType,
+                            workplaceType: _activeWorkplaceType,
+                          );
+                        },
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
                           height: 48,
@@ -319,30 +340,13 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Category Buttons Row (Semua Pekerjaan, Remote, On Site, Magang)
+              // Category Buttons Row (dynamically built from filter options)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildCategoryItem(
-                      'Semua Pekerjaan',
-                      Icons.work_outline_rounded,
-                    ),
-                    _buildCategoryItem(
-                      'Remote',
-                      Icons.laptop_chromebook_rounded,
-                    ),
-                    _buildCategoryItem(
-                      'On Site',
-                      Icons.apartment_rounded,
-                    ),
-                    _buildCategoryItem(
-                      'Magang',
-                      Icons.school_outlined,
-                    ),
-                  ],
+                  children: _buildCategoryList(),
                 ),
               ),
               const SizedBox(height: 20),
@@ -637,5 +641,40 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildCategoryList() {
+    final categories = <String>['Semua Pekerjaan'];
+    for (final wp in _filterOptions.workplaceTypes) {
+      if (wp != 'Semua' && !categories.contains(wp)) {
+        categories.add(wp);
+      }
+    }
+    for (final emp in _filterOptions.employmentTypes) {
+      if (emp == 'Magang' && !categories.contains(emp)) {
+        categories.add(emp);
+      }
+    }
+    if (categories.length == 1) {
+      categories.addAll(['Remote', 'On Site', 'Magang']);
+    }
+    return categories.take(4).map((cat) {
+      return _buildCategoryItem(cat, _categoryIcon(cat));
+    }).toList();
+  }
+
+  IconData _categoryIcon(String title) {
+    switch (title.toLowerCase()) {
+      case 'remote':
+        return Icons.laptop_chromebook_rounded;
+      case 'on site':
+        return Icons.apartment_rounded;
+      case 'magang':
+        return Icons.school_outlined;
+      case 'full time':
+        return Icons.badge_rounded;
+      default:
+        return Icons.work_outline_rounded;
+    }
   }
 }

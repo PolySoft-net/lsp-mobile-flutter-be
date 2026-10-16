@@ -174,4 +174,16 @@ class CareerExpoService {
   static Future<void> markAllNotifikasiRead() async {
     await _dio.put(ApiRoutes.careerExpoNotifikasiReadAll);
   }
+
+  /// GET /api/career-expo/filter-options — opsi filter dinamis dari API.
+  static Future<CareerFilterOptions> getFilterOptions() async {
+    try {
+      final response = await _dio.get(ApiRoutes.careerExpoFilterOptions);
+      final data = response.data['data'];
+      if (data is Map) {
+        return CareerFilterOptions.fromJson(Map<String, dynamic>.from(data));
+      }
+    } catch (_) {}
+    return const CareerFilterOptions();
+  }
 }

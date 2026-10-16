@@ -493,3 +493,35 @@ class CareerExpoMockData {
     ];
   }
 }
+
+/// Model untuk opsi filter dinamis dari API Career Expo
+class CareerFilterOptions {
+  final List<String> employmentTypes;
+  final List<String> workplaceTypes;
+  final List<String> locations;
+
+  const CareerFilterOptions({
+    this.employmentTypes = const ['Semua'],
+    this.workplaceTypes = const ['Semua'],
+    this.locations = const ['Semua'],
+  });
+
+  factory CareerFilterOptions.fromJson(Map<String, dynamic> json) {
+    return CareerFilterOptions(
+      employmentTypes: _parseList(json['employment_types']),
+      workplaceTypes: _parseList(json['workplace_types']),
+      locations: _parseList(json['locations']),
+    );
+  }
+
+  static List<String> _parseList(dynamic raw) {
+    if (raw is List) {
+      final list = raw.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
+      if (!list.contains('Semua')) {
+        list.insert(0, 'Semua');
+      }
+      return list;
+    }
+    return const ['Semua'];
+  }
+}

@@ -4,6 +4,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
+import '../../widgets/career_expo/career_bouncy_tap.dart';
+import '../../widgets/common/custom_app_bar.dart';
 import 'career_expo_apply_screen.dart';
 
 /// Halaman Detail Lowongan Career Expo sesuai desain UI
@@ -109,79 +111,70 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
     final salaryFormatted =
         'Rp ${NumberFormatHelper.formatWithDots(widget.job.salaryMin)} - ${NumberFormatHelper.formatWithDots(widget.job.salaryMax)} / ${widget.job.salaryPeriod}';
 
+    final double statusBarHeight = MediaQuery.paddingOf(context).top;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _isBookmarked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              color: _isBookmarked ? const Color(0xFFEF4444) : const Color(0xFF0F172A),
+      body: Column(
+        children: [
+          SizedBox(height: statusBarHeight + 8),
+          CustomAppBar(
+            title: 'Detail Lowongan',
+            onBack: () => Navigator.pop(context),
+            rightWidget: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CareerBouncyTap(
+                  onTap: _toggleBookmark,
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: _isBookmarked
+                          ? const Color(0xFFFEE2E2)
+                          : const Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        _isBookmarked
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        color: _isBookmarked
+                            ? const Color(0xFFEF4444)
+                            : const Color(0xFF475569),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                CareerBouncyTap(
+                  onTap: () => _showOptionsMenu(context),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.more_horiz_rounded,
+                        color: Color(0xFF0F172A),
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            onPressed: _toggleBookmark,
           ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFF0F172A)),
-            onSelected: (val) {
-              if (val == 'share') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tautan lowongan telah disalin'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              } else if (val == 'hapus_lamaran') {
-                _confirmHapusLamaran();
-              }
-            },
-            itemBuilder: (ctx) => [
-              const PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    Icon(Icons.share_outlined, size: 18),
-                    SizedBox(width: 8),
-                    Text('Bagikan'),
-                  ],
-                ),
-              ),
-              if (_isApplied)
-                const PopupMenuItem(
-                  value: 'hapus_lamaran',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFDC2626)),
-                      SizedBox(width: 8),
-                      Text('Hapus Lamaran', style: TextStyle(color: Color(0xFFDC2626))),
-                    ],
-                  ),
-                ),
-              const PopupMenuItem(
-                value: 'report',
-                child: Row(
-                  children: [
-                    Icon(Icons.flag_outlined, size: 18, color: Color(0xFFEF4444)),
-                    SizedBox(width: 8),
-                    Text('Laporkan Lowongan', style: TextStyle(color: Color(0xFFEF4444))),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        child: Column(
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Company Header
@@ -556,7 +549,9 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
         ),
       ),
     ),
-    );
+  ],
+),
+);
   }
 
   Widget _buildInfoItem(IconData icon, String text) {
@@ -696,5 +691,171 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
         ),
       );
     }
+  }
+
+  void _showOptionsMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      sheetAnimationStyle: const AnimationStyle(
+        duration: Duration(milliseconds: 280),
+        reverseDuration: Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      ),
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Opsi Lowongan',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildOptionItem(
+                  icon: Icons.share_outlined,
+                  iconColor: const Color(0xFF0066F6),
+                  iconBgColor: const Color(0xFFEFF6FF),
+                  title: 'Bagikan Lowongan',
+                  subtitle: 'Salin tautan lowongan untuk dibagikan ke teman',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tautan lowongan telah disalin ke clipboard'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                if (_isApplied) ...[
+                  _buildOptionItem(
+                    icon: Icons.delete_outline_rounded,
+                    iconColor: const Color(0xFFDC2626),
+                    iconBgColor: const Color(0xFFFEE2E2),
+                    title: 'Batalkan / Hapus Lamaran',
+                    subtitle: 'Batalkan lamaran pekerjaan yang telah dikirim',
+                    titleColor: const Color(0xFFDC2626),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _confirmHapusLamaran();
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                _buildOptionItem(
+                  icon: Icons.flag_outlined,
+                  iconColor: const Color(0xFFF59E0B),
+                  iconBgColor: const Color(0xFFFEF3C7),
+                  title: 'Laporkan Lowongan',
+                  subtitle: 'Laporkan jika lowongan mencurigakan atau bermasalah',
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Laporan Anda telah diterima dan akan ditinjau oleh tim LSP',
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOptionItem({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String title,
+    required String subtitle,
+    Color? titleColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                      color: titleColor ?? const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF94A3B8),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
