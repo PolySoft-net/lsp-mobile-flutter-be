@@ -106,12 +106,12 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
       });
     }
   }
+  String get _salaryFormatted =>
+      'Rp ${NumberFormatHelper.formatWithDots(widget.job.salaryMin)} - ${NumberFormatHelper.formatWithDots(widget.job.salaryMax)} / ${widget.job.salaryPeriod}';
 
   @override
   Widget build(BuildContext context) {
-    final salaryFormatted =
-        'Rp ${NumberFormatHelper.formatWithDots(widget.job.salaryMin)} - ${NumberFormatHelper.formatWithDots(widget.job.salaryMax)} / ${widget.job.salaryPeriod}';
-
+    final salaryFormatted = _salaryFormatted;
     final double statusBarHeight = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
@@ -749,15 +749,18 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                   title: 'Bagikan Lowongan',
                   subtitle: 'Salin tautan lowongan untuk dibagikan ke teman',
                   onTap: () {
-                    Clipboard.setData(
-                      ClipboardData(
-                        text: 'https://mobile.lspdigital.id/career-expo/job/${widget.job.id}',
-                      ),
-                    );
+                    final shareText =
+                        'Lowongan Kerja: ${widget.job.title}\n'
+                        'Perusahaan: ${widget.job.companyName}\n'
+                        'Lokasi: ${widget.job.location} (${widget.job.workplaceType})\n'
+                        'Gaji: $_salaryFormatted\n\n'
+                        'Lamar dan cek lowongan ini di aplikasi LSP Teknologi Digital:\n'
+                        'https://play.google.com/store/apps/details?id=id.lspdigital.mobile';
+                    Clipboard.setData(ClipboardData(text: shareText));
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Tautan lowongan telah disalin ke clipboard'),
+                        content: Text('Info lowongan telah disalin ke clipboard'),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
