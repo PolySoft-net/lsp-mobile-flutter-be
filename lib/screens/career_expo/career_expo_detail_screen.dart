@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
@@ -173,7 +174,12 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                24 + MediaQuery.paddingOf(context).bottom,
+              ),
               child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -743,6 +749,11 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                   title: 'Bagikan Lowongan',
                   subtitle: 'Salin tautan lowongan untuk dibagikan ke teman',
                   onTap: () {
+                    Clipboard.setData(
+                      ClipboardData(
+                        text: 'https://mobile.lspdigital.id/career-expo/job/${widget.job.id}',
+                      ),
+                    );
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

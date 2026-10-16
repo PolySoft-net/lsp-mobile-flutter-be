@@ -500,28 +500,49 @@ class CareerFilterOptions {
   final List<String> workplaceTypes;
   final List<String> locations;
 
+  static const List<String> defaultEmploymentTypes = [
+    'Semua',
+    'Full Time',
+    'Magang',
+    'Kontrak',
+    'Part Time',
+  ];
+  static const List<String> defaultWorkplaceTypes = [
+    'Semua',
+    'Remote',
+    'On Site',
+    'Hybrid',
+  ];
+  static const List<String> defaultLocations = [
+    'Semua',
+    'Jakarta',
+    'Yogyakarta',
+    'Bandung',
+    'Surabaya',
+  ];
+
   const CareerFilterOptions({
-    this.employmentTypes = const ['Semua'],
-    this.workplaceTypes = const ['Semua'],
-    this.locations = const ['Semua'],
+    this.employmentTypes = defaultEmploymentTypes,
+    this.workplaceTypes = defaultWorkplaceTypes,
+    this.locations = defaultLocations,
   });
 
   factory CareerFilterOptions.fromJson(Map<String, dynamic> json) {
     return CareerFilterOptions(
-      employmentTypes: _parseList(json['employment_types']),
-      workplaceTypes: _parseList(json['workplace_types']),
-      locations: _parseList(json['locations']),
+      employmentTypes: _parseList(json['employment_types'], defaultEmploymentTypes),
+      workplaceTypes: _parseList(json['workplace_types'], defaultWorkplaceTypes),
+      locations: _parseList(json['locations'], defaultLocations),
     );
   }
 
-  static List<String> _parseList(dynamic raw) {
-    if (raw is List) {
+  static List<String> _parseList(dynamic raw, List<String> fallback) {
+    if (raw is List && raw.isNotEmpty) {
       final list = raw.map((e) => e.toString().trim()).where((s) => s.isNotEmpty).toList();
       if (!list.contains('Semua')) {
         list.insert(0, 'Semua');
       }
-      return list;
+      return list.isNotEmpty ? list : fallback;
     }
-    return const ['Semua'];
+    return fallback;
   }
 }
