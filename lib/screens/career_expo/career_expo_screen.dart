@@ -108,28 +108,54 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         index: _currentIndex,
         children: tabs,
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            top: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-          ),
+      bottomNavigationBar: _CareerExpoBottomNav(
+        currentIndex: _currentIndex,
+        onTabTapped: _onTabTapped,
+        unreadNotifCount: _unreadNotifCount,
+      ),
+    );
+  }
+}
+
+class _CareerExpoBottomNav extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTabTapped;
+  final int unreadNotifCount;
+
+  const _CareerExpoBottomNav({
+    required this.currentIndex,
+    required this.onTabTapped,
+    required this.unreadNotifCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Sembunyikan bottom nav saat keyboard terbuka tanpa me-rebuild layar utama
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(color: Color(0xFFE2E8F0), width: 1),
         ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: SizedBox(
-              height: 52,
-              child: Row(
-                children: [
-                  _buildNavItem(0, Icons.home_filled, Icons.home_outlined),
-                  _buildNavItem(1, Icons.search_rounded, Icons.search_rounded),
-                  _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded),
-                  _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: _unreadNotifCount > 0),
-                  _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
-                ],
-              ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: SizedBox(
+            height: 52,
+            child: Row(
+              children: [
+                _buildNavItem(0, Icons.home_filled, Icons.home_outlined),
+                _buildNavItem(1, Icons.search_rounded, Icons.search_rounded),
+                _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded),
+                _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: unreadNotifCount > 0),
+                _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
+              ],
             ),
           ),
         ),
@@ -143,12 +169,12 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
     IconData inactiveIcon, {
     bool hasBadge = false,
   }) {
-    final isSelected = _currentIndex == index;
+    final isSelected = currentIndex == index;
     final color = isSelected ? const Color(0xFF0066F6) : const Color(0xFF94A3B8);
 
     return Expanded(
       child: InkWell(
-        onTap: () => _onTabTapped(index),
+        onTap: () => onTabTapped(index),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
         child: Center(

@@ -57,3 +57,5 @@ keystore-base64.txt
 docs/RELEASE_GUIDE.md
 .agents
 .codebase-memory
+# Widget Preview related
+.widget_preview/

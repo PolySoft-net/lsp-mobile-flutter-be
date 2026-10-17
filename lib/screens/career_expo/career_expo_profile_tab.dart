@@ -104,17 +104,6 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
             color: Color(0xFF0F172A),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF0066F6), size: 22),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DataDiriScreen()),
-              ).then((_) => _loadProfile());
-            },
-          ),
-        ],
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,

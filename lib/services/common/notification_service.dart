@@ -301,6 +301,7 @@ class NotificationService {
     final notifIdentity = NotificationIdentity.fromPushData(data);
     final sessionIdentity =
         await AppNotificationStorage.instance.resolveSessionIdentity();
+    if (context != null && !context.mounted) return;
     if (!(notifIdentity?.matches(sessionIdentity) ?? false)) {
       if (kDebugMode) {
         debugPrint(
@@ -340,18 +341,17 @@ class NotificationService {
       debugPrint('⚠️ MainNavigator not mounted, skipping setTab for notification');
     }
 
-    final navContext = context ?? navigatorKey.currentContext;
+    final navState = (context != null && context.mounted)
+        ? Navigator.maybeOf(context) ?? navigatorKey.currentState
+        : navigatorKey.currentState;
 
     // 1. FAQ punya layar sendiri dan tidak pernah jatuh ke detail jadwal.
     if (destination == NotificationDestination.faq) {
-      if (navContext != null) {
-        Navigator.push(
-          navContext,
-          MaterialPageRoute(
-            builder: (context) => const FaqScreen(),
-          ),
-        );
-      }
+      navState?.push(
+        MaterialPageRoute(
+          builder: (context) => const FaqScreen(),
+        ),
+      );
       return;
     }
 
@@ -362,7 +362,7 @@ class NotificationService {
     }
 
     // 3. Detail/form hanya bila tipe memang tipe jadwal DAN jadwal_id valid.
-    if (jadwalId != null && jadwalId > 0 && navContext != null) {
+    if (jadwalId != null && jadwalId > 0 && navState != null) {
       final currentUser = AuthRepository.currentUserInstance;
       UserRole userRole;
       if (currentUser != null) {
@@ -374,6 +374,7 @@ class NotificationService {
       } else {
         // Sesi yang baru dipulihkan: ambil role kanonikal dari profil tersimpan.
         final profile = await TokenStorage.instance.getUserProfile();
+        if (context != null && !context.mounted) return;
         // Tanpa role yang jelas, jangan pernah menebak (mis. asesor).
         if (profile == null) return;
         userRole = UserRole(
@@ -413,8 +414,7 @@ class NotificationService {
       );
 
       if (destination == NotificationDestination.umpanBalikForm) {
-        Navigator.push(
-          navContext,
+        navState.push(
           MaterialPageRoute(
             builder: (context) => AsesiAK03FormScreen(
               jadwal: jadwalItem,
@@ -422,8 +422,7 @@ class NotificationService {
           ),
         );
       } else {
-        Navigator.push(
-          navContext,
+        navState.push(
           MaterialPageRoute(
             builder: (context) => JadwalDetailScreen(
               jadwal: jadwalItem,

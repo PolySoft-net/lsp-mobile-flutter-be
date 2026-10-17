@@ -650,6 +650,7 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
       onRefresh: _fetchJobs,
       color: const Color(0xFF0066F6),
       child: ListView.separated(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
         itemCount: _jobs.length,
         separatorBuilder: (context, index) => const SizedBox(height: 12),
