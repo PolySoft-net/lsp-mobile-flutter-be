@@ -7,9 +7,9 @@ import '../dashboard/faq_screen.dart';
 import '../profile/data_diri_screen.dart';
 import '../profile/syarat_ketentuan_screen.dart';
 import '../profile/tentang_lsp_screen.dart';
+import 'asesor_lowongan_screen.dart';
 import 'career_expo_favorit_screen.dart';
 import 'career_expo_notification_settings_screen.dart';
-
 /// Tab Profil Pelamar Career Expo — mengambil data profil user yang sedang login
 class CareerExpoProfileTab extends StatefulWidget {
   final VoidCallback? onNavigateToLamaran;
@@ -208,6 +208,19 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
               ),
               const SizedBox(height: 20),
               // Menu Items List (matching Screen 4)
+              if (_authUser?.isAsesorOrAdmin == true)
+                _buildProfileMenuItem(
+                  icon: Icons.post_add_rounded,
+                  title: 'Kelola Lowongan (Asesor)',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AsesorLowonganScreen(),
+                      ),
+                    );
+                  },
+                ),
               _buildProfileMenuItem(
                 icon: Icons.assignment_outlined,
                 title: 'Riwayat Lamaran',

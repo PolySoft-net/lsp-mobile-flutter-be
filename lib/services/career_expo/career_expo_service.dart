@@ -82,6 +82,8 @@ class CareerExpoService {
     required String noHp,
     String coverLetter = '',
     String linkPortofolio = '',
+    String fileCv = '',
+    String namaFileCv = '',
     bool sertakanSertifikat = false,
   }) async {
     await _dio.post(
@@ -92,6 +94,8 @@ class CareerExpoService {
         'no_hp': noHp,
         'cover_letter': coverLetter,
         'link_portofolio': linkPortofolio,
+        'file_cv': fileCv,
+        'nama_file_cv': namaFileCv,
         'sertakan_sertifikat': sertakanSertifikat,
       },
     );
@@ -185,5 +189,69 @@ class CareerExpoService {
       }
     } catch (_) {}
     return const CareerFilterOptions();
+  }
+
+  /// POST /api/career-expo/upload — upload berkas PDF / gambar untuk Career Expo
+  static Future<Map<String, String>> uploadFile(String filePath) async {
+    final fileName = filePath.split(RegExp(r'[/\\]')).last;
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(
+        filePath,
+        filename: fileName,
+      ),
+    });
+    final response = await _dio.post(
+      ApiRoutes.careerExpoUpload,
+      data: formData,
+    );
+    final data = response.data['data'] as Map? ?? {};
+    return {
+      'file_name': data['file_name']?.toString() ?? fileName,
+      'file_url': data['file_url']?.toString() ?? '',
+    };
+  }
+
+  /// POST /api/career-expo/lowongan — asesor/admin input lowongan pekerjaan baru
+  static Future<CareerJobItem> createLowongan(Map<String, dynamic> payload) async {
+    final response = await _dio.post(
+      ApiRoutes.careerExpoLowongan,
+      data: payload,
+    );
+    return CareerJobItem.fromJson(
+      Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+    );
+  }
+
+  /// PUT /api/career-expo/lowongan/:id — edit lowongan
+  static Future<CareerJobItem> updateLowongan(String id, Map<String, dynamic> payload) async {
+    final response = await _dio.put(
+      ApiRoutes.careerExpoLowonganDetail(id),
+      data: payload,
+    );
+    return CareerJobItem.fromJson(
+      Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+    );
+  }
+
+  /// DELETE /api/career-expo/lowongan/:id — hapus lowongan
+  static Future<void> deleteLowongan(String id) async {
+    await _dio.delete(ApiRoutes.careerExpoLowonganDetail(id));
+  }
+
+  /// GET /api/career-expo/lowongan-saya — daftar lowongan yang dipasang oleh asesor ini
+  static Future<List<CareerJobItem>> getMyLowongan({
+    String status = 'Semua',
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final response = await _dio.get(
+      ApiRoutes.careerExpoMyLowongan,
+      queryParameters: {
+        if (status.isNotEmpty && status != 'Semua') 'status': status,
+        'limit': limit,
+        if (offset > 0) 'offset': offset,
+      },
+    );
+    return _parseJobs(response.data['data']);
   }
 }

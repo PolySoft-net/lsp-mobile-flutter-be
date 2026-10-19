@@ -26,6 +26,14 @@ class AuthUser {
   /// membuat fitur khusus asesi (Titik Koordinat, Status Pencari Kerja) hilang
   /// untuk user tersebut, karena itu keanggotaan `roles[]` WAJIB ikut dicek.
   bool get isAsesi => role == 'asesi' || roles.contains('asesi');
+  bool get isAsesorOrAdmin {
+    final r = role.toLowerCase();
+    if (r == 'asesor' || r == 'admin' || r == 'pengelola' || r == 'superadmin') return true;
+    return roles.any((e) {
+      final el = e.toLowerCase();
+      return el == 'asesor' || el == 'admin' || el == 'pengelola' || el == 'superadmin';
+    });
+  }
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(

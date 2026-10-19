@@ -3,12 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../services/api_client.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
+import '../../utils/url_helper.dart';
 import '../../widgets/career_expo/career_bouncy_tap.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'career_expo_apply_screen.dart';
-
 /// Halaman Detail Lowongan Career Expo sesuai desain UI
 class CareerExpoDetailScreen extends StatefulWidget {
   final CareerJobItem job;
@@ -547,6 +548,75 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                       ),
                     ],
                   ),
+                ),
+              ),
+            ],
+
+            // Section: Dokumen & Brosur Lowongan (PDF)
+            if (widget.job.filePdfUrl.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              const Text(
+                'Dokumen & Brosur Lowongan',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.picture_as_pdf_rounded,
+                        color: Color(0xFFDC2626),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.job.filePdf.split(RegExp(r'[/\\]')).last,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Dokumen Resmi Rekruter / Brosur Lowongan (PDF)',
+                            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.download_rounded, color: Color(0xFF0066F6)),
+                      onPressed: () {
+                        final raw = widget.job.filePdfUrl;
+                        final url = raw.startsWith('http') ? raw : '${ApiClient.baseUrl}/$raw';
+                        UrlHelper.launchURL(url);
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],

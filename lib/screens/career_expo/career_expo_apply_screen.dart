@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
@@ -25,12 +28,16 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _coverLetterController = TextEditingController();
+  final TextEditingController _portfolioController = TextEditingController();
 
   bool _attachLspCert = true;
-  bool _attachPortfolio = true;
+  bool _attachPortfolio = false;
   bool _agreedToTerms = true;
   bool _isSubmitting = false;
-
+  bool _isUploadingCv = false;
+  String _cvFileName = '';
+  String _cvFileSize = '';
+  String _cvUploadedUrl = '';
   @override
   void initState() {
     super.initState();
@@ -46,12 +53,55 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
     if (email != null && email.isNotEmpty) _emailController.text = email;
   }
 
+  Future<void> _pickCvFile() async {
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: const ['pdf'],
+      );
+      if (file != null && file.path != null) {
+        final path = file.path!;
+        final name = file.name;
+        final bytes = await File(path).length();
+        final sizeStr = '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+        setState(() {
+          _cvFileName = name;
+          _cvFileSize = sizeStr;
+          _isUploadingCv = true;
+        });
+        final res = await CareerExpoService.uploadFile(path);
+        if (!mounted) return;
+        setState(() {
+          _cvUploadedUrl = res['file_url'] ?? '';
+          _isUploadingCv = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('CV berhasil diunggah!'),
+            backgroundColor: Color(0xFF16A34A),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploadingCv = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memilih berkas CV: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _coverLetterController.dispose();
+    _portfolioController.dispose();
     super.dispose();
   }
 
@@ -94,7 +144,9 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         email: email,
         noHp: phone,
         coverLetter: _coverLetterController.text.trim(),
-        linkPortofolio: '',
+        linkPortofolio: _attachPortfolio ? _portfolioController.text.trim() : '',
+        fileCv: _cvUploadedUrl,
+        namaFileCv: _cvUploadedUrl.isNotEmpty ? _cvFileName : '',
         sertakanSertifikat: _attachLspCert,
       );
     } catch (e) {
@@ -491,50 +543,75 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         ),
         const SizedBox(height: 14),
         // Selected CV Card
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF0066F6)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEFF6FF),
-                  shape: BoxShape.circle,
+        // Selected CV Card with interactive file picker
+        InkWell(
+          onTap: _isUploadingCv ? null : _pickCvFile,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF0066F6)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEFF6FF),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.picture_as_pdf_rounded,
+                    color: Color(0xFF0066F6),
+                    size: 24,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.picture_as_pdf_rounded,
-                  color: Color(0xFF0066F6),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'CV_Nurmalia_Dwi_Cahyani.pdf',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _cvUploadedUrl.isNotEmpty
+                            ? _cvFileName
+                            : (_isUploadingCv ? 'Mengunggah CV...' : 'Unggah Berkas CV (PDF)'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      '1.8 MB • Terverifikasi LSP',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF10B981)),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        _isUploadingCv
+                            ? 'Sedang mengunggah ke server...'
+                            : (_cvUploadedUrl.isNotEmpty
+                                ? '$_cvFileSize • Terlampir • Ketuk untuk ganti'
+                                : 'Ketuk di sini untuk memilih berkas PDF dari HP'),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _cvUploadedUrl.isNotEmpty ? const Color(0xFF10B981) : const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF0066F6), size: 22),
-            ],
+                if (_isUploadingCv)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0066F6)),
+                  )
+                else if (_cvUploadedUrl.isNotEmpty)
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 22)
+                else
+                  const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF0066F6), size: 22),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -583,7 +660,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
               ),
               const Expanded(
                 child: Text(
-                  'Sertakan Link Portofolio UI/UX Figma & Behance',
+                  'Sertakan Link Portofolio (Figma, Behance, GitHub, Web)',
                   style: TextStyle(
                     fontSize: 12.5,
                     color: Color(0xFF334155),
@@ -593,6 +670,31 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
             ],
           ),
         ),
+        if (_attachPortfolio) ...[
+          const SizedBox(height: 10),
+          TextField(
+            controller: _portfolioController,
+            decoration: InputDecoration(
+              hintText: 'https://behance.net/portofolio-anda',
+              hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+              filled: true,
+              fillColor: const Color(0xFFF8FAFC),
+              prefixIcon: const Icon(Icons.link_rounded, size: 20, color: Color(0xFF0066F6)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF0066F6)),
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         // Cover Letter
         const Text(

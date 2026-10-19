@@ -17,6 +17,7 @@ import 'public_profile_screen.dart';
 import '../../widgets/profile/profile_asesor_widgets.dart';
 import '../../utils/url_helper.dart';
 import '../../utils/date_format_helper.dart';
+import '../career_expo/asesor_lowongan_screen.dart';
 
 class ProfileAsesorScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -630,6 +631,20 @@ class _ProfileAsesorScreenState extends State<ProfileAsesorScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const HonorAsesorScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildMenuCard(
+                          icon: Icons.business_center_rounded,
+                          title: 'Lowongan Kerja (Career Expo)',
+                          iconColor: const Color(0xFF378CE7),
+                          iconBgColor: const Color(0xFFE3F2FD),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AsesorLowonganScreen(),
                               ),
                             );
                           },

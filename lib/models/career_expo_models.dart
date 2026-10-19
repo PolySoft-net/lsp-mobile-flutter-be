@@ -26,6 +26,12 @@ class CareerJobItem {
   final List<String> benefits;
   final Color logoBgColor;
   final String logoText;
+  final String filePdf;
+  final String filePdfUrl;
+  final String createdBy;
+  final int? idSkema;
+  final String shortDescription;
+  final String statusLowongan;
 
   const CareerJobItem({
     required this.id,
@@ -52,8 +58,13 @@ class CareerJobItem {
     required this.benefits,
     this.logoBgColor = const Color(0xFF0284C7),
     this.logoText = '',
+    this.filePdf = '',
+    this.filePdfUrl = '',
+    this.createdBy = '',
+    this.idSkema,
+    this.shortDescription = '',
+    this.statusLowongan = 'publish',
   });
-
   /// Endpoint API: GET /api/career-expo/lowongan (list) dan /:id (detail).
   factory CareerJobItem.fromJson(Map<String, dynamic> json) {
     return CareerJobItem(
@@ -82,9 +93,14 @@ class CareerJobItem {
       logoBgColor: _parseHexColor(json['logo_color']) ??
           const Color(0xFF0284C7),
       logoText: json['logo_text']?.toString() ?? '',
+      filePdf: json['file_pdf']?.toString() ?? '',
+      filePdfUrl: json['file_pdf_url']?.toString() ?? json['file_pdf']?.toString() ?? '',
+      createdBy: json['created_by']?.toString() ?? '',
+      idSkema: json['id_skema'] != null ? int.tryParse(json['id_skema'].toString()) : null,
+      shortDescription: json['short_description']?.toString() ?? '',
+      statusLowongan: json['status_lowongan']?.toString() ?? 'publish',
     );
   }
-
   static int _asInt(dynamic value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
@@ -138,6 +154,12 @@ class CareerJobItem {
     List<String>? benefits,
     Color? logoBgColor,
     String? logoText,
+    String? filePdf,
+    String? filePdfUrl,
+    String? createdBy,
+    int? idSkema,
+    String? shortDescription,
+    String? statusLowongan,
   }) {
     return CareerJobItem(
       id: id ?? this.id,
@@ -163,6 +185,12 @@ class CareerJobItem {
       benefits: benefits ?? this.benefits,
       logoBgColor: logoBgColor ?? this.logoBgColor,
       logoText: logoText ?? this.logoText,
+      filePdf: filePdf ?? this.filePdf,
+      filePdfUrl: filePdfUrl ?? this.filePdfUrl,
+      createdBy: createdBy ?? this.createdBy,
+      idSkema: idSkema ?? this.idSkema,
+      shortDescription: shortDescription ?? this.shortDescription,
+      statusLowongan: statusLowongan ?? this.statusLowongan,
     );
   }
 }
@@ -174,6 +202,8 @@ class CareerApplicationItem {
   final DateTime appliedDate;
   final String status; // 'Terkirim', 'Diproses', 'Wawancara', 'Diterima', 'Ditolak'
   final String? note;
+  final String fileCv;
+  final String namaFileCv;
 
   /// Label siap tampil dari backend, mis. 'Dilamar 12 Jun 2025'.
   final String appliedLabel;
@@ -184,6 +214,8 @@ class CareerApplicationItem {
     required this.appliedDate,
     required this.status,
     this.note,
+    this.fileCv = '',
+    this.namaFileCv = '',
     this.appliedLabel = '',
   });
 
@@ -202,11 +234,12 @@ class CareerApplicationItem {
       appliedDate: parsed,
       status: json['status']?.toString() ?? 'Terkirim',
       note: json['note']?.toString(),
+      fileCv: json['file_cv']?.toString() ?? '',
+      namaFileCv: json['nama_file_cv']?.toString() ?? '',
       appliedLabel: json['applied_label']?.toString() ?? '',
     );
   }
 }
-
 /// Model untuk notifikasi di Career Expo
 class CareerNotificationItem {
   final String id;
