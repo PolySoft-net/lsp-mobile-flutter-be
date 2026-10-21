@@ -6,21 +6,36 @@ import '../../models/career_expo_models.dart';
 import '../../models/master_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../services/common/master_service.dart';
+import '../../widgets/common/custom_app_bar.dart';
+
+const TextStyle _inputTextStyle = TextStyle(
+  fontSize: 13.5,
+  color: Color(0xFF0F172A),
+);
+
+final OutlineInputBorder _inputBorder = OutlineInputBorder(
+  borderRadius: BorderRadius.circular(12),
+  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+);
+
+final OutlineInputBorder _inputFocusedBorder = OutlineInputBorder(
+  borderRadius: BorderRadius.circular(12),
+  borderSide: const BorderSide(color: Color(0xFF0066F6), width: 1.5),
+);
 
 /// Form Input & Edit Lowongan Pekerjaan Career Expo untuk Asesor / Rekruter
 class CareerExpoFormLowonganScreen extends StatefulWidget {
   final CareerJobItem? initialJob;
 
-  const CareerExpoFormLowonganScreen({
-    super.key,
-    this.initialJob,
-  });
+  const CareerExpoFormLowonganScreen({super.key, this.initialJob});
 
   @override
-  State<CareerExpoFormLowonganScreen> createState() => _CareerExpoFormLowonganScreenState();
+  State<CareerExpoFormLowonganScreen> createState() =>
+      _CareerExpoFormLowonganScreenState();
 }
 
-class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScreen> {
+class _CareerExpoFormLowonganScreenState
+    extends State<CareerExpoFormLowonganScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _titleController;
@@ -50,11 +65,29 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
   String _filePdfName = '';
   bool _isUploadingPdf = false;
   bool _isSubmitting = false;
+  bool _savingDraft = false;
 
-  List<String> _employmentTypes = ['Full Time', 'Part Time', 'Magang', 'Kontrak', 'Freelance'];
+  List<String> _employmentTypes = [
+    'Full Time',
+    'Part Time',
+    'Magang',
+    'Kontrak',
+    'Freelance',
+  ];
   List<String> _workplaceTypes = ['On Site', 'Remote', 'Hybrid'];
-  List<String> _experienceOptions = ['Fresh Graduate', '1 - 3 Tahun', '3 - 5 Tahun', '> 5 Tahun'];
-  List<String> _educationOptions = ['SMA / SMK', 'D3', 'S1', 'S2', 'Semua Jurusan'];
+  List<String> _experienceOptions = [
+    'Fresh Graduate',
+    '1 - 3 Tahun',
+    '3 - 5 Tahun',
+    '> 5 Tahun',
+  ];
+  List<String> _educationOptions = [
+    'SMA / SMK',
+    'D3',
+    'S1',
+    'S2',
+    'Semua Jurusan',
+  ];
 
   @override
   void initState() {
@@ -62,15 +95,25 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
     final init = widget.initialJob;
     _titleController = TextEditingController(text: init?.title ?? '');
     _companyController = TextEditingController(text: init?.companyName ?? '');
-    _categoryController = TextEditingController(text: init?.companyCategory ?? 'Teknologi Informasi & Software');
+    _categoryController = TextEditingController(
+      text: init?.companyCategory ?? '',
+    );
     _locationController = TextEditingController(text: init?.location ?? '');
-    _salaryMinController = TextEditingController(text: init != null && init.salaryMin > 0 ? init.salaryMin.toString() : '');
-    _salaryMaxController = TextEditingController(text: init != null && init.salaryMax > 0 ? init.salaryMax.toString() : '');
-    _aboutCompanyController = TextEditingController(text: init?.aboutCompany ?? '');
+    _salaryMinController = TextEditingController(
+      text: init != null && init.salaryMin > 0 ? init.salaryMin.toString() : '',
+    );
+    _salaryMaxController = TextEditingController(
+      text: init != null && init.salaryMax > 0 ? init.salaryMax.toString() : '',
+    );
+    _aboutCompanyController = TextEditingController(
+      text: init?.aboutCompany ?? '',
+    );
     _descriptionController = TextEditingController(
       text: init?.shortDescription.isNotEmpty == true
           ? init!.shortDescription
-          : (init?.jobDescription.isNotEmpty == true ? init!.jobDescription.first : ''),
+          : (init?.jobDescription.isNotEmpty == true
+                ? init!.jobDescription.first
+                : ''),
     );
     if (init != null) {
       if (_employmentTypes.contains(init.employmentType)) {
@@ -146,6 +189,7 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
       }
     }
   }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -242,8 +286,16 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
       'tipe_pekerjaan': _employmentType,
       'jenis_tempat': _workplaceType,
       'lokasi': _locationController.text.trim(),
-      'salary_min': int.tryParse(_salaryMinController.text.trim().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
-      'salary_max': int.tryParse(_salaryMaxController.text.trim().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+      'salary_min':
+          int.tryParse(
+            _salaryMinController.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
+          ) ??
+          0,
+      'salary_max':
+          int.tryParse(
+            _salaryMaxController.text.trim().replaceAll(RegExp(r'[^0-9]'), ''),
+          ) ??
+          0,
       'salary_period': _salaryPeriod,
       'pengalaman': _experience,
       'pendidikan': _education,
@@ -251,12 +303,19 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
       'poin_deskripsi': poinDeskripsi,
       'poin_persyaratan': poinPersyaratan,
       'poin_benefit': poinBenefit,
-      'id_skema': _selectedSkema?.id ?? (_skemaLoadFailed || _isLoadingSkema ? widget.initialJob?.idSkema : null),
+      'id_skema':
+          _selectedSkema?.id ??
+          (_skemaLoadFailed || _isLoadingSkema
+              ? widget.initialJob?.idSkema
+              : null),
       'file_pdf': _filePdfUrl,
       'status_lowongan': isDraft ? 'draft' : 'publish',
     };
 
-    setState(() => _isSubmitting = true);
+    setState(() {
+      _savingDraft = isDraft;
+      _isSubmitting = true;
+    });
     try {
       if (widget.initialJob != null) {
         await CareerExpoService.updateLowongan(widget.initialJob!.id, payload);
@@ -297,381 +356,488 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
     final isEdit = widget.initialJob != null;
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          isEdit ? 'Edit Lowongan' : 'Pasang Lowongan Baru',
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: SafeArea(
+          bottom: false,
+          child: CustomAppBar(
+            title: isEdit ? 'Edit Lowongan' : 'Pasang Lowongan Baru',
           ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
-          onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionHeader('1. Informasi Posisi & Perusahaan'),
-              const SizedBox(height: 12),
-              _buildLabel('Posisi / Judul Pekerjaan *'),
-              TextFormField(
-                controller: _titleController,
-                decoration: _inputDecoration('Contoh: Senior UI/UX Designer'),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Posisi pekerjaan wajib diisi' : null,
-              ),
-              const SizedBox(height: 14),
-              _buildLabel('Nama Perusahaan *'),
-              TextFormField(
-                controller: _companyController,
-                decoration: _inputDecoration('Contoh: PT Digital Inovasi Asia'),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Nama perusahaan wajib diisi' : null,
-              ),
-              const SizedBox(height: 14),
-              _buildLabel('Kategori Industri / Bidang'),
-              TextFormField(
-                controller: _categoryController,
-                decoration: _inputDecoration('Contoh: Teknologi Informasi & Software'),
-              ),
-              const SizedBox(height: 14),
-              _buildLabel('Lokasi Penempatan *'),
-              TextFormField(
-                controller: _locationController,
-                decoration: _inputDecoration('Contoh: Jakarta Selatan, DKI Jakarta'),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Lokasi wajib diisi' : null,
-              ),
-
-              const SizedBox(height: 24),
-              _buildSectionHeader('2. Tipe & Skema Sertifikasi'),
-              const SizedBox(height: 12),
-              _buildLabel('Tipe Pekerjaan'),
-              Wrap(
-                spacing: 8,
-                children: _employmentTypes.map((type) {
-                  final isSelected = _employmentType == type;
-                  return ChoiceChip(
-                    label: Text(type),
-                    selected: isSelected,
-                    onSelected: (val) => setState(() => _employmentType = type),
-                    selectedColor: const Color(0xFF0066F6),
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF0F172A),
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 14),
-              _buildLabel('Tipe Tempat Kerja'),
-              Wrap(
-                spacing: 8,
-                children: _workplaceTypes.map((type) {
-                  final isSelected = _workplaceType == type;
-                  return ChoiceChip(
-                    label: Text(type),
-                    selected: isSelected,
-                    onSelected: (val) => setState(() => _workplaceType = type),
-                    selectedColor: const Color(0xFF0066F6),
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFF0F172A),
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 14),
-              _buildLabel('Kualifikasi Skema Sertifikasi LSP (Opsional)'),
-              if (_isLoadingSkema)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: LinearProgressIndicator(color: Color(0xFF0066F6)),
-                )
-              else
-                DropdownButtonFormField<MasterSkema>(
-                  initialValue: _selectedSkema,
-                  isExpanded: true,
-                  decoration: _inputDecoration('Pilih skema sertifikasi terkait'),
-                  items: [
-                    const DropdownMenuItem<MasterSkema>(
-                      value: null,
-                      child: Text('Tidak mewajibkan skema khusus', style: TextStyle(color: Color(0xFF94A3B8))),
-                    ),
-                    ..._skemaList.map(
-                      (s) => DropdownMenuItem<MasterSkema>(
-                        value: s,
-                        child: Text(s.namaSkema, maxLines: 1, overflow: TextOverflow.ellipsis),
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader('1. Informasi Posisi & Perusahaan'),
+                      const SizedBox(height: 12),
+                      _buildLabel('Posisi / Judul Pekerjaan *'),
+                      TextFormField(
+                        controller: _titleController,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration(
+                          'Contoh: Senior UI/UX Designer',
+                        ),
+                        validator: (val) => val == null || val.trim().isEmpty
+                            ? 'Posisi pekerjaan wajib diisi'
+                            : null,
                       ),
-                    ),
-                  ],
-                  onChanged: (val) => setState(() => _selectedSkema = val),
-                ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Nama Perusahaan *'),
+                      TextFormField(
+                        controller: _companyController,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration(
+                          'Contoh: PT Digital Inovasi Asia',
+                        ),
+                        validator: (val) => val == null || val.trim().isEmpty
+                            ? 'Nama perusahaan wajib diisi'
+                            : null,
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Kategori Industri / Bidang'),
+                      TextFormField(
+                        controller: _categoryController,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration(
+                          'Contoh: Teknologi Informasi & Software',
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Lokasi Penempatan *'),
+                      TextFormField(
+                        controller: _locationController,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration(
+                          'Contoh: Jakarta Selatan, DKI Jakarta',
+                        ),
+                        validator: (val) => val == null || val.trim().isEmpty
+                            ? 'Lokasi wajib diisi'
+                            : null,
+                      ),
 
-              const SizedBox(height: 24),
-              _buildSectionHeader('3. Gaji & Kualifikasi'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Gaji Min (Rp)'),
-                        TextFormField(
-                          controller: _salaryMinController,
-                          keyboardType: TextInputType.number,
-                          decoration: _inputDecoration('Mis. 6000000'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Gaji Max (Rp)'),
-                        TextFormField(
-                          controller: _salaryMaxController,
-                          keyboardType: TextInputType.number,
-                          decoration: _inputDecoration('Mis. 10000000'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Periode'),
-                        DropdownButtonFormField<String>(
-                          initialValue: _salaryPeriod,
-                          decoration: _inputDecoration(''),
-                          items: const [
-                            DropdownMenuItem(value: 'bulan', child: Text('Bulan', style: TextStyle(fontSize: 12.5))),
-                            DropdownMenuItem(value: 'tahun', child: Text('Tahun', style: TextStyle(fontSize: 12.5))),
-                            DropdownMenuItem(value: 'proyek', child: Text('Proyek', style: TextStyle(fontSize: 12.5))),
-                          ],
-                          onChanged: (val) => setState(() => _salaryPeriod = val ?? 'bulan'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Pengalaman Minimal'),
-                        DropdownButtonFormField<String>(
-                          initialValue: _experience,
-                          decoration: _inputDecoration(''),
-                          items: _experienceOptions
-                              .map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13))))
-                              .toList(),
-                          onChanged: (val) => setState(() => _experience = val ?? _experience),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildLabel('Pendidikan Minimal'),
-                        DropdownButtonFormField<String>(
-                          initialValue: _education,
-                          decoration: _inputDecoration(''),
-                          items: _educationOptions
-                              .map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13))))
-                              .toList(),
-                          onChanged: (val) => setState(() => _education = val ?? _education),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-              _buildSectionHeader('4. Deskripsi & Detail Pekerjaan'),
-              const SizedBox(height: 12),
-              _buildLabel('Ringkasan Posisi'),
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: _inputDecoration('Tuliskan ringkasan singkat perihal peran ini...'),
-              ),
-              const SizedBox(height: 16),
-              _buildDynamicListSection(
-                title: 'Tanggung Jawab Pekerjaan',
-                controllers: _descItemControllers,
-                hintText: 'Contoh: Mengembangkan fitur aplikasi mobile',
-              ),
-              const SizedBox(height: 16),
-              _buildDynamicListSection(
-                title: 'Persyaratan & Kualifikasi',
-                controllers: _reqItemControllers,
-                hintText: 'Contoh: Menguasai Flutter & REST API',
-              ),
-              const SizedBox(height: 16),
-              _buildDynamicListSection(
-                title: 'Benefit & Fasilitas',
-                controllers: _benefitItemControllers,
-                hintText: 'Contoh: BPJS Ketenagakerjaan & Kesehatan',
-              ),
-
-              const SizedBox(height: 24),
-              _buildSectionHeader('5. Dokumen Lowongan (PDF Rekruter)'),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEFF6FF),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFF0066F6), size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _filePdfName.isNotEmpty ? _filePdfName : 'Belum ada dokumen PDF',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('2. Tipe & Skema Sertifikasi'),
+                      const SizedBox(height: 12),
+                      _buildLabel('Tipe Pekerjaan'),
+                      DropdownButtonFormField<String>(
+                        initialValue: _employmentType,
+                        isExpanded: true,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration('Pilih tipe pekerjaan'),
+                        items: _employmentTypes
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                _isUploadingPdf
-                                    ? 'Mengunggah file ke server...'
-                                    : 'Lampirkan Brosur / TOR / Syarat Tambahan (PDF)',
+                            )
+                            .toList(),
+                        onChanged: (value) => setState(
+                          () => _employmentType = value ?? _employmentType,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Tipe Tempat Kerja'),
+                      DropdownButtonFormField<String>(
+                        initialValue: _workplaceType,
+                        isExpanded: true,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration('Pilih tempat kerja'),
+                        items: _workplaceTypes
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) => setState(
+                          () => _workplaceType = value ?? _workplaceType,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel(
+                        'Kualifikasi Skema Sertifikasi LSP (Opsional)',
+                      ),
+                      if (_isLoadingSkema)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: LinearProgressIndicator(
+                            color: Color(0xFF0066F6),
+                          ),
+                        )
+                      else
+                        DropdownButtonFormField<MasterSkema>(
+                          initialValue: _selectedSkema,
+                          isExpanded: true,
+                          style: _inputTextStyle,
+                          decoration: _inputDecoration(
+                            _skemaLoadFailed
+                                ? 'Skema belum dapat dimuat'
+                                : 'Pilih skema sertifikasi',
+                          ),
+                          items: [
+                            const DropdownMenuItem<MasterSkema>(
+                              value: null,
+                              child: Text(
+                                'Tidak mewajibkan skema khusus',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  color: _isUploadingPdf ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                                  color: Color(0xFF94A3B8),
+                                  fontSize: 13,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            ..._skemaList.map(
+                              (skema) => DropdownMenuItem<MasterSkema>(
+                                value: skema,
+                                child: Text(
+                                  skema.namaSkema,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _selectedSkema = value),
                         ),
-                        if (_filePdfName.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFFEF4444)),
-                            onPressed: () {
-                              setState(() {
-                                _filePdfName = '';
-                                _filePdfUrl = '';
-                              });
-                            },
+
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('3. Gaji & Kualifikasi'),
+                      const SizedBox(height: 12),
+                      _buildLabel('Gaji minimum (Rp)'),
+                      TextFormField(
+                        controller: _salaryMinController,
+                        keyboardType: TextInputType.number,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration('Contoh: 6000000'),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Gaji maksimum (Rp)'),
+                      TextFormField(
+                        controller: _salaryMaxController,
+                        keyboardType: TextInputType.number,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration('Contoh: 10000000'),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Periode gaji'),
+                      DropdownButtonFormField<String>(
+                        initialValue: _salaryPeriod,
+                        isExpanded: true,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration('Pilih periode gaji'),
+                        items: [
+                          const DropdownMenuItem(
+                            value: 'bulan',
+                            child: Text('Per bulan'),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: _isUploadingPdf ? null : _pickPdfFile,
-                        icon: _isUploadingPdf
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0066F6)),
-                              )
-                            : const Icon(Icons.upload_file_rounded, size: 18),
-                        label: Text(_isUploadingPdf ? 'Mengunggah...' : 'Pilih Berkas PDF'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF0066F6),
-                          side: const BorderSide(color: Color(0xFFBFDBFE)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          const DropdownMenuItem(
+                            value: 'tahun',
+                            child: Text('Per tahun'),
+                          ),
+                          const DropdownMenuItem(
+                            value: 'proyek',
+                            child: Text('Per proyek'),
+                          ),
+                          if (!const [
+                            'bulan',
+                            'tahun',
+                            'proyek',
+                          ].contains(_salaryPeriod))
+                            DropdownMenuItem(
+                              value: _salaryPeriod,
+                              child: Text(_salaryPeriod),
+                            ),
+                        ],
+                        onChanged: (value) =>
+                            setState(() => _salaryPeriod = value ?? 'bulan'),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Pengalaman minimal'),
+                      DropdownButtonFormField<String>(
+                        initialValue: _experience,
+                        isExpanded: true,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration('Pilih pengalaman'),
+                        items: _experienceOptions
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => _experience = value ?? _experience),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Pendidikan minimal'),
+                      DropdownButtonFormField<String>(
+                        initialValue: _education,
+                        isExpanded: true,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration('Pilih pendidikan'),
+                        items: _educationOptions
+                            .map(
+                              (value) => DropdownMenuItem(
+                                value: value,
+                                child: Text(value),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) =>
+                            setState(() => _education = value ?? _education),
+                      ),
+
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('4. Deskripsi & Detail Pekerjaan'),
+                      const SizedBox(height: 12),
+                      _buildLabel('Ringkasan Posisi'),
+                      TextFormField(
+                        controller: _descriptionController,
+                        maxLines: 3,
+                        style: _inputTextStyle,
+                        decoration: _inputDecoration(
+                          'Tuliskan ringkasan singkat perihal peran ini...',
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      _buildDynamicListSection(
+                        title: 'Tanggung Jawab Pekerjaan',
+                        controllers: _descItemControllers,
+                        hintText: 'Contoh: Mengembangkan fitur aplikasi mobile',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDynamicListSection(
+                        title: 'Persyaratan & Kualifikasi',
+                        controllers: _reqItemControllers,
+                        hintText: 'Contoh: Menguasai Flutter & REST API',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDynamicListSection(
+                        title: 'Benefit & Fasilitas',
+                        controllers: _benefitItemControllers,
+                        hintText: 'Contoh: BPJS Ketenagakerjaan & Kesehatan',
+                      ),
+
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('5. Dokumen Lowongan (PDF Rekruter)'),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFEFF6FF),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.picture_as_pdf_rounded,
+                                    color: Color(0xFF0066F6),
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _filePdfName.isNotEmpty
+                                            ? _filePdfName
+                                            : 'Belum ada dokumen PDF',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF0F172A),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        _isUploadingPdf
+                                            ? 'Mengunggah file ke server...'
+                                            : 'Lampirkan Brosur / TOR / Syarat Tambahan (PDF)',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: _isUploadingPdf
+                                              ? const Color(0xFF2563EB)
+                                              : const Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (_filePdfName.isNotEmpty)
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      size: 20,
+                                      color: Color(0xFFEF4444),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _filePdfName = '';
+                                        _filePdfUrl = '';
+                                      });
+                                    },
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: _isUploadingPdf
+                                    ? null
+                                    : _pickPdfFile,
+                                icon: _isUploadingPdf
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Color(0xFF0066F6),
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.upload_file_rounded,
+                                        size: 18,
+                                      ),
+                                label: Text(
+                                  _isUploadingPdf
+                                      ? 'Mengunggah...'
+                                      : 'Pilih Berkas PDF',
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF0066F6),
+                                  side: const BorderSide(
+                                    color: Color(0xFFBFDBFE),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-
-              const SizedBox(height: 32),
-              // Action buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: OutlinedButton(
-                        onPressed: _isSubmitting ? null : () => _submit(true),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF0F172A),
-                          side: const BorderSide(color: Color(0xFFCBD5E1)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Simpan Draft', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : () => _submit(false),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0066F6),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                              )
-                            : const Text('Publikasikan Lowongan', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+            _buildActionsBar(),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionsBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _isSubmitting || _isUploadingPdf
+                  ? null
+                  : () => _submit(false),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0066F6),
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFF93C5FD),
+                disabledForegroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSubmitting && !_savingDraft
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      'Publikasikan Lowongan',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 44,
+            child: OutlinedButton(
+              onPressed: _isSubmitting || _isUploadingPdf
+                  ? null
+                  : () => _submit(true),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF475569),
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSubmitting && _savingDraft
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF475569),
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      'Simpan Draft',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF475569),
+                      ),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -714,18 +880,9 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF0066F6), width: 1.5),
-      ),
+      border: _inputBorder,
+      enabledBorder: _inputBorder,
+      focusedBorder: _inputFocusedBorder,
     );
   }
 
@@ -740,13 +897,20 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildLabel(title),
+            Expanded(child: _buildLabel(title)),
             TextButton.icon(
               onPressed: () {
                 setState(() => controllers.add(TextEditingController()));
               },
-              icon: const Icon(Icons.add_circle_outline_rounded, size: 16, color: Color(0xFF0066F6)),
-              label: const Text('Tambah', style: TextStyle(fontSize: 12, color: Color(0xFF0066F6))),
+              icon: const Icon(
+                Icons.add_circle_outline_rounded,
+                size: 16,
+                color: Color(0xFF0066F6),
+              ),
+              label: const Text(
+                'Tambah',
+                style: TextStyle(fontSize: 12, color: Color(0xFF0066F6)),
+              ),
             ),
           ],
         ),
@@ -760,12 +924,17 @@ class _CareerExpoFormLowonganScreenState extends State<CareerExpoFormLowonganScr
                 Expanded(
                   child: TextFormField(
                     controller: controller,
+                    style: _inputTextStyle,
                     decoration: _inputDecoration('$hintText (${index + 1})'),
                   ),
                 ),
                 if (controllers.length > 1)
                   IconButton(
-                    icon: const Icon(Icons.remove_circle_outline_rounded, color: Color(0xFFEF4444), size: 20),
+                    icon: const Icon(
+                      Icons.remove_circle_outline_rounded,
+                      color: Color(0xFFEF4444),
+                      size: 20,
+                    ),
                     onPressed: () {
                       setState(() {
                         controllers.removeAt(index).dispose();

@@ -9,11 +9,11 @@ import '../../services/career_expo/career_expo_service.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../utils/url_helper.dart';
-import '../../widgets/career_expo/career_bouncy_tap.dart';
+import '../../widgets/common/custom_app_bar.dart';
 import '../career_expo/career_expo_apply_screen.dart';
 import 'magang_form_screen.dart';
 
-/// Halaman Detail Info Magang di Magang Hub (warna aksen ungu #7C3AED).
+/// Detail lowongan magang dengan aksi sesuai pemilik dan status lamaran.
 class MagangDetailScreen extends StatefulWidget {
   final CareerJobItem job;
   final String? applicationStatus;
@@ -102,7 +102,7 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
           target ? 'Info magang disimpan ke favorit' : 'Info magang dihapus dari favorit',
         ),
         duration: const Duration(seconds: 2),
-        backgroundColor: const Color(0xFF7C3AED),
+        backgroundColor: const Color(0xFF53A6ED),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -135,535 +135,292 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
     return 'Rp ${NumberFormatHelper.formatWithDots(_job.salaryMax)} / bln';
   }
 
+  Future<void> _editJob() async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => MagangFormScreen(initialJob: _job)),
+    );
+    if (updated == true && mounted) {
+      _hasEdited = true;
+      _loadLiveDetail();
+    }
+  }
+
+  Future<void> _copyInfo() async {
+    await Clipboard.setData(ClipboardData(
+      text: 'Lowongan Magang: ${_job.title} di ${_job.companyName} - LSP Digital Mobile',
+    ));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Informasi magang disalin.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          Navigator.pop(context, _hasEdited);
-        }
+        if (!didPop) Navigator.pop(context, _hasEdited);
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
-            onPressed: () => Navigator.pop(context, _hasEdited),
-          ),
-          title: const Text(
-            'Detail Lowongan Magang',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-          actions: [
-            if (_isCreator)
-              IconButton(
-                icon: const Icon(Icons.edit_outlined, color: Color(0xFF7C3AED)),
-                tooltip: 'Edit Info Magang',
-                onPressed: () async {
-                  final updated = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MagangFormScreen(initialJob: _job),
-                    ),
-                  );
-                  if (updated == true && mounted) {
-                    _hasEdited = true;
-                    _loadLiveDetail();
-                  }
-                },
-              ),
-            IconButton(
-              icon: const Icon(Icons.share_outlined, color: Color(0xFF1E293B)),
-              onPressed: () {
-                Clipboard.setData(ClipboardData(
-                  text: 'Lowongan Magang: ${_job.title} di ${_job.companyName} - LSP Digital Mobile',
-                ));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tautan info magang disalin ke clipboard.'),
-                    duration: Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            ),
-            IconButton(
-              icon: Icon(
-                _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                color: _isBookmarked ? const Color(0xFF7C3AED) : const Color(0xFF1E293B),
-              ),
-              onPressed: _toggleBookmark,
-            ),
-          ],
-        ),
+        backgroundColor: const Color(0xFFF5F6F8),
         body: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Company Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAF5FF),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE9D5FF)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: _job.logoBgColor,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              _job.logoText.isNotEmpty
-                                  ? _job.logoText
-                                  : (_job.companyName.isNotEmpty
-                                      ? _job.companyName.substring(0, 1).toUpperCase()
-                                      : 'M'),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _job.companyName,
-                                  style: const TextStyle(
-                                    fontSize: 15.5,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  _job.companyCategory.isNotEmpty
-                                      ? _job.companyCategory
-                                      : 'Mitra Industri Asesor',
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+          bottom: false,
+          child: Column(
+            children: [
+              CustomAppBar(
+                title: 'Detail Magang',
+                onBack: () => Navigator.pop(context, _hasEdited),
+                rightWidget: PopupMenuButton<String>(
+                  tooltip: 'Opsi lowongan',
+                  icon: const Icon(Icons.more_horiz_rounded),
+                  onSelected: (value) {
+                    if (value == 'copy') _copyInfo();
+                    if (value == 'edit') _editJob();
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(
+                      value: 'copy',
+                      child: Text('Salin informasi'),
                     ),
-                    const SizedBox(height: 20),
-                    // Title & Badge
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _job.title,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                              height: 1.3,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3E8FF),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Program Magang',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF7C3AED),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Highlights Grid
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                    if (_isCreator)
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Edit lowongan'),
                       ),
-                      child: Column(
-                        children: [
-                          _buildSpecRow(
-                            Icons.payments_outlined,
-                            'Uang Saku',
-                            _salaryFormatted,
-                            const Color(0xFF7C3AED),
-                          ),
-                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-                          _buildSpecRow(
-                            Icons.business_outlined,
-                            'Sistem Kerja',
-                            _job.workplaceType.isNotEmpty ? _job.workplaceType : 'On Site',
-                            const Color(0xFF2563EB),
-                          ),
-                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-                          _buildSpecRow(
-                            Icons.location_on_outlined,
-                            'Lokasi',
-                            _job.location.isNotEmpty ? _job.location : '-',
-                            const Color(0xFF0D9488),
-                          ),
-                          const Divider(height: 20, color: Color(0xFFE2E8F0)),
-                          _buildSpecRow(
-                            Icons.school_outlined,
-                            'Pendidikan',
-                            _job.education.isNotEmpty ? _job.education : 'Semua Jurusan',
-                            const Color(0xFFEA580C),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Deskripsi
-                    if (_job.shortDescription.isNotEmpty || _job.jobDescription.isNotEmpty) ...[
-                      const Text(
-                        'Deskripsi Tugas & Program Magang',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (_job.shortDescription.isNotEmpty)
-                        Text(
-                          _job.shortDescription,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            color: Color(0xFF475569),
-                            height: 1.5,
-                          ),
-                        ),
-                      if (_job.jobDescription.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        ..._job.jobDescription.map((item) => _buildBulletPoint(item)),
-                      ],
-                      const SizedBox(height: 24),
-                    ],
-                    // Persyaratan
-                    if (_job.requirements.isNotEmpty) ...[
-                      const Text(
-                        'Persyaratan Kualifikasi',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      ..._job.requirements.map((item) => _buildBulletPoint(item)),
-                      const SizedBox(height: 24),
-                    ],
-                    // Benefit
-                    if (_job.benefits.isNotEmpty) ...[
-                      const Text(
-                        'Fasilitas & Benefit Magang',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      ..._job.benefits.map((item) => _buildBulletPoint(item, isBenefit: true)),
-                      const SizedBox(height: 24),
-                    ],
-                    // Tentang Perusahaan
-                    if (_job.aboutCompany.isNotEmpty) ...[
-                      const Text(
-                        'Tentang Perusahaan',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _job.aboutCompany,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          color: Color(0xFF475569),
-                          height: 1.5,
-                        ),
-                        maxLines: _isAboutExpanded ? null : 3,
-                        overflow: _isAboutExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
-                      ),
-                      if (_job.aboutCompany.length > 150)
-                        GestureDetector(
-                          onTap: () => setState(() => _isAboutExpanded = !_isAboutExpanded),
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              _isAboutExpanded ? 'Sembunyikan' : 'Baca Selengkapnya',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF7C3AED),
-                              ),
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 24),
-                    ],
-                    // Berkas Unduhan / Flyer PDF
-                    if (_job.filePdf.isNotEmpty) ...[
-                      const Text(
-                        'Dokumen / Flyer Magang',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.picture_as_pdf_rounded, size: 32, color: Color(0xFFEF4444)),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Kerangka Acuan / Flyer Magang',
-                                    style: TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Format PDF resmi dari perusahaan',
-                                    style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                final pdfUrl = _job.filePdfUrl.isNotEmpty
-                                    ? _job.filePdfUrl
-                                    : (_job.filePdf.startsWith('http')
-                                        ? _job.filePdf
-                                        : '${ApiClient.baseUrl}/${_job.filePdf.replaceAll(RegExp(r'^/+'), '')}');
-                                UrlHelper.launchURL(pdfUrl);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF7C3AED),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: const Text('Buka', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                    const SizedBox(height: 60),
                   ],
                 ),
               ),
-        ),
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-            ),
-              child: _isCreator
-                  ? CareerBouncyTap(
-                      onTap: () async {
-                        final updated = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MagangFormScreen(initialJob: _job),
-                          ),
-                        );
-                        if (updated == true && mounted) {
-                          _hasEdited = true;
-                          _loadLiveDetail();
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF7C3AED),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _section(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.edit_outlined, color: Colors.white, size: 18),
-                            SizedBox(width: 8),
                             Text(
-                              'Edit Info Magang',
-                              style: TextStyle(
-                                fontSize: 15,
+                              _job.title,
+                              style: const TextStyle(
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Color(0xFF0F172A),
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _job.companyName,
+                              style: const TextStyle(fontSize: 15, color: Color(0xFF475569)),
+                            ),
+                            if (_job.companyCategory.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(_job.companyCategory, style: const TextStyle(color: Color(0xFF64748B))),
+                            ],
+                            if (_job.postedAt.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              Text(_job.postedAt, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                            ],
                           ],
                         ),
                       ),
-                    )
-                  : _isApplied
-                      ? Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDCFCE7),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFF86EFAC)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                      _section(
+                        title: 'Informasi magang',
+                        child: Column(
+                          children: [
+                            _info('Uang saku', _salaryFormatted),
+                            _info('Sistem kerja', _job.workplaceType),
+                            _info('Lokasi', _job.location),
+                            _info('Pendidikan', _job.education),
+                            if (_job.experience.isNotEmpty) _info('Pengalaman', _job.experience),
+                          ],
+                        ),
+                      ),
+                      if (_job.shortDescription.isNotEmpty || _job.jobDescription.isNotEmpty)
+                        _section(
+                          title: 'Deskripsi magang',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Lamaran Terkirim (${_applicationStatus.isNotEmpty ? _applicationStatus : 'Menunggu Review'})',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF16A34A),
-                                ),
-                              ),
+                              if (_job.shortDescription.isNotEmpty)
+                                Text(_job.shortDescription, style: _bodyStyle),
+                              if (_job.shortDescription.isNotEmpty && _job.jobDescription.isNotEmpty)
+                                const SizedBox(height: 12),
+                              ..._job.jobDescription.map(_bullet),
                             ],
                           ),
-                        )
-                      : CareerBouncyTap(
-                          onTap: _showApplyModal,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF7C3AED),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              'Lamar Magang Sekarang',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                        ),
+                      if (_job.requirements.isNotEmpty)
+                        _section(
+                          title: 'Persyaratan',
+                          child: Column(children: _job.requirements.map(_bullet).toList()),
+                        ),
+                      if (_job.benefits.isNotEmpty)
+                        _section(
+                          title: 'Fasilitas dan benefit',
+                          child: Column(children: _job.benefits.map(_bullet).toList()),
+                        ),
+                      if (_job.aboutCompany.isNotEmpty)
+                        _section(
+                          title: 'Tentang perusahaan',
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _job.aboutCompany,
+                                style: _bodyStyle,
+                                maxLines: _isAboutExpanded ? null : 4,
+                                overflow: _isAboutExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                               ),
+                              if (_job.aboutCompany.length > 150)
+                                TextButton(
+                                  onPressed: () => setState(() => _isAboutExpanded = !_isAboutExpanded),
+                                  child: Text(_isAboutExpanded ? 'Tampilkan lebih sedikit' : 'Baca selengkapnya'),
+                                ),
+                            ],
+                          ),
+                        ),
+                      if (_job.filePdf.isNotEmpty)
+                        _section(
+                          title: 'Dokumen pendukung',
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.description_outlined, size: 24),
+                            title: const Text('Dokumen magang', style: TextStyle(fontSize: 14)),
+                            trailing: const Icon(Icons.open_in_new_rounded, size: 20),
+                            onTap: () {
+                              final pdfUrl = _job.filePdfUrl.isNotEmpty
+                                  ? _job.filePdfUrl
+                                  : (_job.filePdf.startsWith('http')
+                                      ? _job.filePdf
+                                      : '${ApiClient.baseUrl}/${_job.filePdf.replaceAll(RegExp(r'^/+'), '')}');
+                              UrlHelper.launchURL(pdfUrl);
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_isApplied && !_isCreator) ...[
+                  Text(
+                    'Status lamaran: ${_applicationStatus.isEmpty ? 'Terkirim' : _applicationStatus}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF166534)),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Row(
+                  children: [
+                    if (!_isCreator) ...[
+                      SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: IconButton.outlined(
+                          tooltip: _isBookmarked ? 'Hapus dari tersimpan' : 'Simpan lowongan',
+                          onPressed: _toggleBookmark,
+                          icon: Icon(
+                            _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                            color: const Color(0xFF2563EB),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _isCreator ? _editJob : (_isApplied ? null : _showApplyModal),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF53A6ED),
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: const Color(0xFFDCFCE7),
+                            disabledForegroundColor: const Color(0xFF166534),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: Text(
+                            _isCreator ? 'Edit lowongan' : (_isApplied ? 'Terkirim' : 'Lamar magang'),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: _isApplied && !_isCreator ? const Color(0xFF166534) : Colors.white,
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSpecRow(IconData icon, String label, String value, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 18, color: color),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B)),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
+  static const _bodyStyle = TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF334155));
+
+  Widget _section({String? title, required Widget child}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (title != null) ...[
+            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
           ],
-        ),
-      ],
+          child,
+        ],
+      ),
     );
   }
 
-  Widget _buildBulletPoint(String text, {bool isBenefit = false}) {
+  Widget _info(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+          const SizedBox(height: 4),
+          Text(value.isEmpty ? 'Tidak dicantumkan' : value, style: _bodyStyle),
+        ],
+      ),
+    );
+  }
+
+  Widget _bullet(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Icon(
-              isBenefit ? Icons.check_circle_rounded : Icons.fiber_manual_record,
-              size: isBenefit ? 15 : 8,
-              color: isBenefit ? const Color(0xFF7C3AED) : const Color(0xFF94A3B8),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 13.5,
-                color: Color(0xFF334155),
-                height: 1.45,
-              ),
-            ),
-          ),
+          const Text('•  ', style: _bodyStyle),
+          Expanded(child: Text(text, style: _bodyStyle)),
         ],
       ),
     );

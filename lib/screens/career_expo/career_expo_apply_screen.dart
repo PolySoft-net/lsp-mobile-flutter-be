@@ -7,15 +7,13 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/career_expo_models.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../services/career_expo/career_expo_service.dart';
+import '../../widgets/common/custom_app_bar.dart';
 
 /// Halaman Multi-Step Lamar Pekerjaan sesuai Screen 1
 class CareerExpoApplyScreen extends StatefulWidget {
   final CareerJobItem job;
 
-  const CareerExpoApplyScreen({
-    super.key,
-    required this.job,
-  });
+  const CareerExpoApplyScreen({super.key, required this.job});
 
   @override
   State<CareerExpoApplyScreen> createState() => _CareerExpoApplyScreenState();
@@ -95,6 +93,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
       }
     }
   }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -144,7 +143,9 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         email: email,
         noHp: phone,
         coverLetter: _coverLetterController.text.trim(),
-        linkPortofolio: _attachPortfolio ? _portfolioController.text.trim() : '',
+        linkPortofolio: _attachPortfolio
+            ? _portfolioController.text.trim()
+            : '',
         fileCv: _cvUploadedUrl,
         namaFileCv: _cvUploadedUrl.isNotEmpty ? _cvFileName : '',
         sertakanSertifikat: _attachLspCert,
@@ -165,10 +166,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -210,10 +208,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
             Text(
               'Lamaran Anda untuk posisi ${widget.job.title} di ${widget.job.companyName} berhasil dikirim.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748B),
-              ),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -234,7 +229,10 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
                 ),
                 child: const Text(
                   'Lihat Status Lamaran',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -248,21 +246,11 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
-          onPressed: _previousStep,
-        ),
-        title: const Text(
-          'Lamar Pekerjaan',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: SafeArea(
+          bottom: false,
+          child: CustomAppBar(title: 'Lamar Pekerjaan', onBack: _previousStep),
         ),
       ),
       body: GestureDetector(
@@ -272,93 +260,99 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
           children: [
             Expanded(
               child: SingleChildScrollView(
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-              // Company & Job Summary Card
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: widget.job.logoBgColor,
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            widget.job.logoText.isNotEmpty
-                                ? widget.job.logoText
-                                : widget.job.companyName.substring(0, 1),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                    // Company & Job Summary Card
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: widget.job.logoBgColor,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              widget.job.logoText.isNotEmpty
+                                  ? widget.job.logoText
+                                  : widget.job.companyName.substring(0, 1),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.job.title,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F172A),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.job.companyName,
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 14,
-                                    color: Color(0xFF94A3B8),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.job.title,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF0F172A),
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${widget.job.location} • ${widget.job.employmentType}',
-                                    style: const TextStyle(
-                                      fontSize: 11.5,
-                                      color: Color(0xFF64748B),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  widget.job.companyName,
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on_outlined,
+                                      size: 14,
+                                      color: Color(0xFF94A3B8),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        '${widget.job.location} • ${widget.job.employmentType}',
+                                        style: const TextStyle(
+                                          fontSize: 11.5,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Multi-Step Progress Stepper
-                  _buildStepperIndicator(),
-                  const SizedBox(height: 28),
-                  // Current Step Content
-                  if (_currentStep == 1) _buildStep1DataDiri(),
-                  if (_currentStep == 2) _buildStep2CvPortfolio(),
-                  if (_currentStep == 3) _buildStep3Konfirmasi(),
+                    const SizedBox(height: 24),
+                    // Multi-Step Progress Stepper
+                    _buildStepperIndicator(),
+                    const SizedBox(height: 28),
+                    // Current Step Content
+                    if (_currentStep == 1) _buildStep1DataDiri(),
+                    if (_currentStep == 2) _buildStep2CvPortfolio(),
+                    if (_currentStep == 3) _buildStep3Konfirmasi(),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -379,11 +373,18 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : _nextStep,
+                    onPressed:
+                        _isSubmitting ||
+                            _isUploadingCv ||
+                            (_currentStep == 3 && !_agreedToTerms)
+                        ? null
+                        : _nextStep,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0066F6),
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: const Color(0xFF0066F6).withValues(alpha: 0.7),
+                      disabledBackgroundColor: const Color(
+                        0xFF0066F6,
+                      ).withValues(alpha: 0.7),
                       disabledForegroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -396,27 +397,31 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                _currentStep == 1
-                                    ? 'Lanjut ke CV & Portofolio'
-                                    : _currentStep == 2
-                                        ? 'Lanjut ke Konfirmasi'
-                                        : 'Kirim Lamaran Sekarang',
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                              Flexible(
+                                child: Text(
+                                  _currentStep == 3 ? 'Kirim Lamaran' : 'Lanjutkan',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 6),
                               Icon(
-                                _currentStep == 3 ? Icons.send_rounded : Icons.arrow_forward_rounded,
+                                _currentStep == 3
+                                    ? Icons.send_rounded
+                                    : Icons.arrow_forward_rounded,
                                 size: 16,
                                 color: Colors.white,
                               ),
@@ -435,23 +440,29 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
   Widget _buildStepperIndicator() {
     return Row(
       children: [
-        _buildStepNode(1, 'Data Diri', _currentStep >= 1),
-        Expanded(
+        Expanded(child: _buildStepNode(1, 'Data Diri', _currentStep >= 1)),
+        SizedBox(
+          width: 20,
           child: Container(
             height: 2,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            color: _currentStep >= 2 ? const Color(0xFF0066F6) : const Color(0xFFE2E8F0),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            color: _currentStep >= 2
+                ? const Color(0xFF0066F6)
+                : const Color(0xFFE2E8F0),
           ),
         ),
-        _buildStepNode(2, 'CV & Portofolio', _currentStep >= 2),
-        Expanded(
+        Expanded(child: _buildStepNode(2, 'CV & Portofolio', _currentStep >= 2)),
+        SizedBox(
+          width: 20,
           child: Container(
             height: 2,
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            color: _currentStep >= 3 ? const Color(0xFF0066F6) : const Color(0xFFE2E8F0),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            color: _currentStep >= 3
+                ? const Color(0xFF0066F6)
+                : const Color(0xFFE2E8F0),
           ),
         ),
-        _buildStepNode(3, 'Konfirmasi', _currentStep >= 3),
+        Expanded(child: _buildStepNode(3, 'Konfirmasi', _currentStep >= 3)),
       ],
     );
   }
@@ -466,7 +477,9 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
             color: isActive ? const Color(0xFF0066F6) : const Color(0xFFF1F5F9),
             shape: BoxShape.circle,
             border: Border.all(
-              color: isActive ? const Color(0xFF0066F6) : const Color(0xFFCBD5E1),
+              color: isActive
+                  ? const Color(0xFF0066F6)
+                  : const Color(0xFFCBD5E1),
             ),
           ),
           alignment: Alignment.center,
@@ -482,6 +495,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         const SizedBox(height: 6),
         Text(
           label,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 11,
             fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
@@ -530,205 +544,218 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
   }
 
   Widget _buildStep2CvPortfolio() {
+    final hasCv = _cvUploadedUrl.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'CV & Dokumen Pendukung',
+          'CV & Portofolio',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Color(0xFF0F172A),
           ),
         ),
-        const SizedBox(height: 14),
-        // Selected CV Card
-        // Selected CV Card with interactive file picker
-        InkWell(
-          onTap: _isUploadingCv ? null : _pickCvFile,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF0066F6)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEFF6FF),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.picture_as_pdf_rounded,
-                    color: Color(0xFF0066F6),
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _cvUploadedUrl.isNotEmpty
-                            ? _cvFileName
-                            : (_isUploadingCv ? 'Mengunggah CV...' : 'Unggah Berkas CV (PDF)'),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _isUploadingCv
-                            ? 'Sedang mengunggah ke server...'
-                            : (_cvUploadedUrl.isNotEmpty
-                                ? '$_cvFileSize • Terlampir • Ketuk untuk ganti'
-                                : 'Ketuk di sini untuk memilih berkas PDF dari HP'),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: _cvUploadedUrl.isNotEmpty ? const Color(0xFF10B981) : const Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_isUploadingCv)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0066F6)),
-                  )
-                else if (_cvUploadedUrl.isNotEmpty)
-                  const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 22)
-                else
-                  const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF0066F6), size: 22),
-              ],
-            ),
-          ),
+        const SizedBox(height: 6),
+        const Text(
+          'Lengkapi lamaran dengan CV dan dokumen pendukung.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
         ),
-        const SizedBox(height: 14),
-        // Checkbox Sertifikat LSP
+        const SizedBox(height: 20),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FF),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(
-                value: _attachLspCert,
-                onChanged: (val) => setState(() => _attachLspCert = val ?? true),
-                activeColor: const Color(0xFF0066F6),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.description_outlined,
+                    color: Color(0xFF0066F6),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasCv ? _cvFileName : 'Curriculum Vitae',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _isUploadingCv
+                              ? 'Mengunggah CV...'
+                              : hasCv
+                              ? '$_cvFileSize • Terlampir'
+                              : 'Pilih dokumen dalam format PDF',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const Expanded(
-                child: Text(
-                  'Lampirkan Sertifikat Kompetensi LSP Resmi',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E3A8A),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isUploadingCv ? null : _pickCvFile,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF0066F6),
+                    minimumSize: const Size(0, 44),
+                    side: const BorderSide(color: Color(0xFFBFDBFE)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  icon: _isUploadingCv
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(
+                          Icons.upload_file_rounded,
+                          size: 20,
+                          color: Color(0xFF0066F6),
+                        ),
+                  label: Text(
+                    _isUploadingCv
+                        ? 'Mengunggah...'
+                        : hasCv
+                        ? 'Ganti CV'
+                        : 'Pilih CV (PDF)',
+                    style: const TextStyle(
+                      color: Color(0xFF0066F6),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'Dokumen pendukung',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 10),
-        // Checkbox Portofolio
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        _buildDocumentOption(
+          title: 'Sertifikat kompetensi LSP',
+          subtitle: 'Sertakan sertifikat pada lamaran Anda.',
+          selected: _attachLspCert,
+          onTap: () => setState(() => _attachLspCert = !_attachLspCert),
+        ),
+        const SizedBox(height: 10),
+        _buildDocumentOption(
+          title: 'Link portofolio',
+          subtitle: 'Figma, Behance, GitHub, atau website pribadi.',
+          selected: _attachPortfolio,
+          onTap: () => setState(() => _attachPortfolio = !_attachPortfolio),
+        ),
+        if (_attachPortfolio) ...[
+          const SizedBox(height: 14),
+          _buildTextField(
+            label: 'Tautan portofolio',
+            controller: _portfolioController,
+            hint: 'https://',
+            keyboardType: TextInputType.url,
+          ),
+        ],
+        const SizedBox(height: 20),
+        _buildTextField(
+          label: 'Pesan pengantar (opsional)',
+          controller: _coverLetterController,
+          hint: 'Perkenalkan diri dan ceritakan ketertarikan Anda...',
+          maxLines: 4,
+          keyboardType: TextInputType.multiline,
+          textInputAction: TextInputAction.newline,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentOption({
+    required String title,
+    required String subtitle,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Semantics(
+      checked: selected,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
+            color: selected ? const Color(0xFFEFF6FF) : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(
+              color: selected
+                  ? const Color(0xFFBFDBFE)
+                  : const Color(0xFFE2E8F0),
+            ),
           ),
           child: Row(
             children: [
-              Checkbox(
-                value: _attachPortfolio,
-                onChanged: (val) => setState(() => _attachPortfolio = val ?? true),
-                activeColor: const Color(0xFF0066F6),
+              Icon(
+                selected
+                    ? Icons.check_box_rounded
+                    : Icons.check_box_outline_blank_rounded,
+                color: selected
+                    ? const Color(0xFF0066F6)
+                    : const Color(0xFF94A3B8),
+                size: 22,
               ),
-              const Expanded(
-                child: Text(
-                  'Sertakan Link Portofolio (Figma, Behance, GitHub, Web)',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF334155),
-                  ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-        if (_attachPortfolio) ...[
-          const SizedBox(height: 10),
-          TextField(
-            controller: _portfolioController,
-            decoration: InputDecoration(
-              hintText: 'https://behance.net/portofolio-anda',
-              hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              prefixIcon: const Icon(Icons.link_rounded, size: 20, color: Color(0xFF0066F6)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF0066F6)),
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 16),
-        // Cover Letter
-        const Text(
-          'Catatan / Pesan Pengantar (Opsional)',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF334155),
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _coverLetterController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Tuliskan salam perkenalan singkat...',
-            hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-            filled: true,
-            fillColor: const Color(0xFFF8FAFC),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF0066F6)),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -764,29 +791,25 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
               const Divider(height: 18, color: Color(0xFFE2E8F0)),
               _buildSummaryRow('Perusahaan', widget.job.companyName),
               const Divider(height: 18, color: Color(0xFFE2E8F0)),
-              _buildSummaryRow('Dokumen', 'CV + Sertifikat LSP Aktif'),
+              _buildSummaryRow(
+                'Dokumen',
+                [
+                  if (_cvUploadedUrl.isNotEmpty) 'CV',
+                  if (_attachLspCert) 'Sertifikat LSP',
+                  if (_attachPortfolio &&
+                      _portfolioController.text.trim().isNotEmpty)
+                    'Link portofolio',
+                ].join(' • '),
+              ),
             ],
           ),
         ),
         const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Checkbox(
-              value: _agreedToTerms,
-              onChanged: (val) => setState(() => _agreedToTerms = val ?? true),
-              activeColor: const Color(0xFF0066F6),
-            ),
-            const Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: Text(
-                  'Saya menyatakan data yang diisi adalah benar dan mengizinkan perusahaan untuk meninjau profil saya.',
-                  style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B), height: 1.35),
-                ),
-              ),
-            ),
-          ],
+        _buildDocumentOption(
+          title: 'Persetujuan pengajuan',
+          subtitle: 'Saya menyatakan data yang diisi adalah benar dan mengizinkan perusahaan untuk meninjau profil saya.',
+          selected: _agreedToTerms,
+          onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
         ),
       ],
     );
@@ -800,12 +823,16 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
           label,
           style: const TextStyle(fontSize: 12.5, color: Color(0xFF64748B)),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF0F172A),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF0F172A),
+            ),
           ),
         ),
       ],
@@ -818,6 +845,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
     required String hint,
     TextInputType keyboardType = TextInputType.text,
     TextInputAction textInputAction = TextInputAction.next,
+    int maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -833,6 +861,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         const SizedBox(height: 6),
         TextField(
           controller: controller,
+          maxLines: maxLines,
           keyboardType: keyboardType,
           textInputAction: textInputAction,
           style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
@@ -841,7 +870,10 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
             hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -852,7 +884,10 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF0066F6), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFF0066F6),
+                width: 1.5,
+              ),
             ),
           ),
         ),
