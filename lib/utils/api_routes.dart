@@ -471,4 +471,15 @@ class ApiRoutes {
       '/api/career-expo/notifikasi/$id/read';
   static const String careerExpoNotifikasiReadAll =
       '/api/career-expo/notifikasi/read-all';
+
+  // ============================================================================
+  // Magang Hub Routes
+  // ============================================================================
+
+  static const String magangHubLowongan = '/api/magang-hub/lowongan';
+  static const String magangHubPerusahaan = '/api/magang-hub/perusahaan';
+  static const String magangHubStats = '/api/magang-hub/stats';
+  static const String magangHubMyLowongan = '/api/magang-hub/lowongan-saya';
+  static String magangHubDetail(dynamic id) => '/api/magang-hub/lowongan/$id';
+  static const String magangHubUpload = '/api/magang-hub/upload';
 }

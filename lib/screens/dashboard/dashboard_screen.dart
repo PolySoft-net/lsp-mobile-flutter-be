@@ -33,7 +33,7 @@ import 'berita_screen.dart';
 import '../ai/asesor_ai_screen.dart';
 import '../digital_product/digital_product_screen.dart';
 import '../career_expo/career_expo_screen.dart';
-
+import '../magang_hub/magang_hub_screen.dart';
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToJadwal;
   final Function(int tabIndex)? onNavigateToTab;
@@ -977,11 +977,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         } else if (value == 'magang_hub') {
-          _showComingSoonDialog(
+          Navigator.push(
             context,
-            'Magang Hub',
-            Icons.school_outlined,
-            const Color(0xFF7C3AED),
+            MaterialPageRoute(
+              builder: (context) => const MagangHubScreen(),
+            ),
           );
         } else if (value == 'investment') {
           _showComingSoonDialog(
@@ -1017,7 +1017,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.school_outlined,
           iconColor: const Color(0xFF7C3AED),
           title: 'Magang Hub',
-          badgeText: 'Segera Hadir',
         ),
         _buildHeaderDropdownItem(
           value: 'investment',
