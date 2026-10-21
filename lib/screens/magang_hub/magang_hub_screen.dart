@@ -264,7 +264,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
             ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(54),
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             decoration: BoxDecoration(
@@ -394,7 +394,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                   hintText: 'Cari posisi magang atau perusahaan...',
                   hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
                   prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF64748B)),
-                  suffixIcon: _searchJobQuery.isNotEmpty
+                  suffixIcon: _searchJobController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
                           onPressed: () {
@@ -407,6 +407,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),
+                onChanged: (_) => setState(() {}),
                 onSubmitted: (v) {
                   setState(() => _searchJobQuery = v.trim());
                   _loadJobs();
@@ -550,7 +551,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                   hintText: 'Cari perusahaan atau kategori industri...',
                   hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
                   prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF64748B)),
-                  suffixIcon: _searchCompanyQuery.isNotEmpty
+                  suffixIcon: _searchCompanyController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
                           onPressed: () {
@@ -563,6 +564,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),
+                onChanged: (_) => setState(() {}),
                 onSubmitted: (v) {
                   setState(() => _searchCompanyQuery = v.trim());
                   _loadCompanies();
