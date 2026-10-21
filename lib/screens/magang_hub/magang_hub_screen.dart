@@ -305,7 +305,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
 
   Widget _buildStatsBanner() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      margin: const EdgeInsets.only(top: 4, bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFFAF5FF),
@@ -375,11 +375,9 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
       onRefresh: _loadAllData,
       child: Column(
         children: [
-          // Compact Stats Banner
-          _buildStatsBanner(),
           // Search Bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
             child: Container(
               height: 44,
               decoration: BoxDecoration(
@@ -471,41 +469,44 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                         ),
                       )
                     : _jobs.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.school_outlined, size: 48, color: Color(0xFFCBD5E1)),
-                                  const SizedBox(height: 12),
-                                  const Text(
-                                    'Belum ada lowongan magang yang sesuai kriteria.',
-                                    style: TextStyle(fontSize: 13.5, color: Color(0xFF64748B)),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  if (_isAsesor) ...[
-                                    const SizedBox(height: 14),
-                                    ElevatedButton.icon(
-                                      onPressed: () => _openForm(),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF7C3AED),
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      ),
-                                      icon: const Icon(Icons.add_rounded, size: 18),
-                                      label: const Text('Pasang Info Magang Baru'),
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
+                            child: Column(
+                              children: [
+                                _buildStatsBanner(),
+                                const SizedBox(height: 32),
+                                const Icon(Icons.school_outlined, size: 48, color: Color(0xFFCBD5E1)),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'Belum ada lowongan magang yang sesuai kriteria.',
+                                  style: TextStyle(fontSize: 13.5, color: Color(0xFF64748B)),
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (_isAsesor) ...[
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: () => _openForm(),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF7C3AED),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                     ),
-                                  ],
+                                    icon: const Icon(Icons.add_rounded, size: 18),
+                                    label: const Text('Pasang Info Magang Baru'),
+                                  ),
                                 ],
-                              ),
+                              ],
                             ),
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
-                            itemCount: _jobs.length,
+                            itemCount: _jobs.length + 1,
                             itemBuilder: (context, idx) {
-                              final job = _jobs[idx];
+                              if (idx == 0) {
+                                return _buildStatsBanner();
+                              }
+                              final job = _jobs[idx - 1];
                               return MagangJobCard(
                                 job: job,
                                 onTap: () async {
