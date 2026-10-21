@@ -4,7 +4,6 @@ import '../../models/magang_hub_models.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
-import '../../widgets/common/custom_app_bar.dart';
 import 'magang_detail_screen.dart';
 import 'magang_form_screen.dart';
 import 'magang_perusahaan_detail_screen.dart';
@@ -225,84 +224,49 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.paddingOf(context).top;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: Column(
-        children: [
-          SizedBox(height: statusBarHeight + 8),
-          CustomAppBar(
-            title: 'Magang Hub',
-            rightWidget: _isAsesor
-                ? Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: TextButton.icon(
-                      onPressed: () => _openForm(),
-                      style: TextButton.styleFrom(
-                        backgroundColor: const Color(0xFF7C3AED),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      icon: const Icon(Icons.add_rounded, size: 16),
-                      label: const Text('Pasang Magang', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                    ),
-                  )
-                : null,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Magang Hub',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
           ),
-          // Hero Stats Card
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        ),
+        actions: [
+          if (_isAsesor)
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: ElevatedButton.icon(
+                onPressed: () => _openForm(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x287C3AED),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatItem(
-                      'Lowongan Magang',
-                      '${_stats.totalLowonganMagang}',
-                      Icons.school_outlined,
-                    ),
-                  ),
-                  Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
-                  Expanded(
-                    child: _buildStatItem(
-                      'Mitra Industri',
-                      '${_stats.totalPerusahaan}',
-                      Icons.business_rounded,
-                    ),
-                  ),
-                  Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
-                  Expanded(
-                    child: _buildStatItem(
-                      'Kota / Wilayah',
-                      '${_stats.totalKota}',
-                      Icons.location_on_outlined,
-                    ),
-                  ),
-                ],
+                icon: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                label: const Text(
+                  'Pasang',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
             ),
-          ),
-          // TabBar
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(12),
@@ -314,6 +278,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                 borderRadius: BorderRadius.circular(10),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
               labelColor: Colors.white,
               unselectedLabelColor: const Color(0xFF64748B),
               labelStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
@@ -325,16 +290,51 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          // TabBarView
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildLowonganTab(),
+          _buildPerusahaanTab(),
+          if (_isAsesor) _buildMagangSayaTab(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF5FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE9D5FF), width: 1.0),
+      ),
+      child: Row(
+        children: [
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildLowonganTab(),
-                _buildPerusahaanTab(),
-                if (_isAsesor) _buildMagangSayaTab(),
-              ],
+            child: _buildStatItem(
+              'Lowongan',
+              '${_stats.totalLowonganMagang}',
+              Icons.school_outlined,
+            ),
+          ),
+          Container(width: 1, height: 28, color: const Color(0xFFDDD6FE)),
+          Expanded(
+            child: _buildStatItem(
+              'Mitra Industri',
+              '${_stats.totalPerusahaan}',
+              Icons.business_rounded,
+            ),
+          ),
+          Container(width: 1, height: 28, color: const Color(0xFFDDD6FE)),
+          Expanded(
+            child: _buildStatItem(
+              'Kota/Wilayah',
+              '${_stats.totalKota}',
+              Icons.location_on_outlined,
             ),
           ),
         ],
@@ -345,21 +345,22 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
   Widget _buildStatItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white.withValues(alpha: 0.9), size: 20),
-        const SizedBox(height: 4),
+        Icon(icon, color: const Color(0xFF7C3AED), size: 18),
+        const SizedBox(height: 3),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
+            color: Color(0xFF5B21B6),
+            fontSize: 15,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
+          style: const TextStyle(
+            color: Color(0xFF6B21A8),
             fontSize: 10.5,
+            fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
         ),
@@ -367,49 +368,56 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
     );
   }
 
+
   Widget _buildLowonganTab() {
     return RefreshIndicator(
       color: const Color(0xFF7C3AED),
       onRefresh: _loadAllData,
       child: Column(
         children: [
-          // Search & Filter Row
+          // Compact Stats Banner
+          _buildStatsBanner(),
+          // Search Bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: TextField(
-                      controller: _searchJobController,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: const InputDecoration(
-                        hintText: 'Cari posisi atau nama perusahaan...',
-                        hintStyle: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-                        prefixIcon: Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 10),
-                      ),
-                      onSubmitted: (v) {
-                        setState(() => _searchJobQuery = v.trim());
-                        _loadJobs();
-                      },
-                    ),
-                  ),
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: TextField(
+                controller: _searchJobController,
+                style: const TextStyle(fontSize: 13.5, color: Color(0xFF0F172A)),
+                decoration: InputDecoration(
+                  hintText: 'Cari posisi magang atau perusahaan...',
+                  hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF64748B)),
+                  suffixIcon: _searchJobQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                          onPressed: () {
+                            _searchJobController.clear();
+                            setState(() => _searchJobQuery = '');
+                            _loadJobs();
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),
-              ],
+                onSubmitted: (v) {
+                  setState(() => _searchJobQuery = v.trim());
+                  _loadJobs();
+                },
+              ),
             ),
           ),
           // Workplace Type Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: _workplaceFilterOptions.map((type) {
                 final isSelected = _selectedWorkplace == type;
@@ -429,9 +437,10 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                     ),
                     backgroundColor: Colors.white,
                     selectedColor: const Color(0xFF7C3AED),
-                    checkmarkColor: Colors.white,
+                    showCheckmark: false,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
                         color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0),
                       ),
@@ -492,7 +501,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
                             itemCount: _jobs.length,
                             itemBuilder: (context, idx) {
                               final job = _jobs[idx];
@@ -526,23 +535,33 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
         children: [
           // Search Field
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
             child: Container(
-              height: 42,
+              height: 44,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: TextField(
                 controller: _searchCompanyController,
-                style: const TextStyle(fontSize: 13),
-                decoration: const InputDecoration(
+                style: const TextStyle(fontSize: 13.5, color: Color(0xFF0F172A)),
+                decoration: InputDecoration(
                   hintText: 'Cari perusahaan atau kategori industri...',
-                  hintStyle: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
-                  prefixIcon: Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
+                  hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF64748B)),
+                  suffixIcon: _searchCompanyQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF94A3B8)),
+                          onPressed: () {
+                            _searchCompanyController.clear();
+                            setState(() => _searchCompanyQuery = '');
+                            _loadCompanies();
+                          },
+                        )
+                      : null,
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),
                 onSubmitted: (v) {
                   setState(() => _searchCompanyQuery = v.trim());
@@ -587,7 +606,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
                             itemCount: _companies.length,
                             itemBuilder: (context, idx) {
                               final item = _companies[idx];
@@ -619,7 +638,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
           // Filter Chips: Semua, Publish, Draft
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: ['Semua', 'Publish', 'Draft'].map((status) {
                 final isSelected = _selectedMyStatus == status;
@@ -639,9 +658,10 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                     ),
                     backgroundColor: Colors.white,
                     selectedColor: const Color(0xFF7C3AED),
-                    checkmarkColor: Colors.white,
+                    showCheckmark: false,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
                         color: isSelected ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0),
                       ),
@@ -705,7 +725,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> with SingleTickerProv
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
                             itemCount: _myJobs.length,
                             itemBuilder: (context, idx) {
                               final job = _myJobs[idx];

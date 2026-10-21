@@ -10,7 +10,6 @@ import '../../services/magang_hub/magang_hub_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../utils/url_helper.dart';
 import '../../widgets/career_expo/career_bouncy_tap.dart';
-import '../../widgets/common/custom_app_bar.dart';
 import '../career_expo/career_expo_apply_screen.dart';
 import 'magang_form_screen.dart';
 
@@ -138,7 +137,6 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.paddingOf(context).top;
 
     return PopScope(
       canPop: false,
@@ -149,61 +147,69 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            SizedBox(height: statusBarHeight + 8),
-            CustomAppBar(
-              title: 'Detail Lowongan Magang',
-              onBack: () => Navigator.pop(context, _hasEdited),
-              rightWidget: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_isCreator)
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined, color: Color(0xFF7C3AED)),
-                      tooltip: 'Edit Info Magang',
-                      onPressed: () async {
-                        final updated = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MagangFormScreen(initialJob: _job),
-                          ),
-                        );
-                        if (updated == true && mounted) {
-                          _hasEdited = true;
-                          _loadLiveDetail();
-                        }
-                      },
-                    ),
-                  IconButton(
-                    icon: const Icon(Icons.share_outlined, color: Color(0xFF1E293B)),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(
-                        text: 'Lowongan Magang: ${_job.title} di ${_job.companyName} - LSP Digital Mobile',
-                      ));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Tautan info magang disalin ke clipboard.'),
-                          duration: Duration(seconds: 2),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                      color: _isBookmarked ? const Color(0xFF7C3AED) : const Color(0xFF1E293B),
-                    ),
-                    onPressed: _toggleBookmark,
-                  ),
-                ],
-              ),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+            onPressed: () => Navigator.pop(context, _hasEdited),
+          ),
+          title: const Text(
+            'Detail Lowongan Magang',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Column(
+          ),
+          actions: [
+            if (_isCreator)
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, color: Color(0xFF7C3AED)),
+                tooltip: 'Edit Info Magang',
+                onPressed: () async {
+                  final updated = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MagangFormScreen(initialJob: _job),
+                    ),
+                  );
+                  if (updated == true && mounted) {
+                    _hasEdited = true;
+                    _loadLiveDetail();
+                  }
+                },
+              ),
+            IconButton(
+              icon: const Icon(Icons.share_outlined, color: Color(0xFF1E293B)),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(
+                  text: 'Lowongan Magang: ${_job.title} di ${_job.companyName} - LSP Digital Mobile',
+                ));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Tautan info magang disalin ke clipboard.'),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: Icon(
+                _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                color: _isBookmarked ? const Color(0xFF7C3AED) : const Color(0xFF1E293B),
+              ),
+              onPressed: _toggleBookmark,
+            ),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Company Card
@@ -501,21 +507,15 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
                   ],
                 ),
               ),
+        ),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
             ),
-            // Bottom Sticky Button
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x08000000),
-                    blurRadius: 10,
-                    offset: Offset(0, -3),
-                  ),
-                ],
-              ),
               child: _isCreator
                   ? CareerBouncyTap(
                       onTap: () async {
@@ -536,15 +536,7 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFF7C3AED),
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x337C3AED),
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
                         ),
-                        alignment: Alignment.center,
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -592,19 +584,10 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x337C3AED),
-                                  blurRadius: 8,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7C3AED),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                             alignment: Alignment.center,
                             child: const Text(
                               'Lamar Magang Sekarang',
@@ -616,8 +599,7 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
                             ),
                           ),
                         ),
-            ),
-          ],
+          ),
         ),
       ),
     );

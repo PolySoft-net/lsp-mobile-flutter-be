@@ -2,7 +2,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/magang_hub_models.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
-import '../../widgets/common/custom_app_bar.dart';
 import 'magang_detail_screen.dart';
 import 'widgets/magang_card.dart';
 
@@ -56,22 +55,32 @@ class _MagangPerusahaanDetailScreenState extends State<MagangPerusahaanDetailScr
 
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.paddingOf(context).top;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: Column(
-        children: [
-          SizedBox(height: statusBarHeight + 8),
-          const CustomAppBar(
-            title: 'Profil Perusahaan Mitra',
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Profil Perusahaan Mitra',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
                   // Company Hero Card
                   Container(
                     width: double.infinity,
@@ -80,13 +89,6 @@ class _MagangPerusahaanDetailScreenState extends State<MagangPerusahaanDetailScr
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x06000000),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -260,8 +262,6 @@ class _MagangPerusahaanDetailScreenState extends State<MagangPerusahaanDetailScr
               ),
             ),
           ),
-        ],
-      ),
-    );
+        );
   }
 }

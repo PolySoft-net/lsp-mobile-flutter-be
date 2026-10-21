@@ -7,7 +7,6 @@ import '../../models/master_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../services/common/master_service.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
-import '../../widgets/common/custom_app_bar.dart';
 
 /// Form Input & Edit Lowongan Magang di Perusahaan Mitra yang di-input oleh Asesor.
 class MagangFormScreen extends StatefulWidget {
@@ -285,20 +284,30 @@ class _MagangFormScreenState extends State<MagangFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double statusBarHeight = MediaQuery.paddingOf(context).top;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: Column(
-        children: [
-          SizedBox(height: statusBarHeight + 8),
-          CustomAppBar(
-            title: widget.initialJob != null ? 'Edit Info Magang' : 'Pasang Info Magang',
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.initialJob != null ? 'Edit Info Magang' : 'Pasang Info Magang',
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Form(
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,10 +567,8 @@ class _MagangFormScreenState extends State<MagangFormScreen> {
                     const SizedBox(height: 40),
                   ],
                 ),
-              ),
-            ),
           ),
-        ],
+        ),
       ),
     );
   }
