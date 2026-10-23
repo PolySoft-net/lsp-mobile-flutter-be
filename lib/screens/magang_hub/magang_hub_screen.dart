@@ -7,7 +7,6 @@ import '../../services/career_expo/career_expo_service.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
 import '../career_expo/career_expo_favorit_screen.dart';
 import '../career_expo/career_expo_lamaran_tab.dart';
-import '../career_expo/career_expo_notifikasi_tab.dart';
 import '../career_expo/career_expo_profile_tab.dart';
 import 'magang_detail_screen.dart';
 import 'magang_form_screen.dart';
@@ -410,60 +409,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
 
     return Scaffold(
       backgroundColor: hubCanvas,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/logo.png',
-                    width: 28,
-                    height: 28,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.verified_user_rounded,
-                      color: Color(0xFF0066F6),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'LSP Teknologi Digital',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CareerExpoNotifikasiTab(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: Color(0xFF0F172A),
-                      size: 26,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: IndexedStack(index: _currentIndex, children: tabs),
-            ),
-          ],
-        ),
-      ),
+      body: IndexedStack(index: _currentIndex, children: tabs),
       bottomNavigationBar: _buildBottomBar(),
       floatingActionButton: _isAsesor
           ? FloatingActionButton(

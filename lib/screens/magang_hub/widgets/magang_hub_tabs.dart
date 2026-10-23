@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../models/magang_hub_models.dart';
 import '../../../utils/number_format_helper.dart';
+import '../../career_expo/career_expo_notifikasi_tab.dart';
 import 'magang_card.dart';
 import 'magang_hub_common.dart';
 import 'magang_perusahaan_card.dart';
@@ -55,6 +56,54 @@ class MagangHubJobsTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Top App Bar Header
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/logo.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.verified_user_rounded,
+                        color: Color(0xFF0066F6),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'LSP Teknologi Digital',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CareerExpoNotifikasiTab(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.notifications_none_rounded,
+                        color: Color(0xFF0F172A),
+                        size: 26,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             // Search Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -547,24 +596,71 @@ class MagangHubCompaniesTab extends StatelessWidget {
     return RefreshIndicator(
       color: hubBlue,
       onRefresh: onRefresh,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: MagangHubSearchField(
-              controller: searchController,
-              hint: 'Cari perusahaan atau kategori industri',
-              onSubmitted: onSearchSubmitted,
-              onClear: onSearchCleared,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/logo.png',
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.verified_user_rounded,
+                      color: Color(0xFF0066F6),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'LSP Teknologi Digital',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CareerExpoNotifikasiTab(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Color(0xFF0F172A),
+                      size: 26,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          MagangHubSegmentedControl(
-            options: locationOptions,
-            selected: selectedLocation,
-            onSelected: onLocationSelected,
-          ),
-          Expanded(child: _buildBody()),
-        ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: MagangHubSearchField(
+                controller: searchController,
+                hint: 'Cari perusahaan atau kategori industri',
+                onSubmitted: onSearchSubmitted,
+                onClear: onSearchCleared,
+              ),
+            ),
+            MagangHubSegmentedControl(
+              options: locationOptions,
+              selected: selectedLocation,
+              onSelected: onLocationSelected,
+            ),
+            Expanded(child: _buildBody()),
+          ],
+        ),
       ),
     );
   }

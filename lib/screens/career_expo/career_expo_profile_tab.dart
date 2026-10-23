@@ -62,32 +62,10 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
     return raw.isNotEmpty ? UrlHelper.resolveUrl(raw) : '';
   }
 
-  Future<void> _handleLogout() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Konfirmasi Keluar', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
-            child: const Text('Keluar', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !mounted) return;
-
-    try {
-      await AuthRepository.instance.logout();
-    } catch (_) {}
-    if (!mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+  void _handleKeluar() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
   @override
   Widget build(BuildContext context) {
@@ -278,7 +256,7 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
                 width: double.infinity,
                 height: 46,
                 child: ElevatedButton(
-                  onPressed: _handleLogout,
+                  onPressed: _handleKeluar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE2E8F0),
                     foregroundColor: const Color(0xFF0F172A),

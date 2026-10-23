@@ -514,23 +514,26 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // Logo placeholder with diagonal line
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFCBD5E1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: const CustomPaint(
-                    painter: _DiagonalPlaceholderPainter(
-                      color: Color(0xFF475569),
-                      strokeWidth: 1.2,
+                  // Logo placeholder with diagonal line
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: const CustomPaint(
+                        painter: _DiagonalPlaceholderPainter(
+                          color: Color(0xFF475569),
+                          strokeWidth: 1.2,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
                 // Center information
                 Expanded(
                   child: Column(
