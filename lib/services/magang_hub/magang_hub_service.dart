@@ -17,30 +17,53 @@ class MagangHubService {
       Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
     );
   }
-
-  static Future<PortalBanner> getMyBanner() async {
+  static Future<List<PortalBanner>> getMyBanners() async {
     final response = await _dio.get(ApiRoutes.magangHubMyBanner);
+    final list = response.data['data'] is List ? response.data['data'] as List : const [];
+    return list
+        .map((e) => PortalBanner.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  static Future<PortalBanner> createBanner({
+    required String imageUrl,
+    required DateTime startsAt,
+    required DateTime expiresAt,
+  }) async {
+    final response = await _dio.post(
+      ApiRoutes.magangHubBanner,
+      data: {
+        'image_url': imageUrl,
+        'starts_at': startsAt.toUtc().toIso8601String(),
+        'expires_at': expiresAt.toUtc().toIso8601String(),
+      },
+    );
     return PortalBanner.fromJson(
       Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
     );
   }
 
   static Future<PortalBanner> updateBanner(
-    String imageUrl, {
-    required int durationValue,
-    required String durationUnit,
+    int id, {
+    required String imageUrl,
+    required DateTime startsAt,
+    required DateTime expiresAt,
   }) async {
     final response = await _dio.put(
-      ApiRoutes.magangHubBanner,
+      ApiRoutes.magangHubBannerDetail(id),
       data: {
         'image_url': imageUrl,
-        'duration_value': durationValue,
-        'duration_unit': durationUnit,
+        'starts_at': startsAt.toUtc().toIso8601String(),
+        'expires_at': expiresAt.toUtc().toIso8601String(),
       },
     );
     return PortalBanner.fromJson(
       Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
     );
+  }
+
+  static Future<void> deleteBanner(int id) async {
+    await _dio.delete(ApiRoutes.magangHubBannerDetail(id));
   }
 
   static List<CareerJobItem> _parseJobs(dynamic data) {

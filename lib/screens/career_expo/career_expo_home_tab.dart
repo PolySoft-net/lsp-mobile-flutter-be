@@ -269,22 +269,23 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                     height: 44,
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: const Row(
                       children: [
                         Icon(
                           Icons.search_rounded,
-                          color: Color(0xFF475569),
+                          color: Color(0xFF64748B),
                           size: 20,
                         ),
                         SizedBox(width: 10),
                         Text(
-                          'search',
+                          'Cari disini',
                           style: TextStyle(
                             fontSize: 13.5,
-                            color: Color(0xFF64748B),
+                            color: Color(0xFF94A3B8),
                           ),
                         ),
                       ],

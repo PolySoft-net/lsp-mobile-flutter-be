@@ -172,18 +172,19 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: widget.showBackButton
-          ? PreferredSize(
-              preferredSize: const Size.fromHeight(50),
-              child: ColoredBox(
-                color: Colors.white,
-                child: SafeArea(
-                  bottom: false,
-                  child: CustomAppBar(title: _title),
-                ),
-              ),
-            )
-          : null,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: ColoredBox(
+          color: Colors.white,
+          child: SafeArea(
+            bottom: false,
+            child: CustomAppBar(
+              title: _title,
+              showBack: widget.showBackButton,
+            ),
+          ),
+        ),
+      ),
       bottomNavigationBar: widget.showBackButton
           ? Container(
               decoration: const BoxDecoration(
@@ -223,33 +224,10 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
             )
           : null,
       body: SafeArea(
-        top: !widget.showBackButton,
+        top: false,
         bottom: false,
         child: Column(
           children: [
-          if (!widget.showBackButton)
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.assignment_rounded,
-                    color: Color(0xFF0066F6),
-                    size: 22,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           // Filter Tabs
           Container(
             color: Colors.white,

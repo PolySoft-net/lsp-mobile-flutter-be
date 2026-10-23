@@ -229,32 +229,36 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                     child: Container(
                       height: 44,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFCBD5E1),
-                        borderRadius: BorderRadius.circular(10),
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
                       child: TextField(
                         controller: _searchController,
                         onChanged: _onSearchChanged,
                         textInputAction: TextInputAction.search,
                         onSubmitted: (_) => _fetchJobs(),
+                        textAlignVertical: TextAlignVertical.center,
                         style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
                         decoration: InputDecoration(
-                          hintText: 'search',
-                          hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF64748B)),
+                          isDense: true,
+                          hintText: 'Cari disini',
+                          hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF94A3B8)),
                           prefixIcon: const Icon(
                             Icons.search_rounded,
                             size: 20,
-                            color: Color(0xFF475569),
+                            color: Color(0xFF64748B),
                           ),
+                          prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.close_rounded, size: 18),
-                                  color: const Color(0xFF475569),
+                                  color: const Color(0xFF64748B),
                                   onPressed: _clearSearch,
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                         ),
                       ),
                     ),

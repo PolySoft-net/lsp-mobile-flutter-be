@@ -90,7 +90,11 @@ class CareerJobItem {
       jobDescription: _asStringList(json['job_description']),
       requirements: _asStringList(json['requirements']),
       benefits: _asStringList(json['benefits']),
-      companyLogo: json['company_logo']?.toString() ?? '',
+      companyLogo: json['company_logo']?.toString() ??
+          json['logo_url']?.toString() ??
+          json['logo']?.toString() ??
+          json['company_logo_url']?.toString() ??
+          '',
       filePdf: json['file_pdf']?.toString() ?? '',
       filePdfUrl: json['file_pdf_url']?.toString() ?? json['file_pdf']?.toString() ?? '',
       createdBy: json['created_by']?.toString() ?? '',

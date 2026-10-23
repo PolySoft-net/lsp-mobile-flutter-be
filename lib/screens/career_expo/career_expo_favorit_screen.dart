@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../widgets/career_expo/career_job_card.dart';
+import '../../widgets/common/custom_app_bar.dart';
 import 'career_expo_detail_screen.dart';
 
 /// Halaman Daftar Lowongan Favorit / Tersimpan di Career Expo
@@ -85,26 +86,20 @@ class _CareerExpoFavoritScreenState extends State<CareerExpoFavoritScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Lowongan Favorit',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(50),
+        child: ColoredBox(
+          color: Colors.white,
+          child: SafeArea(
+            bottom: false,
+            child: CustomAppBar(
+              title: 'Lowongan Favorit',
+              showBack: widget.showBackButton,
+              onBack: () => Navigator.pop(context),
+            ),
           ),
         ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        automaticallyImplyLeading: widget.showBackButton,
-        leading: widget.showBackButton
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
-                onPressed: () => Navigator.pop(context),
-              )
-            : null,
       ),
       body: SafeArea(
         top: false,

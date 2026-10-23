@@ -4,12 +4,14 @@ class CustomAppBar extends StatelessWidget {
   final String title;
   final VoidCallback? onBack;
   final Widget? rightWidget;
+  final bool showBack;
 
   const CustomAppBar({
     super.key,
     required this.title,
     this.onBack,
     this.rightWidget,
+    this.showBack = true,
   });
 
   @override
@@ -45,11 +47,12 @@ class CustomAppBar extends StatelessWidget {
             // Circular Black Back Arrow Button on left.
             // 48x48 opaque hit area: the visible circle stays 32px, but the whole
             // box registers taps so the button never needs a second press.
-            Align(
-              alignment: Alignment.centerLeft,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onBack ?? () => Navigator.of(context).pop(),
+            if (showBack)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onBack ?? () => Navigator.of(context).pop(),
                 child: SizedBox(
                   width: 48,
                   height: 48,

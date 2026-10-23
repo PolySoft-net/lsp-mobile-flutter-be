@@ -5,6 +5,7 @@ import '../../../utils/number_format_helper.dart';
 import '../../../widgets/common/company_logo.dart';
 import '../../../widgets/common/career_portal_banner.dart';
 import '../../career_expo/career_expo_notifikasi_tab.dart';
+import '../../../widgets/common/custom_app_bar.dart';
 import 'magang_card.dart';
 import 'magang_hub_common.dart';
 import 'magang_perusahaan_card.dart';
@@ -113,14 +114,15 @@ class MagangHubJobsTab extends StatelessWidget {
                 height: 44,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.search_rounded,
-                      color: Color(0xFF475569),
+                      color: Color(0xFF64748B),
                       size: 20,
                     ),
                     const SizedBox(width: 10),
@@ -128,16 +130,18 @@ class MagangHubJobsTab extends StatelessWidget {
                       child: TextField(
                         controller: searchController,
                         onSubmitted: onSearchSubmitted,
+                        textAlignVertical: TextAlignVertical.center,
                         style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
                         decoration: InputDecoration(
-                          hintText: 'search',
-                          hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF64748B)),
+                          isDense: true,
+                          hintText: 'Cari disini',
+                          hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF94A3B8)),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(vertical: 12),
                           suffixIcon: searchQuery.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.close_rounded, size: 18),
-                                  color: const Color(0xFF475569),
+                                  color: const Color(0xFF64748B),
                                   onPressed: onSearchCleared,
                                 )
                               : null,
@@ -265,6 +269,7 @@ class MagangHubJobsTab extends StatelessWidget {
     }
     if (error != null) {
       return MagangHubStateList(
+        shrinkWrap: true,
         icon: Icons.cloud_off_rounded,
         title: 'Lowongan gagal dimuat',
         message: error,
@@ -273,6 +278,7 @@ class MagangHubJobsTab extends StatelessWidget {
     }
     if (jobs.isEmpty) {
       return MagangHubStateList(
+        shrinkWrap: true,
         icon: Icons.work_outline_rounded,
         title: 'Belum ada lowongan',
         message: searchQuery.isNotEmpty || selectedWorkplace != 'Semua'
@@ -622,49 +628,9 @@ class MagangHubMyJobsTab extends StatelessWidget {
         bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/logo.png',
-                    width: 28,
-                    height: 28,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.verified_user_rounded,
-                      color: Color(0xFF0066F6),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'LSP Teknologi Digital',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CareerExpoNotifikasiTab(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: Color(0xFF0F172A),
-                      size: 26,
-                    ),
-                  ),
-                ],
-              ),
+            const CustomAppBar(
+              title: 'Info Magang Saya',
+              showBack: false,
             ),
             MagangHubSegmentedControl(
               options: const ['Semua', 'Publish', 'Draft'],

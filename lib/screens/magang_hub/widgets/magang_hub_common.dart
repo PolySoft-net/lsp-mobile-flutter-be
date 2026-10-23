@@ -166,6 +166,8 @@ class MagangHubStateList extends StatelessWidget {
   final String? message;
   final VoidCallback? onRetry;
   final Widget? action;
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
 
   const MagangHubStateList({
     super.key,
@@ -174,12 +176,18 @@ class MagangHubStateList extends StatelessWidget {
     this.message,
     this.onRetry,
     this.action,
+    this.shrinkWrap = false,
+    this.physics,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: shrinkWrap,
+      physics: physics ??
+          (shrinkWrap
+              ? const NeverScrollableScrollPhysics()
+              : const AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
       children: [
         Icon(icon, size: 40, color: const Color(0xFFCBD5E1)),
