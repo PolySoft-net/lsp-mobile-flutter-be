@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/auth_models.dart';
 import '../../services/asesi/asesi_service.dart';
 import '../../services/auth/auth_repository.dart';
+import '../../utils/url_helper.dart';
 import '../dashboard/faq_screen.dart';
 import 'career_expo_favorit_screen.dart';
 import 'career_expo_notification_settings_screen.dart';
@@ -51,6 +52,14 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
     final authName = _authUser?.name.trim();
     if (authName != null && authName.isNotEmpty) return authName;
     return 'Pengguna LSP';
+  }
+
+  String get _photoUrl {
+    final raw = _asesiProfile?['foto_profil_url']?.toString() ??
+        _authUser?.fotoProfilUrl ??
+        _authUser?.fotoProfil ??
+        '';
+    return raw.isNotEmpty ? UrlHelper.resolveUrl(raw) : '';
   }
 
   Future<void> _handleLogout() async {
@@ -124,11 +133,22 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
                         color: Color(0xFFCBD5E1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.person,
-                        size: 34,
-                        color: Colors.white,
-                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: _photoUrl.isNotEmpty
+                          ? Image.network(
+                              _photoUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (ctx, err, stack) => const Icon(
+                                Icons.person,
+                                size: 34,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person,
+                              size: 34,
+                              color: Colors.white,
+                            ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(

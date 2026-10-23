@@ -136,7 +136,9 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         email: email,
         noHp: phone,
         pendidikan: _selectedEducation,
-        coverLetter: _coverLetterController.text.trim(),
+        coverLetter: _coverLetterController.text.trim().isNotEmpty
+            ? '${_coverLetterController.text.trim()}\n\nPendidikan: $_selectedEducation'
+            : 'Pendidikan Terakhir: $_selectedEducation',
         linkPortofolio: _attachPortfolio
             ? _portfolioController.text.trim()
             : '',

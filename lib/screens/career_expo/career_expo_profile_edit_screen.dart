@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../services/asesi/asesi_service.dart';
 import '../../services/auth/auth_repository.dart';
+import '../../utils/url_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
 
 /// Halaman Pengaturan Profil Career Expo sesuai mockup UI
@@ -53,6 +54,14 @@ class _CareerExpoProfileEditScreenState
         }
       }
     } catch (_) {}
+  }
+
+  String get _photoUrl {
+    final raw = _asesiProfile?['foto_profil_url']?.toString() ??
+        AuthRepository.currentUserInstance?.fotoProfilUrl ??
+        AuthRepository.currentUserInstance?.fotoProfil ??
+        '';
+    return raw.isNotEmpty ? UrlHelper.resolveUrl(raw) : '';
   }
 
   @override
@@ -158,11 +167,22 @@ class _CareerExpoProfileEditScreenState
                     color: Color(0xFFCBD5E1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 38,
-                    color: Colors.white,
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: _photoUrl.isNotEmpty
+                      ? Image.network(
+                          _photoUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, stack) => const Icon(
+                            Icons.person,
+                            size: 38,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person,
+                          size: 38,
+                          color: Colors.white,
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
