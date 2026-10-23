@@ -1,14 +1,20 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'asesor_lowongan_screen.dart';
 import 'career_expo_favorit_screen.dart';
+import 'career_expo_form_lowongan_screen.dart';
 import 'career_expo_home_tab.dart';
 import 'career_expo_lamaran_tab.dart';
 import 'career_expo_notifikasi_tab.dart';
 import 'career_expo_profile_tab.dart';
 import 'career_expo_search_tab.dart';
+import '../../services/auth/auth_repository.dart';
 import '../../services/career_expo/career_expo_service.dart';
 
-/// Screen utama Career Expo dengan Bottom Navigation Bar 5 Tab
+/// Screen utama Career Expo dengan Bottom Navigation Bar 5 Tab.
+///
+/// Asesor melihat tab "Kelola" pada index 2 (menggantikan "Lamaran") dan FAB
+/// untuk memasang lowongan baru; asesi tetap melihat alur lamaran seperti biasa.
 class CareerExpoScreen extends StatefulWidget {
   final int initialTabIndex;
 
@@ -23,15 +29,19 @@ class CareerExpoScreen extends StatefulWidget {
 
 class _CareerExpoScreenState extends State<CareerExpoScreen> {
   late int _currentIndex;
-  int _lamaranKeyCounter = 0;
+  int _tab2KeyCounter = 0;
   int _favoritKeyCounter = 0;
   int _profileKeyCounter = 0;
+  int _homeKeyCounter = 0;
   int _unreadNotifCount = 0;
   int _searchKeyCounter = 0;
   String _searchQuery = '';
   String _searchEmpType = 'Semua';
   String _searchWorkplaceType = 'Semua';
   String _searchLocation = 'Semua';
+
+  bool get _isAsesor =>
+      AuthRepository.currentUserInstance?.isAsesorOrAdmin ?? false;
 
   @override
   void initState() {
@@ -48,13 +58,35 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
     } catch (_) {}
   }
 
+  /// Segarkan daftar publik (termasuk banner) dan daftar kelola milik asesor.
+  void _refreshPortal() {
+    if (!mounted) return;
+    setState(() {
+      _homeKeyCounter++;
+      _tab2KeyCounter++;
+    });
+  }
+
   void _onTabTapped(int index) {
     setState(() {
       _currentIndex = index;
-      if (index == 2) _lamaranKeyCounter++;
+      // Ganti key tab agar data (banner/lowongan) dimuat ulang saat dibuka lagi.
+      if (index == 0) _homeKeyCounter++;
+      if (index == 2) _tab2KeyCounter++;
       if (index == 3) _favoritKeyCounter++;
       if (index == 4) _profileKeyCounter++;
     });
+  }
+
+  Future<void> _openCreateForm() async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CareerExpoFormLowonganScreen(),
+      ),
+    );
+    if (!mounted) return;
+    if (updated == true) _refreshPortal();
   }
 
   void _onNavigateToSearch({
@@ -77,6 +109,7 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
   Widget build(BuildContext context) {
     final List<Widget> tabs = [
       CareerExpoHomeTab(
+        key: ValueKey('home_$_homeKeyCounter'),
         unreadNotifCount: _unreadNotifCount,
         onNavigateToSearch: _onNavigateToSearch,
         onNavigateToNotification: () async {
@@ -98,10 +131,17 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         showBackButton: false,
         onBack: () => _onTabTapped(0),
       ),
-      CareerExpoLamaranTab(
-        key: ValueKey('lamaran_$_lamaranKeyCounter'),
-        onBack: () => _onTabTapped(0),
-      ),
+      // Index 2: asesi melihat lamarannya, asesor melihat kelola lowongannya.
+      if (_isAsesor)
+        AsesorLowonganScreen(
+          key: ValueKey('kelola_$_tab2KeyCounter'),
+          showBackButton: false,
+        )
+      else
+        CareerExpoLamaranTab(
+          key: ValueKey('lamaran_$_tab2KeyCounter'),
+          onBack: () => _onTabTapped(0),
+        ),
       CareerExpoFavoritScreen(
         key: ValueKey('favorit_$_favoritKeyCounter'),
         showBackButton: false,
@@ -110,6 +150,7 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         key: ValueKey('profile_$_profileKeyCounter'),
         onNavigateToLamaran: () => _onTabTapped(2),
         onNavigateToFavorit: () => _onTabTapped(3),
+        onPortalDataChanged: _refreshPortal,
       ),
     ];
     return Scaffold(
@@ -117,10 +158,23 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         index: _currentIndex,
         children: tabs,
       ),
+      floatingActionButton: _isAsesor
+          ? FloatingActionButton.extended(
+              onPressed: _openCreateForm,
+              backgroundColor: const Color(0xFF0066F6),
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text(
+                'Pasang Lowongan',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            )
+          : null,
       bottomNavigationBar: _CareerExpoBottomNav(
         currentIndex: _currentIndex,
         onTabTapped: _onTabTapped,
         unreadNotifCount: _unreadNotifCount,
+        isAsesor: _isAsesor,
       ),
     );
   }
@@ -130,11 +184,13 @@ class _CareerExpoBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabTapped;
   final int unreadNotifCount;
+  final bool isAsesor;
 
   const _CareerExpoBottomNav({
     required this.currentIndex,
     required this.onTabTapped,
     required this.unreadNotifCount,
+    this.isAsesor = false,
   });
 
   @override
@@ -161,7 +217,9 @@ class _CareerExpoBottomNav extends StatelessWidget {
               children: [
                 _buildNavItem(0, Icons.home_filled, Icons.home_outlined, 'Home'),
                 _buildNavItem(1, Icons.search_rounded, Icons.search_rounded, 'Search'),
-                _buildNavItem(2, Icons.account_balance_rounded, Icons.account_balance_outlined, 'Lamaran'),
+                isAsesor
+                    ? _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded, 'Kelola')
+                    : _buildNavItem(2, Icons.account_balance_rounded, Icons.account_balance_outlined, 'Lamaran'),
                 _buildNavItem(3, Icons.bookmark_rounded, Icons.bookmark_outline_rounded, 'Save'),
                 _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded, 'Profil'),
               ],

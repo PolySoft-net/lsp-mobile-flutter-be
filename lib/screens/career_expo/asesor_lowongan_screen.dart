@@ -3,15 +3,28 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
+import '../../services/magang_hub/magang_hub_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/company_logo.dart';
+import '../magang_hub/magang_detail_screen.dart';
+import '../magang_hub/magang_form_screen.dart';
 import 'career_expo_detail_screen.dart';
 import 'career_expo_form_lowongan_screen.dart';
 
-/// Halaman Kelola Lowongan Kerja Saya (untuk Asesor / Rekruter)
+/// Halaman Kelola Lowongan Kerja / Info Magang milik Asesor (Rekruter).
+///
+/// Dipakai berdiri sendiri dari Profil (dengan tombol kembali) maupun sebagai
+/// tab "Kelola" di dalam portal (tanpa app bar, tambah lewat FAB portal).
 class AsesorLowonganScreen extends StatefulWidget {
-  const AsesorLowonganScreen({super.key});
+  final bool isMagang;
+  final bool showBackButton;
+
+  const AsesorLowonganScreen({
+    super.key,
+    this.isMagang = false,
+    this.showBackButton = true,
+  });
 
   @override
   State<AsesorLowonganScreen> createState() => _AsesorLowonganScreenState();
@@ -38,9 +51,10 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
     });
 
     try {
-      final items = await CareerExpoService.getMyLowongan(
-        status: _selectedFilter == 'Semua' ? '' : _selectedFilter,
-      );
+      final status = _selectedFilter == 'Semua' ? '' : _selectedFilter;
+      final items = widget.isMagang
+          ? await MagangHubService.getMyLowongan(status: status)
+          : await CareerExpoService.getMyLowongan(status: status);
       if (!mounted) return;
       setState(() {
         _jobs = items;
@@ -62,12 +76,12 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Hapus Lowongan',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          widget.isMagang ? 'Hapus Info Magang' : 'Hapus Lowongan',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Apakah Anda yakin ingin menghapus lowongan "${job.title}" di ${job.companyName}?',
+          'Apakah Anda yakin ingin menghapus ${widget.isMagang ? "info magang" : "lowongan"} "${job.title}" di ${job.companyName}?',
         ),
         actions: [
           TextButton(
@@ -92,12 +106,20 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
     if (confirm != true) return;
 
     try {
-      await CareerExpoService.deleteLowongan(job.id);
+      if (widget.isMagang) {
+        await MagangHubService.deleteMagang(job.id);
+      } else {
+        await CareerExpoService.deleteLowongan(job.id);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lowongan berhasil dihapus.'),
-          backgroundColor: Color(0xFF16A34A),
+        SnackBar(
+          content: Text(
+            widget.isMagang
+                ? 'Info magang berhasil dihapus.'
+                : 'Lowongan berhasil dihapus.',
+          ),
+          backgroundColor: const Color(0xFF16A34A),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -105,9 +127,13 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal menghapus lowongan.'),
-          backgroundColor: Color(0xFFEF4444),
+        SnackBar(
+          content: Text(
+            widget.isMagang
+                ? 'Gagal menghapus info magang.'
+                : 'Gagal menghapus lowongan.',
+          ),
+          backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -118,66 +144,112 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
     final updated = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => CareerExpoFormLowonganScreen(initialJob: job),
+        builder: (_) => widget.isMagang
+            ? MagangFormScreen(initialJob: job)
+            : CareerExpoFormLowonganScreen(initialJob: job),
       ),
     );
+    if (!mounted) return;
     if (updated == true) {
       _loadJobs();
     }
+  }
+
+  Future<void> _openDetail(CareerJobItem job) async {
+    await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => widget.isMagang
+            ? MagangDetailScreen(job: job, isOwner: true)
+            : CareerExpoDetailScreen(job: job, isOwner: true),
+      ),
+    );
+    // Detail bisa mengubah/menghapus data; muat ulang daftar saat kembali.
+    if (mounted) _loadJobs();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(50),
-        child: ColoredBox(
-          color: Colors.white,
-          child: SafeArea(
-            bottom: false,
-            child: CustomAppBar(title: 'Lowongan Kerja Saya'),
-          ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
-        ),
-        child: SafeArea(
-          top: false,
-          minimum: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: SizedBox(
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: () => _openForm(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0066F6),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(
-                Icons.add_rounded,
-                size: 20,
+      appBar: widget.showBackButton
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(50),
+              child: ColoredBox(
                 color: Colors.white,
-              ),
-              label: const Text(
-                'Pasang Lowongan',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                child: SafeArea(
+                  bottom: false,
+                  child: CustomAppBar(title: _title),
                 ),
+              ),
+            )
+          : null,
+      bottomNavigationBar: widget.showBackButton
+          ? Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+              ),
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openForm(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0066F6),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.add_rounded,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      _addLabel,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
+      body: SafeArea(
+        top: !widget.showBackButton,
+        bottom: false,
+        child: Column(
+          children: [
+          if (!widget.showBackButton)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.assignment_rounded,
+                    color: Color(0xFF0066F6),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
           // Filter Tabs
           Container(
             color: Colors.white,
@@ -242,10 +314,17 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
               child: _buildContent(),
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
+  String get _title =>
+      widget.isMagang ? 'Info Magang Saya' : 'Lowongan Kerja Saya';
+
+  String get _addLabel =>
+      widget.isMagang ? 'Pasang Info Magang' : 'Pasang Lowongan';
 
   Widget _buildContent() {
     if (_isLoading) {
@@ -309,19 +388,21 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Belum Ada Lowongan',
-                style: TextStyle(
+              Text(
+                widget.isMagang ? 'Belum Ada Info Magang' : 'Belum Ada Lowongan',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Anda belum memasang lowongan pekerjaan. Pasang lowongan sekarang untuk menemukan talenta tersertifikasi LSP.',
+              Text(
+                widget.isMagang
+                    ? 'Anda belum memasang info magang. Pasang sekarang agar program magang perusahaan mitra terlihat oleh asesi.'
+                    : 'Anda belum memasang lowongan pekerjaan. Pasang lowongan sekarang untuk menemukan talenta tersertifikasi LSP.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
                   color: Color(0xFF64748B),
                   height: 1.4,
@@ -335,7 +416,8 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
 
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      // Ruang bawah ekstra saat tertanam sebagai tab (FAB portal menutupi list).
+      padding: EdgeInsets.fromLTRB(16, 16, 16, widget.showBackButton ? 16 : 96),
       itemCount: _jobs.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -484,14 +566,7 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CareerExpoDetailScreen(job: job),
-                    ),
-                  );
-                },
+                onPressed: () => _openDetail(job),
                 icon: const Icon(
                   Icons.visibility_outlined,
                   size: 16,

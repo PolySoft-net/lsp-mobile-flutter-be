@@ -454,6 +454,7 @@ class ApiRoutes {
   static const String careerExpoMyLowongan = '/api/career-expo/lowongan-saya';
   static const String careerExpoUpload = '/api/career-expo/upload';
   static const String careerExpoBanner = '/api/career-expo/banner';
+  static const String careerExpoMyBanner = '/api/career-expo/banner-saya';
   static const String careerExpoFilterOptions = '/api/career-expo/filter-options';
   static String careerExpoLowonganDetail(dynamic id) =>
       '/api/career-expo/lowongan/$id';
@@ -484,4 +485,5 @@ class ApiRoutes {
   static String magangHubDetail(dynamic id) => '/api/magang-hub/lowongan/$id';
   static const String magangHubUpload = '/api/magang-hub/upload';
   static const String magangHubBanner = '/api/magang-hub/banner';
+  static const String magangHubMyBanner = '/api/magang-hub/banner-saya';
 }

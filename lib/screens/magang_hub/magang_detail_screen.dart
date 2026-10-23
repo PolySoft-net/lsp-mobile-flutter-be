@@ -17,10 +17,14 @@ class MagangDetailScreen extends StatefulWidget {
   final CareerJobItem job;
   final String? applicationStatus;
 
+  /// True bila dibuka dari daftar kelola milik asesor (pemilik pasti).
+  final bool isOwner;
+
   const MagangDetailScreen({
     super.key,
     required this.job,
     this.applicationStatus,
+    this.isOwner = false,
   });
 
   @override
@@ -35,7 +39,11 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
   bool _isAboutExpanded = false;
   bool _hasEdited = false;
 
+  bool get _isProvider =>
+      AuthRepository.currentUserInstance?.isAsesorOrAdmin ?? false;
+
   bool get _isCreator {
+    if (widget.isOwner) return true;
     final currentUserId = AuthRepository.currentUserInstance?.id;
     return currentUserId != null &&
         _job.createdBy.isNotEmpty &&
@@ -108,10 +116,19 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
   }
 
   void _showApplyModal() async {
+    if (_isProvider) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lamaran hanya bisa dikirim oleh asesi.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => CareerExpoApplyScreen(job: _job),
+        builder: (_) => CareerExpoApplyScreen(job: _job, isMagang: true),
       ),
     );
     if (result == true && mounted) {
@@ -334,25 +351,31 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
                           child: ElevatedButton(
                             onPressed: _isCreator
                                 ? _editJob
-                                : (_isApplied
-                                    ? () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Status lamaran: Terkirim.'),
-                                            behavior: SnackBarBehavior.floating,
-                                          ),
-                                        );
-                                      }
-                                    : _showApplyModal),
+                                : (_isProvider
+                                    ? null
+                                    : (_isApplied
+                                        ? () {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Status lamaran: Terkirim.'),
+                                                behavior: SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        : _showApplyModal)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _isCreator
                                   ? const Color(0xFF0066F6)
-                                  : (_isApplied
-                                      ? const Color(0xFF16A34A)
-                                      : const Color(0xFF94A3B8)),
+                                  : (_isProvider
+                                      ? const Color(0xFFE2E8F0)
+                                      : (_isApplied
+                                          ? const Color(0xFF16A34A)
+                                          : const Color(0xFF94A3B8))),
                               foregroundColor: _isCreator
                                   ? Colors.white
                                   : const Color(0xFF0F172A),
+                              disabledBackgroundColor: const Color(0xFFE2E8F0),
+                              disabledForegroundColor: const Color(0xFF64748B),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -364,21 +387,29 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
                                 Text(
                                   _isCreator
                                       ? 'Edit Lowongan'
-                                      : (_isApplied ? (_applicationStatus.isNotEmpty ? _applicationStatus : 'Terkirim') : 'Lamar Sekarang'),
+                                      : (_isProvider
+                                          ? 'Lamaran hanya untuk asesi'
+                                          : (_isApplied ? (_applicationStatus.isNotEmpty ? _applicationStatus : 'Terkirim') : 'Lamar Sekarang')),
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
-                                    color: _isCreator ? Colors.white : const Color(0xFF0F172A),
+                                    color: _isCreator
+                                        ? Colors.white
+                                        : (_isProvider
+                                            ? const Color(0xFF64748B)
+                                            : const Color(0xFF0F172A)),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  _isCreator
-                                      ? Icons.edit_outlined
-                                      : (_isApplied ? Icons.check_circle_rounded : Icons.send_rounded),
-                                  size: 16,
-                                  color: _isCreator ? Colors.white : const Color(0xFF0F172A),
-                                ),
+                                if (!_isProvider) ...[
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    _isCreator
+                                        ? Icons.edit_outlined
+                                        : (_isApplied ? Icons.check_circle_rounded : Icons.send_rounded),
+                                    size: 16,
+                                    color: _isCreator ? Colors.white : const Color(0xFF0F172A),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

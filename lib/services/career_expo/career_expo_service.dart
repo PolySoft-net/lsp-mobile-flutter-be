@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../models/portal_banner_model.dart';
 import '../../utils/api_routes.dart';
 import '../api_client.dart';
 
@@ -12,17 +13,36 @@ class CareerExpoService {
 
   static Dio get _dio => ApiClient.dio;
 
-  static Future<String> getBanner() async {
+  static Future<PortalBanner> getBanner() async {
     final response = await _dio.get(ApiRoutes.careerExpoBanner);
-    return response.data['data']?['image_url']?.toString() ?? '';
+    return PortalBanner.fromJson(
+      Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+    );
   }
 
-  static Future<String> updateBanner(String imageUrl) async {
+  static Future<PortalBanner> getMyBanner() async {
+    final response = await _dio.get(ApiRoutes.careerExpoMyBanner);
+    return PortalBanner.fromJson(
+      Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+    );
+  }
+
+  static Future<PortalBanner> updateBanner(
+    String imageUrl, {
+    required int durationValue,
+    required String durationUnit,
+  }) async {
     final response = await _dio.put(
       ApiRoutes.careerExpoBanner,
-      data: {'image_url': imageUrl},
+      data: {
+        'image_url': imageUrl,
+        'duration_value': durationValue,
+        'duration_unit': durationUnit,
+      },
     );
-    return response.data['data']?['image_url']?.toString() ?? '';
+    return PortalBanner.fromJson(
+      Map<String, dynamic>.from(response.data['data'] as Map? ?? const {}),
+    );
   }
 
   static List<CareerJobItem> _parseJobs(dynamic data) {

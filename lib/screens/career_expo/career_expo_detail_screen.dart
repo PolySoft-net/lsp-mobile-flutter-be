@@ -3,20 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../../services/auth/auth_repository.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/company_logo.dart';
 import 'career_expo_apply_screen.dart';
+import 'career_expo_form_lowongan_screen.dart';
 /// Halaman Detail Lowongan Career Expo sesuai desain UI
 class CareerExpoDetailScreen extends StatefulWidget {
   final CareerJobItem job;
   final String? applicationStatus;
 
+  /// True bila dibuka dari daftar kelola milik asesor (pemilik pasti).
+  final bool isOwner;
+
   const CareerExpoDetailScreen({
     super.key,
     required this.job,
     this.applicationStatus,
+    this.isOwner = false,
   });
 
   @override
@@ -29,6 +35,21 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
   late bool _isApplied;
   String _applicationStatus = '';
   CareerJobItem? _liveJob;
+
+  CareerJobItem get _job => _liveJob ?? widget.job;
+
+  bool get _isProvider =>
+      AuthRepository.currentUserInstance?.isAsesorOrAdmin ?? false;
+
+  /// Pemilik lowongan: boleh edit, tidak boleh melamar.
+  bool get _isCreator {
+    if (widget.isOwner) return true;
+    final currentUserId = AuthRepository.currentUserInstance?.id;
+    final creator = _job.createdBy;
+    return currentUserId != null &&
+        creator.isNotEmpty &&
+        creator == currentUserId;
+  }
 
   @override
   void initState() {
@@ -94,10 +115,19 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
   }
 
   void _showApplyModal() async {
+    if (_isProvider) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lamaran hanya bisa dikirim oleh asesi.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => CareerExpoApplyScreen(job: widget.job),
+        builder: (_) => CareerExpoApplyScreen(job: _job),
       ),
     );
     if (result == true && mounted) {
@@ -107,6 +137,18 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
       });
     }
   }
+
+  Future<void> _editJob() async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CareerExpoFormLowonganScreen(initialJob: _job),
+      ),
+    );
+    if (updated != true || !mounted) return;
+    _loadLiveDetail();
+  }
+
   @override
   Widget build(BuildContext context) {
     final double statusBarHeight = MediaQuery.paddingOf(context).top;
@@ -151,7 +193,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CompanyLogo(
-                          imageUrl: (_liveJob ?? widget.job).companyLogo,
+                          imageUrl: _job.companyLogo,
                           size: 44,
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -161,7 +203,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.job.companyName,
+                                _job.companyName,
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -170,8 +212,8 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                widget.job.companyCategory.isNotEmpty
-                                    ? widget.job.companyCategory
+                                _job.companyCategory.isNotEmpty
+                                    ? _job.companyCategory
                                     : 'IT Services & Consulting',
                                 style: const TextStyle(
                                   fontSize: 11.5,
@@ -183,8 +225,8 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                                 spacing: 4,
                                 runSpacing: 4,
                                 children: [
-                                  _buildTagBadge('+${widget.job.employmentType}'),
-                                  _buildTagBadge('+${widget.job.workplaceType}'),
+                                  _buildTagBadge('+${_job.employmentType}'),
+                                  _buildTagBadge('+${_job.workplaceType}'),
                                 ],
                               ),
                               const SizedBox(height: 8),
@@ -198,7 +240,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
-                                      'RP. ${NumberFormatHelper.formatSalaryRange(widget.job.salaryMin, widget.job.salaryMax)} /${widget.job.salaryPeriod}',
+                                      'RP. ${NumberFormatHelper.formatSalaryRange(_job.salaryMin, _job.salaryMax)} /${_job.salaryPeriod}',
                                       style: const TextStyle(
                                         fontSize: 11.5,
                                         color: Color(0xFF334155),
@@ -208,7 +250,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                                   ),
                                 ],
                               ),
-                              if (widget.job.postedAt.isNotEmpty) ...[
+                              if (_job.postedAt.isNotEmpty) ...[
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
@@ -220,7 +262,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        widget.job.postedAt,
+                                        _job.postedAt,
                                         style: const TextStyle(
                                           fontSize: 11,
                                           color: Color(0xFF475569),
@@ -256,73 +298,117 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                         Expanded(
                           child: _buildInfoItem(
                             Icons.location_on_outlined,
-                            widget.job.location,
+                            _job.location,
                           ),
                         ),
                         Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
                         Expanded(
                           child: _buildInfoItem(
                             Icons.work_outline_rounded,
-                            widget.job.experience,
+                            _job.experience,
                           ),
                         ),
                         Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
                         Expanded(
                           child: _buildInfoItem(
                             Icons.school_outlined,
-                            widget.job.education,
+                            _job.education,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
 
-                    // Big Action CTA Button "Lamar Sekarang"
+                    // Big Action CTA: pemilik -> Edit, asesor lain -> tanpa lamar,
+                    // asesi -> Lamar Sekarang / status lamaran.
                     SizedBox(
                       width: double.infinity,
                       height: 46,
-                      child: ElevatedButton(
-                        onPressed: _isApplied
-                            ? () {
-                                final statusText = _appliedStatusLabel;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Status lamaran: $statusText.'),
-                                    behavior: SnackBarBehavior.floating,
+                      child: _isCreator
+                          ? ElevatedButton(
+                              onPressed: _editJob,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0066F6),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Edit Lowongan',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
                                   ),
-                                );
-                              }
-                            : _showApplyModal,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isApplied
-                              ? _appliedButtonColor
-                              : const Color(0xFF94A3B8),
-                          foregroundColor: const Color(0xFF0F172A),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _isApplied ? _appliedStatusLabel : 'Lamar Sekarang',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
+                                  SizedBox(width: 8),
+                                  Icon(
+                                    Icons.edit_outlined,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ElevatedButton(
+                              onPressed: _isProvider
+                                  ? null
+                                  : (_isApplied
+                                      ? () {
+                                          final statusText = _appliedStatusLabel;
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Status lamaran: $statusText.'),
+                                              behavior: SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      : _showApplyModal),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _isProvider
+                                    ? const Color(0xFFE2E8F0)
+                                    : (_isApplied
+                                        ? _appliedButtonColor
+                                        : const Color(0xFF94A3B8)),
+                                foregroundColor: const Color(0xFF0F172A),
+                                disabledBackgroundColor: const Color(0xFFE2E8F0),
+                                disabledForegroundColor: const Color(0xFF64748B),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _isProvider
+                                        ? 'Lamaran hanya untuk asesi'
+                                        : (_isApplied ? _appliedStatusLabel : 'Lamar Sekarang'),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: _isProvider
+                                          ? const Color(0xFF64748B)
+                                          : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  if (!_isProvider) ...[
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      _isApplied ? _appliedButtonIcon : Icons.send_rounded,
+                                      size: 16,
+                                      color: const Color(0xFF0F172A),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              _isApplied ? _appliedButtonIcon : Icons.send_rounded,
-                              size: 16,
-                              color: const Color(0xFF0F172A),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -337,8 +423,8 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      widget.job.aboutCompany.isNotEmpty
-                          ? widget.job.aboutCompany
+                      _job.aboutCompany.isNotEmpty
+                          ? _job.aboutCompany
                           : 'Perusahaan penyedia Layanan Teknologi Informasi dan Konsultasi yang berfokus pada inovasi digital.',
                       maxLines: _isAboutExpanded ? 30 : 4,
                       overflow: _isAboutExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
@@ -372,8 +458,8 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (widget.job.jobDescription.isNotEmpty)
-                      ...widget.job.jobDescription.map(
+                    if (_job.jobDescription.isNotEmpty)
+                      ..._job.jobDescription.map(
                         (desc) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
@@ -394,7 +480,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                       const Text('> Melakukan riset pengguna dan analisis kebutuhan', style: TextStyle(fontSize: 12, color: Color(0xFF334155))),
                     ],
 
-                    if (widget.job.requirements.isNotEmpty) ...[
+                    if (_job.requirements.isNotEmpty) ...[
                       const SizedBox(height: 14),
                       const Text(
                         'Persyaratan :',
@@ -405,7 +491,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      ...widget.job.requirements.map(
+                      ..._job.requirements.map(
                         (req) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
@@ -502,7 +588,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         content: Text(
-          'Apakah Anda yakin ingin membatalkan dan menghapus lamaran untuk posisi ${widget.job.title} di ${widget.job.companyName}?',
+          'Apakah Anda yakin ingin membatalkan dan menghapus lamaran untuk posisi ${_job.title} di ${_job.companyName}?',
           style: const TextStyle(fontSize: 13.5, color: Color(0xFF475569)),
         ),
         actions: [
@@ -602,10 +688,10 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                   subtitle: 'Salin tautan lowongan untuk dibagikan ke teman',
                   onTap: () {
                     final shareText =
-                        'Lowongan Kerja: ${widget.job.title}\n'
-                        'Perusahaan: ${widget.job.companyName}\n'
-                        'Lokasi: ${widget.job.location} (${widget.job.workplaceType})\n'
-                        'Gaji: Rp ${NumberFormatHelper.formatSalaryRange(widget.job.salaryMin, widget.job.salaryMax)}\n\n'
+                        'Lowongan Kerja: ${_job.title}\n'
+                        'Perusahaan: ${_job.companyName}\n'
+                        'Lokasi: ${_job.location} (${_job.workplaceType})\n'
+                        'Gaji: Rp ${NumberFormatHelper.formatSalaryRange(_job.salaryMin, _job.salaryMax)}\n\n'
                         'Lamar dan cek lowongan ini di aplikasi LSP Teknologi Digital:\n'
                         'https://play.google.com/store/apps/details?id=id.lspdigital.mobile';
                     Clipboard.setData(ClipboardData(text: shareText));
@@ -619,7 +705,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                   },
                 ),
                 const SizedBox(height: 10),
-                if (_isApplied) ...[
+                if (_isApplied && !_isProvider) ...[
                   _buildOptionItem(
                     icon: Icons.delete_outline_rounded,
                     iconColor: const Color(0xFFDC2626),

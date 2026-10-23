@@ -4,18 +4,29 @@ import '../../services/asesi/asesi_service.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../utils/url_helper.dart';
 import '../dashboard/faq_screen.dart';
+import 'asesor_lowongan_screen.dart';
 import 'career_expo_favorit_screen.dart';
 import 'career_expo_notification_settings_screen.dart';
 import 'career_expo_profile_edit_screen.dart';
-/// Tab Profil Pelamar Career Expo — mengambil data profil user yang sedang login
+import 'portal_banner_manage_screen.dart';
+/// Tab Profil portal — asesi melihat profil pelamar, asesor melihat menu kelola.
 class CareerExpoProfileTab extends StatefulWidget {
   final VoidCallback? onNavigateToLamaran;
   final VoidCallback? onNavigateToFavorit;
+
+  /// True saat dipakai di Magang Hub, sehingga menu kelola mengarah ke portal magang.
+  final bool isMagang;
+
+  /// Dipanggil setelah layar kelola (lowongan/banner) ditutup agar portal
+  /// menyegarkan daftar publik dan daftar milik asesor.
+  final VoidCallback? onPortalDataChanged;
 
   const CareerExpoProfileTab({
     super.key,
     this.onNavigateToLamaran,
     this.onNavigateToFavorit,
+    this.isMagang = false,
+    this.onPortalDataChanged,
   });
 
   @override
@@ -25,6 +36,9 @@ class CareerExpoProfileTab extends StatefulWidget {
 class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
   AuthUser? _authUser;
   Map<String, dynamic>? _asesiProfile;
+
+  bool get _isAsesor =>
+      AuthRepository.currentUserInstance?.isAsesorOrAdmin ?? false;
 
   @override
   void initState() {
@@ -36,6 +50,9 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
     _authUser = AuthRepository.currentUserInstance;
     if (mounted) setState(() {});
 
+    // Asesor tidak punya profil asesi; jangan panggil endpoint asesi.
+    if (_isAsesor) return;
+
     try {
       final profile = await AsesiService.getProfile();
       if (mounted) {
@@ -44,6 +61,15 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
         });
       }
     } catch (_) {}
+  }
+
+  Future<void> _openKelola(Widget screen) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
+    );
+    if (!mounted) return;
+    widget.onPortalDataChanged?.call();
   }
 
   String get _displayName {
@@ -163,12 +189,12 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
               ),
               const SizedBox(height: 18),
 
-              // Section title "Informasi"
-              const Align(
+              // Section title
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Informasi',
-                  style: TextStyle(
+                  _isAsesor ? 'Kelola Portal' : 'Informasi',
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
@@ -185,6 +211,9 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
                 ),
                 child: Column(
                   children: [
+                    if (_isAsesor)
+                      ..._buildProviderMenuRows()
+                    else ...[
                     _buildMenuItemRow(
                       icon: Icons.account_circle_outlined,
                       title: 'Pengaturan Profil',
@@ -246,6 +275,7 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
                         );
                       },
                     ),
+                    ],
                   ],
                 ),
               ),
@@ -290,6 +320,54 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
     ),
   );
 }
+
+  /// Menu khusus asesor: kelola lowongan/info magang dan banner portalnya.
+  List<Widget> _buildProviderMenuRows() {
+    final rows = <Widget>[
+      _buildMenuItemRow(
+        icon: Icons.business_center_outlined,
+        title: widget.isMagang ? 'Kelola Info Magang' : 'Kelola Lowongan Kerja',
+        onTap: () => _openKelola(AsesorLowonganScreen(isMagang: widget.isMagang)),
+      ),
+      _buildMenuItemRow(
+        icon: Icons.image_outlined,
+        title: 'Kelola Banner',
+        onTap: () => _openKelola(PortalBannerManageScreen(isMagang: widget.isMagang)),
+      ),
+      _buildMenuItemRow(
+        icon: Icons.notifications_none_rounded,
+        title: 'Notifikasi',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CareerExpoNotificationSettingsScreen(),
+            ),
+          );
+        },
+      ),
+      _buildMenuItemRow(
+        icon: Icons.help_outline_rounded,
+        title: 'Bantuan',
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const FaqScreen(),
+            ),
+          );
+        },
+      ),
+    ];
+    final separated = <Widget>[];
+    for (var i = 0; i < rows.length; i++) {
+      if (i > 0) {
+        separated.add(const Divider(height: 1, color: Color(0xFFCBD5E1)));
+      }
+      separated.add(rows[i]);
+    }
+    return separated;
+  }
 
   Widget _buildMenuItemRow({
     required IconData icon,

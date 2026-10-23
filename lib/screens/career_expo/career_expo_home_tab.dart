@@ -380,7 +380,8 @@ class _CareerExpoHomeTabState extends State<CareerExpoHomeTab> {
                     return _buildGridJobCard(job);
                   },
                 ),
-              const SizedBox(height: 24),
+              // Ruang bawah agar baris grid terakhir tidak tertutup FAB asesor.
+              const SizedBox(height: 88),
             ],
           ),
         ),

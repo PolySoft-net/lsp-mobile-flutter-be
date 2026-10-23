@@ -50,10 +50,27 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
   String? _errorMyJobs;
   List<CareerJobItem> _myJobs = [];
   String _selectedMyStatus = 'Semua';
+  int _homeKeyCounter = 0;
 
   @override
   void initState() {
     super.initState();
+    _loadAllData();
+  }
+
+  void _onTabSelected(int index) {
+    setState(() {
+      _currentIndex = index;
+      // Key berubah saat Home dibuka lagi agar banner & daftar dimuat ulang.
+      if (index == 0) _homeKeyCounter++;
+    });
+    if (index == 5 && _isAsesor) _loadMyJobs();
+  }
+
+  /// Dipanggil setelah layar kelola (lowongan/banner) dari tab Profil ditutup.
+  void _onPortalDataChanged() {
+    if (!mounted) return;
+    setState(() => _homeKeyCounter++);
     _loadAllData();
   }
 
@@ -190,11 +207,11 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     }
   }
 
-  Future<void> _openJobDetail(CareerJobItem job) async {
+  Future<void> _openJobDetail(CareerJobItem job, {bool isOwner = false}) async {
     final updated = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => MagangDetailScreen(job: job),
+        builder: (_) => MagangDetailScreen(job: job, isOwner: isOwner),
       ),
     );
     if (!mounted) return;
@@ -321,6 +338,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
   Widget build(BuildContext context) {
     final tabs = <Widget>[
       MagangHubJobsTab(
+        key: ValueKey('magang_jobs_$_homeKeyCounter'),
         jobs: _jobs,
         isLoading: _isLoadingJobs,
         error: _errorJobs,
@@ -386,8 +404,10 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         showBackButton: false,
       ),
       CareerExpoProfileTab(
+        isMagang: true,
         onNavigateToLamaran: () => setState(() => _currentIndex = 2),
         onNavigateToFavorit: () => setState(() => _currentIndex = 3),
+        onPortalDataChanged: _onPortalDataChanged,
       ),
       if (_isAsesor)
         MagangHubMyJobsTab(
@@ -400,7 +420,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
             setState(() => _selectedMyStatus = value);
             _loadMyJobs();
           },
-          onOpenJob: _openJobDetail,
+          onOpenJob: (job) => _openJobDetail(job, isOwner: true),
           onEdit: (job) => _openForm(job: job),
           onDelete: _deleteJob,
           onCreate: () => _openForm(),
@@ -437,7 +457,9 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
             children: [
               _buildNavItem(0, Icons.home_filled, Icons.home_outlined, 'Home'),
               _buildNavItem(1, Icons.search_rounded, Icons.search_rounded, 'Search'),
-              _buildNavItem(2, Icons.account_balance_rounded, Icons.account_balance_outlined, 'Lamaran'),
+              // Asesor tidak punya lamaran; item disembunyikan tanpa mengubah index.
+              if (!_isAsesor)
+                _buildNavItem(2, Icons.account_balance_rounded, Icons.account_balance_outlined, 'Lamaran'),
               _buildNavItem(3, Icons.bookmark_rounded, Icons.bookmark_outline_rounded, 'Save'),
               _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded, 'Profil'),
               if (_isAsesor)
@@ -459,7 +481,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     final color = isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8);
     return Expanded(
       child: InkWell(
-        onTap: () => setState(() => _currentIndex = index),
+        onTap: () => _onTabSelected(index),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
         child: Column(

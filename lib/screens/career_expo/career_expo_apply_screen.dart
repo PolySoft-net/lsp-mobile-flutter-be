@@ -30,6 +30,11 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _coverLetterController = TextEditingController();
   final TextEditingController _portfolioController = TextEditingController();
+
+  /// Asesor tidak boleh melamar; backend juga menolak, UI hanya menjaga alur.
+  bool get _isProvider =>
+      AuthRepository.currentUserInstance?.isAsesorOrAdmin ?? false;
+
   bool get _isMagang =>
       widget.isMagang ||
       widget.job.employmentType.toLowerCase().contains('magang') ||
@@ -259,6 +264,51 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isProvider) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: SafeArea(
+            bottom: false,
+            child: CustomAppBar(
+              title: 'Buat Lamaran',
+              onBack: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  size: 48,
+                  color: Color(0xFF94A3B8),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Lamaran hanya untuk asesi',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Akun asesor tidak dapat mengirim lamaran. Kelola lowongan lewat menu Kelola.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
