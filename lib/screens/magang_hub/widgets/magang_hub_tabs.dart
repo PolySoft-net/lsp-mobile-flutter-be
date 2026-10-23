@@ -733,15 +733,62 @@ class MagangHubMyJobsTab extends StatelessWidget {
     return RefreshIndicator(
       color: hubBlue,
       onRefresh: onRefresh,
-      child: Column(
-        children: [
-          MagangHubSegmentedControl(
-            options: const ['Semua', 'Publish', 'Draft'],
-            selected: selectedStatus,
-            onSelected: onStatusSelected,
-          ),
-          Expanded(child: _buildBody()),
-        ],
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/logo.png',
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.verified_user_rounded,
+                      color: Color(0xFF0066F6),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'LSP Teknologi Digital',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CareerExpoNotifikasiTab(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Color(0xFF0F172A),
+                      size: 26,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            MagangHubSegmentedControl(
+              options: const ['Semua', 'Publish', 'Draft'],
+              selected: selectedStatus,
+              onSelected: onStatusSelected,
+            ),
+            Expanded(child: _buildBody()),
+          ],
+        ),
       ),
     );
   }
