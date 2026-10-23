@@ -15,6 +15,7 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       builder: (BuildContext context, Widget? child) {
+        // ignore: deprecated_member_use
         return MaterialUiCompatibilityBridge(child: child!);
       },
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
