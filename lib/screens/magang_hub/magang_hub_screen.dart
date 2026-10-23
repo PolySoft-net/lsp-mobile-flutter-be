@@ -322,6 +322,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         onOpenJob: _openJobDetail,
         onToggleBookmark: _toggleJobBookmark,
         onCreate: () => _openForm(),
+        onSeeMore: () => setState(() => _currentIndex = 1),
       ),
       MagangHubCompaniesTab(
         companies: _companies,

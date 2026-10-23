@@ -22,6 +22,7 @@ class MagangHubJobsTab extends StatelessWidget {
   final ValueChanged<CareerJobItem> onOpenJob;
   final ValueChanged<CareerJobItem>? onToggleBookmark;
   final VoidCallback onCreate;
+  final VoidCallback? onSeeMore;
 
   const MagangHubJobsTab({
     super.key,
@@ -40,6 +41,7 @@ class MagangHubJobsTab extends StatelessWidget {
     required this.onOpenJob,
     this.onToggleBookmark,
     required this.onCreate,
+    this.onSeeMore,
   });
 
   @override
@@ -145,30 +147,34 @@ class MagangHubJobsTab extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Lihat Lebih',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
+                          InkWell(
+                            onTap: onSeeMore,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Lihat Lebih',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 13,
                                     color: Color(0xFF0F172A),
                                   ),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 13,
-                                  color: Color(0xFF0F172A),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -212,7 +218,7 @@ class MagangHubJobsTab extends StatelessWidget {
                     ),
                   ),
                   InkWell(
-                    onTap: () {},
+                    onTap: onSeeMore,
                     child: const Row(
                       children: [
                         Text(
