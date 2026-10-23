@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/magang_hub_models.dart';
@@ -281,7 +282,19 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     });
     try {
       await CareerExpoService.setTersimpan(job.id, target);
-    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            target
+                ? 'Info magang disimpan ke favorit'
+                : 'Info magang dihapus dari favorit',
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         final idx = _jobs.indexWhere((j) => j.id == job.id);
@@ -289,6 +302,18 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
           _jobs[idx] = _jobs[idx].copyWith(isBookmarked: !target);
         }
       });
+      final unauthorized = e is DioException && e.response?.statusCode == 401;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            unauthorized
+                ? 'Silakan login terlebih dahulu untuk menyimpan info magang.'
+                : 'Gagal memperbarui status tersimpan.',
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -322,7 +347,14 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         onOpenJob: _openJobDetail,
         onToggleBookmark: _toggleJobBookmark,
         onCreate: () => _openForm(),
-        onSeeMore: () => setState(() => _currentIndex = 1),
+        onSeeMore: () {
+          _searchJobController.clear();
+          setState(() {
+            _searchJobQuery = '';
+            _selectedWorkplace = 'Semua';
+          });
+          _loadJobs();
+        },
       ),
       MagangHubCompaniesTab(
         companies: _companies,
