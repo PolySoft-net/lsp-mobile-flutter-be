@@ -5,6 +5,7 @@ import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/company_logo.dart';
 import 'career_expo_detail_screen.dart';
 import 'career_expo_form_lowongan_screen.dart';
 
@@ -366,24 +367,10 @@ class _AsesorLowonganScreenState extends State<AsesorLowonganScreen> {
           // Header Row: Logo, Company & Status Chip
           Row(
             children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: job.logoBgColor,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  job.logoText.isNotEmpty
-                      ? job.logoText
-                      : job.companyName.substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
+              CompanyLogo(
+                imageUrl: job.companyLogo,
+                size: 38,
+                borderRadius: BorderRadius.circular(19),
               ),
               const SizedBox(width: 10),
               Expanded(

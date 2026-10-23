@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../models/career_expo_models.dart';
 import '../../../utils/number_format_helper.dart';
+import '../../../widgets/common/company_logo.dart';
 
 /// Kartu lowongan magang — prioritas: judul, perusahaan, lokasi, gaji, status.
 class MagangJobCard extends StatelessWidget {
@@ -37,11 +38,6 @@ class MagangJobCard extends StatelessWidget {
     final meta = job.location.isNotEmpty
         ? '$workplace · ${job.location}'
         : workplace;
-    final initial = job.logoText.isNotEmpty
-        ? job.logoText
-        : (job.companyName.isNotEmpty
-            ? job.companyName.substring(0, 1).toUpperCase()
-            : 'M');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -102,26 +98,10 @@ class MagangJobCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Container(
-                      width: 20,
-                      height: 20,
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: job.logoBgColor,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Text(
-                        initial,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.0,
-                        ),
-                      ),
+                    CompanyLogo(
+                      imageUrl: job.companyLogo,
+                      size: 20,
+                      borderRadius: BorderRadius.circular(5),
                     ),
                     const SizedBox(width: 6),
                     Expanded(

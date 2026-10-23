@@ -12,6 +12,19 @@ class CareerExpoService {
 
   static Dio get _dio => ApiClient.dio;
 
+  static Future<String> getBanner() async {
+    final response = await _dio.get(ApiRoutes.careerExpoBanner);
+    return response.data['data']?['image_url']?.toString() ?? '';
+  }
+
+  static Future<String> updateBanner(String imageUrl) async {
+    final response = await _dio.put(
+      ApiRoutes.careerExpoBanner,
+      data: {'image_url': imageUrl},
+    );
+    return response.data['data']?['image_url']?.toString() ?? '';
+  }
+
   static List<CareerJobItem> _parseJobs(dynamic data) {
     final list = data is List ? data : const [];
     return list

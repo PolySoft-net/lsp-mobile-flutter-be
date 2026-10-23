@@ -6,6 +6,7 @@ import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../widgets/career_expo/career_filter_sheet.dart';
+import '../../widgets/common/company_logo.dart';
 import 'career_expo_detail_screen.dart';
 
 /// Tab Pencarian Lowongan Career Expo — filter dan sort dinamis dari API
@@ -514,23 +515,13 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo placeholder with diagonal line
+                  // Logo perusahaan (gambar asli dari hasil upload)
                   Align(
                     alignment: Alignment.topLeft,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCBD5E1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: const CustomPaint(
-                        painter: _DiagonalPlaceholderPainter(
-                          color: Color(0xFF475569),
-                          strokeWidth: 1.2,
-                        ),
-                      ),
+                    child: CompanyLogo(
+                      imageUrl: job.companyLogo,
+                      size: 32,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -678,20 +669,10 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCBD5E1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: const CustomPaint(
-                        painter: _DiagonalPlaceholderPainter(
-                          color: Color(0xFF475569),
-                          strokeWidth: 1.2,
-                        ),
-                      ),
+                    CompanyLogo(
+                      imageUrl: job.companyLogo,
+                      size: 32,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     const Spacer(),
                     GestureDetector(
@@ -809,25 +790,4 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
   }
 }
 
-class _DiagonalPlaceholderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
 
-  const _DiagonalPlaceholderPainter({
-    this.color = const Color(0xFF475569),
-    this.strokeWidth = 1.2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-}

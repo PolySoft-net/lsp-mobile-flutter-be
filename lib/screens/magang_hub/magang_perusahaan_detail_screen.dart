@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/magang_hub_models.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/company_logo.dart';
 import 'magang_detail_screen.dart';
 import 'widgets/magang_card.dart';
 
@@ -114,22 +115,10 @@ class _MagangPerusahaanDetailScreenState extends State<MagangPerusahaanDetailScr
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: perusahaan.logoColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _logoInitials(perusahaan),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
+              CompanyLogo(
+                imageUrl: perusahaan.companyLogo,
+                size: 40,
+                borderRadius: BorderRadius.circular(10),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -361,18 +350,5 @@ class _MagangPerusahaanDetailScreenState extends State<MagangPerusahaanDetailScr
           )
           .toList(),
     );
-  }
-
-  /// Inisial logo aman: maksimal 2 karakter, fallback ke huruf pertama nama.
-  String _logoInitials(MagangPerusahaanItem perusahaan) {
-    final logoText = perusahaan.logoText.trim();
-    if (logoText.isNotEmpty) {
-      return String.fromCharCodes(logoText.runes.take(2)).toUpperCase();
-    }
-    final nama = perusahaan.namaPerusahaan.trim();
-    if (nama.isNotEmpty) {
-      return String.fromCharCodes(nama.runes.take(1)).toUpperCase();
-    }
-    return 'P';
   }
 }

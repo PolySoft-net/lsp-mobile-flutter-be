@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
 import '../../utils/number_format_helper.dart';
+import '../common/company_logo.dart';
 
 /// Kartu lowongan pekerjaan Career Expo sesuai desain UI
 class CareerJobCard extends StatelessWidget {
@@ -48,23 +49,11 @@ class CareerJobCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo container
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: job.logoBgColor,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      job.logoText.isNotEmpty ? job.logoText : job.companyName.substring(0, 1),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                  // Logo perusahaan (gambar asli dari hasil upload)
+                  CompanyLogo(
+                    imageUrl: job.companyLogo,
+                    size: 44,
+                    borderRadius: BorderRadius.circular(22),
                   ),
                   const SizedBox(width: 12),
                   // Title and company

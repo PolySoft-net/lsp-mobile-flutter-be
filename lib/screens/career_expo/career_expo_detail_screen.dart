@@ -6,6 +6,7 @@ import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/company_logo.dart';
 import 'career_expo_apply_screen.dart';
 /// Halaman Detail Lowongan Career Expo sesuai desain UI
 class CareerExpoDetailScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
   bool _isAboutExpanded = false;
   late bool _isApplied;
   String _applicationStatus = '';
+  CareerJobItem? _liveJob;
 
   @override
   void initState() {
@@ -45,6 +47,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
       final detail = await CareerExpoService.getDetail(widget.job.id);
       if (!mounted) return;
       setState(() {
+        _liveJob = detail;
         _isBookmarked = detail.isBookmarked;
         if (detail.isApplied) {
           _isApplied = true;
@@ -147,20 +150,10 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFCBD5E1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: const CustomPaint(
-                            painter: _DiagonalPlaceholderPainter(
-                              color: Color(0xFF475569),
-                              strokeWidth: 1.2,
-                            ),
-                          ),
+                        CompanyLogo(
+                          imageUrl: (_liveJob ?? widget.job).companyLogo,
+                          size: 44,
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -732,25 +725,4 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
     );
   }
 }
-class _DiagonalPlaceholderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
 
-  const _DiagonalPlaceholderPainter({
-    this.color = const Color(0xFF475569),
-    this.strokeWidth = 1.2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-}

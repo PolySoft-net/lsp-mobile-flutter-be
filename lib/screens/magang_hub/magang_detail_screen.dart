@@ -8,6 +8,7 @@ import '../../services/career_expo/career_expo_service.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/company_logo.dart';
 import '../career_expo/career_expo_apply_screen.dart';
 import 'magang_form_screen.dart';
 
@@ -199,20 +200,10 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFCBD5E1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: const CustomPaint(
-                                painter: _DiagonalPlaceholderPainter(
-                                  color: Color(0xFF475569),
-                                  strokeWidth: 1.2,
-                                ),
-                              ),
+                            CompanyLogo(
+                              imageUrl: _job.companyLogo,
+                              size: 44,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -540,25 +531,3 @@ class _MagangDetailScreenState extends State<MagangDetailScreen> {
 
 }
 
-class _DiagonalPlaceholderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-
-  const _DiagonalPlaceholderPainter({
-    this.color = const Color(0xFF475569),
-    this.strokeWidth = 1.2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-}

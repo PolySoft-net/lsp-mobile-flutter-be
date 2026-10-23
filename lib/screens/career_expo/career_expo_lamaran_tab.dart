@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
+import '../../widgets/common/company_logo.dart';
 import 'career_expo_detail_screen.dart';
 
 /// Tab Lamaran Saya di Career Expo — data dari GET /api/career-expo/lamaran.
@@ -279,21 +280,11 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                               padding: const EdgeInsets.all(12),
                               child: Row(
                                 children: [
-                                  // Logo placeholder with diagonal line
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFCBD5E1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    clipBehavior: Clip.antiAlias,
-                                    child: const CustomPaint(
-                                      painter: _DiagonalPlaceholderPainter(
-                                        color: Color(0xFF475569),
-                                        strokeWidth: 1.2,
-                                      ),
-                                    ),
+                                  // Logo perusahaan (gambar asli dari hasil upload)
+                                  CompanyLogo(
+                                    imageUrl: item.job.companyLogo,
+                                    size: 40,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                   const SizedBox(width: 12),
                                   // Texts
@@ -364,25 +355,4 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
   }
 
 }
-class _DiagonalPlaceholderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
 
-  const _DiagonalPlaceholderPainter({
-    this.color = const Color(0xFF475569),
-    this.strokeWidth = 1.2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-}

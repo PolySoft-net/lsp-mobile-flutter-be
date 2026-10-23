@@ -24,8 +24,9 @@ class CareerJobItem {
   final List<String> jobDescription;
   final List<String> requirements;
   final List<String> benefits;
-  final Color logoBgColor;
-  final String logoText;
+
+  /// Path gambar logo perusahaan hasil upload (JPG/PNG).
+  final String companyLogo;
   final String filePdf;
   final String filePdfUrl;
   final String createdBy;
@@ -56,8 +57,7 @@ class CareerJobItem {
     required this.jobDescription,
     required this.requirements,
     required this.benefits,
-    this.logoBgColor = const Color(0xFF0284C7),
-    this.logoText = '',
+    this.companyLogo = '',
     this.filePdf = '',
     this.filePdfUrl = '',
     this.createdBy = '',
@@ -90,9 +90,7 @@ class CareerJobItem {
       jobDescription: _asStringList(json['job_description']),
       requirements: _asStringList(json['requirements']),
       benefits: _asStringList(json['benefits']),
-      logoBgColor: _parseHexColor(json['logo_color']) ??
-          const Color(0xFF0284C7),
-      logoText: json['logo_text']?.toString() ?? '',
+      companyLogo: json['company_logo']?.toString() ?? '',
       filePdf: json['file_pdf']?.toString() ?? '',
       filePdfUrl: json['file_pdf_url']?.toString() ?? json['file_pdf']?.toString() ?? '',
       createdBy: json['created_by']?.toString() ?? '',
@@ -120,16 +118,6 @@ class CareerJobItem {
     return const [];
   }
 
-  /// Backend mengirim warna logo sebagai hex string, mis. '#0284C7'.
-  static Color? _parseHexColor(dynamic value) {
-    var hex = value?.toString().trim() ?? '';
-    if (hex.isEmpty) return null;
-    if (hex.startsWith('#')) hex = hex.substring(1);
-    final parsed = int.tryParse(hex, radix: 16);
-    if (parsed == null) return null;
-    return Color(0xFF000000 | parsed);
-  }
-
   CareerJobItem copyWith({
     String? id,
     String? title,
@@ -152,8 +140,7 @@ class CareerJobItem {
     List<String>? jobDescription,
     List<String>? requirements,
     List<String>? benefits,
-    Color? logoBgColor,
-    String? logoText,
+    String? companyLogo,
     String? filePdf,
     String? filePdfUrl,
     String? createdBy,
@@ -183,8 +170,7 @@ class CareerJobItem {
       jobDescription: jobDescription ?? this.jobDescription,
       requirements: requirements ?? this.requirements,
       benefits: benefits ?? this.benefits,
-      logoBgColor: logoBgColor ?? this.logoBgColor,
-      logoText: logoText ?? this.logoText,
+      companyLogo: companyLogo ?? this.companyLogo,
       filePdf: filePdf ?? this.filePdf,
       filePdfUrl: filePdfUrl ?? this.filePdfUrl,
       createdBy: createdBy ?? this.createdBy,
@@ -327,203 +313,6 @@ class CareerNotificationItem {
       return const Color(0xFFF3E8FF);
     }
     return const Color(0xFFEFF6FF);
-  }
-}
-
-/// Mock data lowongan untuk Career Expo UI
-class CareerExpoMockData {
-  static List<CareerJobItem> getJobs() {
-    return [
-      const CareerJobItem(
-        id: 'job-1',
-        title: 'UI/UX Designer',
-        companyName: 'PT. Kreatif Digital',
-        companyCategory: 'IT Services & Consulting · 51-200 karyawan',
-        employmentType: 'Full Time',
-        workplaceType: 'Remote',
-        location: 'Jakarta',
-        salaryMin: 6000000,
-        salaryMax: 9000000,
-        postedAt: '3 hari yang lalu',
-        isBookmarked: false,
-        isPopular: true,
-        category: 'Remote',
-        experience: '1-3 tahun',
-        education: 'Min. D3/S1',
-        logoBgColor: Color(0xFF0284C7),
-        logoText: 'KD',
-        aboutCompany:
-            'PT. Kreatif Digital adalah perusahaan yang bergerak di bidang teknologi dan desain digital, berfokus pada pengembangan produk digital inovatif untuk berbagai klien di Indonesia.',
-        jobDescription: [
-          'Membuat desain UI/UX untuk aplikasi dan website',
-          'Berkolaborasi dengan tim produk dan developer',
-          'Melakukan riset pengguna dan analisis kebutuhan',
-          'Merancang wireframe, user flow, dan interactive prototype di Figma',
-          'Memastikan konsistensi design system pada seluruh platform',
-        ],
-        requirements: [
-          'Pengalaman minimal 1-3 tahun di bidang UI/UX Design',
-          'Menguasai tools desain seperti Figma, FigJam, dan Adobe XD',
-          'Memiliki portofolio yang memperlihatkan alur berpikir produk',
-          'Memiliki pemahaman sertifikasi kompetensi LSP (Nilai Tambah)',
-          'Mampu berkomunikasi dengan baik dan bekerja sama secara remote',
-        ],
-        benefits: [
-          'Gaji kompetitif + Bonus kinerja tahunan',
-          'Kerja 100% Remote dengan fleksibilitas jam kerja',
-          'Tunjangan koneksi internet & laptop operasional',
-          'BPJS Kesehatan & Ketenagakerjaan lengkap',
-        ],
-      ),
-      const CareerJobItem(
-        id: 'job-2',
-        title: 'UI/UX Designer (Intern)',
-        companyName: 'Ruang Digital Studio',
-        companyCategory: 'Design & Creative Agency · 11-50 karyawan',
-        employmentType: 'Magang',
-        workplaceType: 'On Site',
-        location: 'Yogyakarta',
-        salaryMin: 2000000,
-        salaryMax: 3000000,
-        postedAt: '5 hari yang lalu',
-        isBookmarked: false,
-        isPopular: true,
-        category: 'Magang',
-        experience: 'Fresh Graduate',
-        education: 'Min. SMK/D3/S1',
-        logoBgColor: Color(0xFF0D9488),
-        logoText: 'RD',
-        aboutCompany:
-            'Ruang Digital Studio adalah agensi kreatif yang berpusat di Yogyakarta, berfokus pada branding, pembuatan sistem desain digital, dan aplikasi mobile modern.',
-        jobDescription: [
-          'Membantu perancangan antarmuka aplikasi mobile dan web',
-          'Membuat aset visual dan ilustrasi micro-interaction',
-          'Mendampingi senior designer dalam presentasi konsep ke klien',
-          'Membantu usability testing bersama partisipan uji',
-        ],
-        requirements: [
-          'Mahasiswa tingkat akhir atau fresh graduate jurusan Desain/IT/Multimedia',
-          'Familiar dengan Figma dan design principles dasar',
-          'Mau belajar, proaktif, dan dapat menerima feedback konstruktif',
-          'Bersedia magang secara on site di kantor Yogyakarta',
-        ],
-        benefits: [
-          'Uang saku bulanan & sertifikat magang resmi',
-          'Mentorship langsung dari praktisi UI/UX berpengalaman',
-          'Peluang diangkat menjadi karyawan tetap setelah masa magang',
-        ],
-      ),
-      const CareerJobItem(
-        id: 'job-3',
-        title: 'UI/UX Designer',
-        companyName: 'Nusa Kreatif Teknologi',
-        companyCategory: 'Software Development · 50-100 karyawan',
-        employmentType: 'Full Time',
-        workplaceType: 'On Site',
-        location: 'Bandung',
-        salaryMin: 5000000,
-        salaryMax: 8000000,
-        postedAt: '6 hari yang lalu',
-        isBookmarked: false,
-        isPopular: false,
-        category: 'On Site',
-        experience: '1-2 tahun',
-        education: 'Min. D3/S1',
-        logoBgColor: Color(0xFF1E293B),
-        logoText: 'NK',
-        aboutCompany:
-            'Nusa Kreatif Teknologi adalah software house terkemuka di Bandung yang mengembangkan solusi enterprise untuk perbankan, logistik, dan industri retail.',
-        jobDescription: [
-          'Mengembangkan design guidelines untuk aplikasi web dan desktop',
-          'Melakukan benchmarking fitur dan kompetitor',
-          'Membangun komponen reusable di Figma Design System',
-          'Koordinasi sprint harian bersama Frontend Engineers',
-        ],
-        requirements: [
-          'Pengalaman 1-2 tahun membuat desain aplikasi enterprise',
-          'Keahlian solid dalam Figma Auto-Layout, Components, dan Variables',
-          'Pemahaman dasar HTML/CSS menjadi nilai tambah',
-          'Domisili atau bersedia relokasi ke Bandung',
-        ],
-        benefits: [
-          'BPJS Kesehatan & Ketenagakerjaan',
-          'Makan siang harian & snack pantry gratis',
-          'Asuransi rawat inap swasta',
-        ],
-      ),
-      const CareerJobItem(
-        id: 'job-4',
-        title: 'Front End Developer',
-        companyName: 'CV. Solusi Digital Inovasi',
-        companyCategory: 'Web & Mobile Tech · 20-50 karyawan',
-        employmentType: 'Full Time',
-        workplaceType: 'On Site',
-        location: 'Yogyakarta',
-        salaryMin: 6000000,
-        salaryMax: 9000000,
-        postedAt: '1 minggu yang lalu',
-        isBookmarked: false,
-        isPopular: true,
-        category: 'On Site',
-        experience: '2-4 tahun',
-        education: 'Min. D3/S1',
-        logoBgColor: Color(0xFF2563EB),
-        logoText: 'SD',
-        aboutCompany:
-            'CV. Solusi Digital Inovasi menghadirkan solusi transformasi digital bagi UMKM dan korporasi melalui ekosistem software berbasis cloud yang tangguh.',
-        jobDescription: [
-          'Mengembangkan antarmuka aplikasi web responsif berbasis Flutter / React',
-          'Mengintegrasikan API RESTful dan GraphQL ke dalam client interface',
-          'Mengoptimalkan performa rendering halaman dan aksesibilitas',
-        ],
-        requirements: [
-          'Pengalaman minimal 2 tahun dengan Flutter / Vue / React',
-          'Memiliki pemahaman state management yang baik (BLoC / Riverpod / Provider)',
-          'Sertifikasi Kompetensi Pemrograman Web/Mobile LSP menjadi nilai unggul',
-        ],
-        benefits: [
-          'Gaji kompetitif + insentif proyek',
-          'Ruang kerja modern dengan fasilitas hiburan',
-          'Dukungan sertifikasi profesional berstandar nasional',
-        ],
-      ),
-      const CareerJobItem(
-        id: 'job-5',
-        title: 'PT. Inovasi Solusi Digital',
-        companyName: 'PT. Inovasi Solusi Digital',
-        companyCategory: 'Information Technology · 100-250 karyawan',
-        employmentType: 'Full Time',
-        workplaceType: 'Remote',
-        location: 'Jakarta',
-        salaryMin: 7000000,
-        salaryMax: 10000000,
-        postedAt: '1 minggu yang lalu',
-        isBookmarked: false,
-        isPopular: false,
-        category: 'Remote',
-        experience: '2-3 tahun',
-        education: 'Min. D3/S1',
-        logoBgColor: Color(0xFF0369A1),
-        logoText: 'IS',
-        aboutCompany:
-            'PT. Inovasi Solusi Digital adalah konsultan IT terpercaya yang menyediakan solusi integrasi cloud, kecerdasan buatan, dan keamanan siber.',
-        jobDescription: [
-          'Merancang antarmuka dashboard monitoring data analitik',
-          'Menyusun spesifikasi visual untuk tim engineer',
-          'Melakukan evaluasi heuristik terhadap platform yang sudah rilis',
-        ],
-        requirements: [
-          'Pengalaman minimal 2 tahun dalam mendesain B2B Dashboard / SaaS',
-          'Terbiasa dengan data visualization dan micro-interactions',
-          'Disiplin tinggi untuk pola kerja asynchronous remote',
-        ],
-        benefits: [
-          'Kebijakan Work From Anywhere (WFA)',
-          'Tunjangan gadget tahunan',
-          'Pelatihan dan sertifikasi berkala',
-        ],
-      ),
-    ];
   }
 }
 

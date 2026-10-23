@@ -7,6 +7,7 @@ import '../../models/master_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../services/common/master_service.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
+import '../../widgets/common/company_logo_upload_field.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'widgets/magang_form_fields.dart';
 
@@ -50,7 +51,9 @@ class _MagangFormScreenState extends State<MagangFormScreen> {
 
   String _filePdfUrl = '';
   String _filePdfName = '';
+  String _companyLogo = '';
   bool _isUploadingPdf = false;
+  bool _isUploadingLogo = false;
   bool _isSubmitting = false;
 
   List<String> _workplaceTypes = ['On Site', 'Remote', 'Hybrid'];
@@ -81,6 +84,7 @@ class _MagangFormScreenState extends State<MagangFormScreen> {
         _experience = init.experience;
       }
       _filePdfUrl = init.filePdf;
+      _companyLogo = init.companyLogo;
       if (init.filePdf.isNotEmpty) {
         _filePdfName = init.filePdf.split(RegExp(r'[/\\]')).last;
       }
@@ -207,7 +211,73 @@ class _MagangFormScreenState extends State<MagangFormScreen> {
     }
   }
 
+  Future<void> _pickLogoFile() async {
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: const ['jpg', 'jpeg', 'png'],
+      );
+      if (!mounted || file == null || file.path == null) return;
+      setState(() => _isUploadingLogo = true);
+
+      final res = await MagangHubService.uploadFile(file.path!);
+      if (!mounted) return;
+      final url = Uri.parse((res['file_url'] ?? '').trim()).path;
+      setState(() {
+        if (url.isNotEmpty) _companyLogo = url;
+        _isUploadingLogo = false;
+      });
+      if (url.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal mengunggah logo. Coba lagi.'),
+            backgroundColor: Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Logo perusahaan berhasil diunggah!'),
+          backgroundColor: Color(0xFF16A34A),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingLogo = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengunggah logo: $e'),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _submit(bool isDraft) async {
+    if (_isUploadingLogo) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tunggu proses unggah logo selesai.'),
+          backgroundColor: Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (_companyLogo.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Logo perusahaan wajib diunggah (JPG/PNG).'),
+          backgroundColor: Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -230,6 +300,7 @@ class _MagangFormScreenState extends State<MagangFormScreen> {
       'nama_perusahaan': _companyController.text.trim(),
       'kategori_perusahaan': _categoryController.text.trim(),
       'tentang_perusahaan': _aboutCompanyController.text.trim(),
+      'company_logo': _companyLogo.trim(),
       'deskripsi_lowongan': _descriptionController.text.trim(),
       'tipe_pekerjaan': 'Magang',
       'jenis_tempat': _workplaceType,
@@ -324,6 +395,15 @@ class _MagangFormScreenState extends State<MagangFormScreen> {
                             label: 'Nama Perusahaan Mitra *',
                             hint: 'Contoh: PT Ruang Digital Kreatif',
                             validator: (v) => v == null || v.trim().isEmpty ? 'Nama perusahaan wajib diisi' : null,
+                          ),
+                          const SizedBox(height: 14),
+                          MagangFormLabel('Logo Perusahaan (JPG/PNG) *'),
+                          const SizedBox(height: 6),
+                          CompanyLogoUploadField(
+                            imageUrl: _companyLogo,
+                            isUploading: _isUploadingLogo,
+                            onPick: _pickLogoFile,
+                            onClear: () => setState(() => _companyLogo = ''),
                           ),
                           const SizedBox(height: 14),
                           MagangFormTextField(

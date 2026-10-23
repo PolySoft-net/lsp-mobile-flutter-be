@@ -323,21 +323,16 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo placeholder with diagonal line
+                  // Ikon kategori notifikasi (tidak ada data logo perusahaan)
                   Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
+                      color: item.iconColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: const CustomPaint(
-                      painter: _DiagonalPlaceholderPainter(
-                        color: Color(0xFF475569),
-                        strokeWidth: 1.2,
-                      ),
-                    ),
+                    alignment: Alignment.center,
+                    child: Icon(item.icon, size: 20, color: item.iconColor),
                   ),
                   const SizedBox(width: 12),
                   // Texts
@@ -402,25 +397,4 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
     );
   }
 }
-class _DiagonalPlaceholderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
 
-  const _DiagonalPlaceholderPainter({
-    this.color = const Color(0xFF475569),
-    this.strokeWidth = 1.2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-}

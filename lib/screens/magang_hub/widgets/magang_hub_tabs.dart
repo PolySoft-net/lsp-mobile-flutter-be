@@ -2,6 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../models/magang_hub_models.dart';
 import '../../../utils/number_format_helper.dart';
+import '../../../widgets/common/company_logo.dart';
+import '../../../widgets/common/career_portal_banner.dart';
 import '../../career_expo/career_expo_notifikasi_tab.dart';
 import 'magang_card.dart';
 import 'magang_hub_common.dart';
@@ -161,94 +163,9 @@ class MagangHubJobsTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Promo Banner: Magang Hub
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 11,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Magang Hub',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Temukan kesempatan magang terbaik untuk membangun karirmu.',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF64748B),
-                              height: 1.25,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          InkWell(
-                            onTap: onSeeMore,
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Lihat Lebih',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 13,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 9,
-                      child: AspectRatio(
-                        aspectRatio: 1.35,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFCBD5E1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: const CustomPaint(
-                            painter: _DiagonalPlaceholderPainter(color: Color(0xFF475569)),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            CareerPortalBanner(
+              isMagang: true,
+              onSeeMore: onSeeMore,
             ),
             const SizedBox(height: 20),
 
@@ -407,20 +324,10 @@ class MagangHubJobsTab extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFCBD5E1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: const CustomPaint(
-                        painter: _DiagonalPlaceholderPainter(
-                          color: Color(0xFF475569),
-                          strokeWidth: 1.2,
-                        ),
-                      ),
+                    CompanyLogo(
+                      imageUrl: job.companyLogo,
+                      size: 32,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     const Spacer(),
                     GestureDetector(
@@ -538,28 +445,6 @@ class MagangHubJobsTab extends StatelessWidget {
   }
 }
 
-class _DiagonalPlaceholderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-
-  const _DiagonalPlaceholderPainter({
-    this.color = const Color(0xFF475569),
-    this.strokeWidth = 1.2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
-}
 
 class MagangHubCompaniesTab extends StatelessWidget {
   final List<MagangPerusahaanItem> companies;

@@ -6,6 +6,7 @@ import '../../models/career_expo_models.dart';
 import '../../models/master_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../services/common/master_service.dart';
+import '../../widgets/common/company_logo_upload_field.dart';
 import '../../widgets/common/custom_app_bar.dart';
 
 const TextStyle _inputTextStyle = TextStyle(
@@ -63,7 +64,9 @@ class _CareerExpoFormLowonganScreenState
   bool _skemaLoadFailed = false;
   String _filePdfUrl = '';
   String _filePdfName = '';
+  String _companyLogo = '';
   bool _isUploadingPdf = false;
+  bool _isUploadingLogo = false;
   bool _isSubmitting = false;
   bool _savingDraft = false;
 
@@ -143,6 +146,7 @@ class _CareerExpoFormLowonganScreenState
       }
       _filePdfUrl = init.filePdfUrl;
       _filePdfName = init.filePdf.split(RegExp(r'[/\\]')).last;
+      _companyLogo = init.companyLogo;
 
       for (final d in init.jobDescription) {
         _descItemControllers.add(TextEditingController(text: d));
@@ -254,7 +258,69 @@ class _CareerExpoFormLowonganScreenState
     }
   }
 
+  Future<void> _pickLogoFile() async {
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: const ['jpg', 'jpeg', 'png'],
+      );
+      if (!mounted || file == null || file.path == null) return;
+      setState(() => _isUploadingLogo = true);
+
+      final res = await CareerExpoService.uploadFile(file.path!);
+      if (!mounted) return;
+      final url = Uri.parse((res['file_url'] ?? '').trim()).path;
+      setState(() {
+        if (url.isNotEmpty) _companyLogo = url;
+        _isUploadingLogo = false;
+      });
+      if (url.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal mengunggah logo. Coba lagi.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Logo perusahaan berhasil diunggah!'),
+          backgroundColor: Color(0xFF16A34A),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingLogo = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengunggah logo: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _submit(bool isDraft) async {
+    if (_isUploadingLogo) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tunggu proses unggah logo selesai.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (_companyLogo.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Logo perusahaan wajib diunggah (JPG/PNG).'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -283,6 +349,7 @@ class _CareerExpoFormLowonganScreenState
       'nama_perusahaan': _companyController.text.trim(),
       'kategori_perusahaan': _categoryController.text.trim(),
       'tentang_perusahaan': _aboutCompanyController.text.trim(),
+      'company_logo': _companyLogo.trim(),
       'tipe_pekerjaan': _employmentType,
       'jenis_tempat': _workplaceType,
       'lokasi': _locationController.text.trim(),
@@ -411,6 +478,22 @@ class _CareerExpoFormLowonganScreenState
                         style: _inputTextStyle,
                         decoration: _inputDecoration(
                           'Contoh: Teknologi Informasi & Software',
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _buildLabel('Logo Perusahaan (JPG/PNG) *'),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: CompanyLogoUploadField(
+                          imageUrl: _companyLogo,
+                          isUploading: _isUploadingLogo,
+                          onPick: _pickLogoFile,
+                          onClear: () => setState(() => _companyLogo = ''),
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -774,7 +857,7 @@ class _CareerExpoFormLowonganScreenState
           SizedBox(
             height: 48,
             child: ElevatedButton(
-              onPressed: _isSubmitting || _isUploadingPdf
+              onPressed: _isSubmitting || _isUploadingPdf || _isUploadingLogo
                   ? null
                   : () => _submit(false),
               style: ElevatedButton.styleFrom(
@@ -809,7 +892,7 @@ class _CareerExpoFormLowonganScreenState
           SizedBox(
             height: 44,
             child: OutlinedButton(
-              onPressed: _isSubmitting || _isUploadingPdf
+              onPressed: _isSubmitting || _isUploadingPdf || _isUploadingLogo
                   ? null
                   : () => _submit(true),
               style: OutlinedButton.styleFrom(

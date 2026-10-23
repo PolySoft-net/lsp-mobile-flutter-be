@@ -1,5 +1,3 @@
-import 'package:material_ui/material_ui.dart';
-
 export 'career_expo_models.dart' show CareerJobItem;
 /// Model untuk profil perusahaan mitra di Magang Hub.
 class MagangPerusahaanItem {
@@ -7,8 +5,8 @@ class MagangPerusahaanItem {
   final String kategoriPerusahaan;
   final String tentangPerusahaan;
   final String lokasi;
-  final String logoText;
-  final Color logoColor;
+  /// Path gambar logo perusahaan hasil upload (JPG/PNG).
+  final String companyLogo;
   final int totalLowongan;
 
   const MagangPerusahaanItem({
@@ -16,28 +14,17 @@ class MagangPerusahaanItem {
     required this.kategoriPerusahaan,
     required this.tentangPerusahaan,
     required this.lokasi,
-    required this.logoText,
-    required this.logoColor,
+    this.companyLogo = '',
     required this.totalLowongan,
   });
 
   factory MagangPerusahaanItem.fromJson(Map<String, dynamic> json) {
-    Color parseColor(String? hex) {
-      if (hex == null || hex.isEmpty) return const Color(0xFF7C3AED);
-      final clean = hex.replaceAll('#', '');
-      if (clean.length == 6) {
-        return Color(int.parse('FF$clean', radix: 16));
-      }
-      return const Color(0xFF7C3AED);
-    }
-
     return MagangPerusahaanItem(
       namaPerusahaan: json['nama_perusahaan']?.toString() ?? '',
       kategoriPerusahaan: json['kategori_perusahaan']?.toString() ?? '',
       tentangPerusahaan: json['tentang_perusahaan']?.toString() ?? '',
       lokasi: json['lokasi']?.toString() ?? '',
-      logoText: json['logo_text']?.toString() ?? '',
-      logoColor: parseColor(json['logo_color']?.toString()),
+      companyLogo: json['company_logo']?.toString() ?? '',
       totalLowongan: json['total_lowongan_magang'] is int
           ? json['total_lowongan_magang'] as int
           : int.tryParse(json['total_lowongan_magang']?.toString() ?? '0') ?? 0,

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
+import '../common/company_logo.dart';
 
 /// Modal bottom sheet untuk konfirmasi & pengajuan lamaran pekerjaan
 class CareerApplySheet extends StatefulWidget {
@@ -69,23 +70,10 @@ class _CareerApplySheetState extends State<CareerApplySheet> {
           // Title
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: widget.job.logoBgColor,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  widget.job.logoText.isNotEmpty
-                      ? widget.job.logoText
-                      : widget.job.companyName.substring(0, 1),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              CompanyLogo(
+                imageUrl: widget.job.companyLogo,
+                size: 40,
+                borderRadius: BorderRadius.circular(20),
               ),
               const SizedBox(width: 12),
               Expanded(

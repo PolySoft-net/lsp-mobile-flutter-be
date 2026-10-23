@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../../models/magang_hub_models.dart';
+import '../../../widgets/common/company_logo.dart';
 
 /// Baris ringkas profil perusahaan mitra penyedia program magang.
 class MagangPerusahaanCard extends StatelessWidget {
@@ -15,11 +16,6 @@ class MagangPerusahaanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = item.logoText.isNotEmpty
-        ? item.logoText
-        : (item.namaPerusahaan.isNotEmpty
-            ? item.namaPerusahaan.substring(0, 1).toUpperCase()
-            : 'P');
     final kategori = item.kategoriPerusahaan.isNotEmpty
         ? item.kategoriPerusahaan
         : 'Mitra Industri LSP';
@@ -43,26 +39,10 @@ class MagangPerusahaanCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: item.logoColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        initial,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.0,
-                        ),
-                      ),
+                    CompanyLogo(
+                      imageUrl: item.companyLogo,
+                      size: 40,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
