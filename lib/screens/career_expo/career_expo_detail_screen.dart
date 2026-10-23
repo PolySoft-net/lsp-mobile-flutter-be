@@ -3,11 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
-import '../../services/api_client.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../utils/number_format_helper.dart';
-import '../../utils/url_helper.dart';
-import '../../widgets/career_expo/career_bouncy_tap.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'career_expo_apply_screen.dart';
 /// Halaman Detail Lowongan Career Expo sesuai desain UI
@@ -107,12 +104,8 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
       });
     }
   }
-  String get _salaryFormatted =>
-      'Rp ${NumberFormatHelper.formatWithDots(widget.job.salaryMin)} - ${NumberFormatHelper.formatWithDots(widget.job.salaryMax)} / ${widget.job.salaryPeriod}';
-
   @override
   Widget build(BuildContext context) {
-    final salaryFormatted = _salaryFormatted;
     final double statusBarHeight = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
@@ -121,513 +114,326 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
         children: [
           SizedBox(height: statusBarHeight + 8),
           CustomAppBar(
-            title: 'Detail Lowongan',
+            title: 'Detail',
             onBack: () => Navigator.pop(context),
-            rightWidget: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CareerBouncyTap(
-                  onTap: _toggleBookmark,
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: _isBookmarked
-                          ? const Color(0xFFFEE2E2)
-                          : const Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        _isBookmarked
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        color: _isBookmarked
-                            ? const Color(0xFFEF4444)
-                            : const Color(0xFF475569),
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                CareerBouncyTap(
-                  onTap: () => _showOptionsMenu(context),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.more_horiz_rounded,
-                        color: Color(0xFF0F172A),
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            rightWidget: IconButton(
+              icon: const Icon(
+                Icons.settings_outlined,
+                color: Color(0xFF0F172A),
+                size: 22,
+              ),
+              onPressed: () => _showOptionsMenu(context),
             ),
           ),
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
-                20,
+                16,
                 12,
-                20,
+                16,
                 24 + MediaQuery.paddingOf(context).bottom,
               ),
-              child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Company Header
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: widget.job.logoBgColor,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    widget.job.logoText.isNotEmpty
-                        ? widget.job.logoText
-                        : widget.job.companyName.substring(0, 1),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.job.companyName,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row: Logo, Company Info, Bookmark
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFCBD5E1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: const CustomPaint(
+                            painter: _DiagonalPlaceholderPainter(
+                              color: Color(0xFF475569),
+                              strokeWidth: 1.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.job.companyName,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.job.companyCategory.isNotEmpty
+                                    ? widget.job.companyCategory
+                                    : 'IT Services & Consulting',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Color(0xFF64748B),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: [
+                                  _buildTagBadge('+${widget.job.employmentType}'),
+                                  _buildTagBadge('+${widget.job.workplaceType}'),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.account_balance_wallet_outlined,
+                                    size: 14,
+                                    color: Color(0xFF334155),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      'RP. ${NumberFormatHelper.formatSalaryRange(widget.job.salaryMin, widget.job.salaryMax)} /${widget.job.salaryPeriod}',
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        color: Color(0xFF334155),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.access_time_rounded,
+                                    size: 14,
+                                    color: Color(0xFF334155),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      widget.job.postedAt.isNotEmpty
+                                          ? 'Berlaku sampai ${widget.job.postedAt}'
+                                          : 'Berlaku sampai 30 Juni 2026',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Bookmark button
+                        GestureDetector(
+                          onTap: _toggleBookmark,
+                          child: Icon(
+                            _isBookmarked
+                                ? Icons.bookmark_rounded
+                                : Icons.bookmark_outline_rounded,
+                            color: const Color(0xFF0F172A),
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    const Divider(height: 1, color: Color(0xFFCBD5E1)),
+                    const SizedBox(height: 12),
+
+                    // 3 Specs in a row (Location, Experience, Education)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildInfoItem(
+                            Icons.location_on_outlined,
+                            widget.job.location,
+                          ),
+                        ),
+                        Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
+                        Expanded(
+                          child: _buildInfoItem(
+                            Icons.work_outline_rounded,
+                            widget.job.experience,
+                          ),
+                        ),
+                        Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
+                        Expanded(
+                          child: _buildInfoItem(
+                            Icons.school_outlined,
+                            widget.job.education,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Big Action CTA Button "Lamar Sekarang"
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: ElevatedButton(
+                        onPressed: _isApplied
+                            ? () {
+                                final statusText = _appliedStatusLabel;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Status lamaran: $statusText.'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            : _showApplyModal,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isApplied
+                              ? _appliedButtonColor
+                              : const Color(0xFF94A3B8),
+                          foregroundColor: const Color(0xFF0F172A),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _isApplied ? _appliedStatusLabel : 'Lamar Sekarang',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              _isApplied ? _appliedButtonIcon : Icons.send_rounded,
+                              size: 16,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Section: Tentang Perusahaan
+                    const Text(
+                      'Tentang Perusahaan :',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      widget.job.aboutCompany.isNotEmpty
+                          ? widget.job.aboutCompany
+                          : 'Perusahaan penyedia Layanan Teknologi Informasi dan Konsultasi yang berfokus pada inovasi digital.',
+                      maxLines: _isAboutExpanded ? 30 : 4,
+                      overflow: _isAboutExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.45,
+                        color: Color(0xFF334155),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    GestureDetector(
+                      onTap: () => setState(() => _isAboutExpanded = !_isAboutExpanded),
+                      child: Text(
+                        _isAboutExpanded ? 'Tutup' : 'Selanjutnya...',
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Section: Deskripsi Pekerjaan
+                    const Text(
+                      'Deskripsi Pekerjaan :',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (widget.job.jobDescription.isNotEmpty)
+                      ...widget.job.jobDescription.map(
+                        (desc) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            '> $desc',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF334155),
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      )
+                    else ...[
+                      const Text('> Membuat desain UI/UX untuk Aplikasi dan Website', style: TextStyle(fontSize: 12, color: Color(0xFF334155))),
+                      const SizedBox(height: 4),
+                      const Text('> Berkolaborasi dengan tim produk dan developer', style: TextStyle(fontSize: 12, color: Color(0xFF334155))),
+                      const SizedBox(height: 4),
+                      const Text('> Melakukan riset pengguna dan analisis kebutuhan', style: TextStyle(fontSize: 12, color: Color(0xFF334155))),
+                    ],
+
+                    if (widget.job.requirements.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Persyaratan :',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
                           color: Color(0xFF0F172A),
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        widget.job.companyCategory,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Job Title
-            Text(
-              widget.job.title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Tag Pills
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildTagBadge(widget.job.employmentType),
-                _buildTagBadge(widget.job.workplaceType),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Salary
-            Text(
-              salaryFormatted,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0066F6),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Highlight Info Grid (Location, Experience, Education)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildInfoItem(
-                      Icons.location_on_outlined,
-                      widget.job.location,
-                    ),
-                  ),
-                  Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
-                  Expanded(
-                    child: _buildInfoItem(
-                      Icons.work_history_outlined,
-                      widget.job.experience,
-                    ),
-                  ),
-                  Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
-                  Expanded(
-                    child: _buildInfoItem(
-                      Icons.school_outlined,
-                      widget.job.education,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Action Buttons (Lamar Sekarang & Simpan)
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _isApplied
-                    ? () {
-                        final statusText = _appliedStatusLabel;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Status lamaran: $statusText. Lamaran Anda sudah diterima sistem.'),
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    : _showApplyModal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isApplied
-                      ? _appliedButtonColor
-                      : const Color(0xFF0066F6),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      _isApplied ? _appliedButtonIcon : Icons.send_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isApplied ? _appliedStatusLabel : 'Lamar Sekarang',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton(
-                onPressed: _toggleBookmark,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF0F172A),
-                  side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                      color: _isBookmarked ? const Color(0xFF0066F6) : const Color(0xFF0F172A),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _isBookmarked ? 'Tersimpan' : 'Simpan',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 28),
-            // Section: Tentang Perusahaan
-            const Text(
-              'Tentang Perusahaan',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.job.aboutCompany,
-              maxLines: _isAboutExpanded ? 20 : 3,
-              overflow: _isAboutExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 13.5,
-                height: 1.55,
-                color: Color(0xFF475569),
-              ),
-            ),
-            const SizedBox(height: 4),
-            GestureDetector(
-              onTap: () {
-                setState(() => _isAboutExpanded = !_isAboutExpanded);
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _isAboutExpanded ? 'Sembunyikan' : 'Selengkapnya',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0066F6),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    _isAboutExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    size: 18,
-                    color: const Color(0xFF0066F6),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Section: Deskripsi Pekerjaan
-            const Text(
-              'Deskripsi Pekerjaan',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ...widget.job.jobDescription.map(
-              (desc) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(top: 6),
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF0066F6),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        desc,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          height: 1.45,
-                          color: Color(0xFF334155),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Section: Kualifikasi & Persyaratan
-            if (widget.job.requirements.isNotEmpty) ...[
-              const Text(
-                'Kualifikasi & Persyaratan',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...widget.job.requirements.map(
-                (req) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 6),
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF0284C7),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          req,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            height: 1.45,
-                            color: Color(0xFF334155),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 20),
-            // Section: Benefit
-            if (widget.job.benefits.isNotEmpty) ...[
-              const Text(
-                'Benefit & Keuntungan',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...widget.job.benefits.map(
-                (benefit) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: Color(0xFF10B981),
-                        size: 16,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          benefit,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            height: 1.45,
-                            color: Color(0xFF334155),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-
-            // Section: Dokumen & Brosur Lowongan (PDF)
-            if (widget.job.filePdfUrl.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              const Text(
-                'Dokumen & Brosur Lowongan',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.picture_as_pdf_rounded,
-                        color: Color(0xFFDC2626),
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.job.filePdf.split(RegExp(r'[/\\]')).last,
+                      const SizedBox(height: 6),
+                      ...widget.job.requirements.map(
+                        (req) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            '> $req',
                             style: const TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
+                              fontSize: 12,
+                              color: Color(0xFF334155),
+                              height: 1.35,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Dokumen Resmi Rekruter / Brosur Lowongan (PDF)',
-                            style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.download_rounded, color: Color(0xFF0066F6)),
-                      onPressed: () {
-                        final raw = widget.job.filePdfUrl;
-                        final url = raw.startsWith('http') ? raw : '${ApiClient.baseUrl}/$raw';
-                        UrlHelper.launchURL(url);
-                      },
-                    ),
+                    ],
                   ],
                 ),
               ),
-            ],
-            const SizedBox(height: 32),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
-    ),
-  ],
-),
-);
+    );
   }
 
   Widget _buildInfoItem(IconData icon, String text) {
@@ -653,39 +459,22 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
 
   Widget _buildTagBadge(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFBFDBFE),
-          width: 0.8,
-        ),
+        color: const Color(0xFFCBD5E1),
+        borderRadius: BorderRadius.circular(4),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: const BoxDecoration(
-              color: Color(0xFF2563EB),
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF1D4ED8),
-              fontSize: 11.5,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF334155),
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
+
   String get _appliedStatusLabel {
     final status = _applicationStatus.trim();
     if (status.isEmpty) return 'Proses Menunggu';
@@ -823,7 +612,7 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                         'Lowongan Kerja: ${widget.job.title}\n'
                         'Perusahaan: ${widget.job.companyName}\n'
                         'Lokasi: ${widget.job.location} (${widget.job.workplaceType})\n'
-                        'Gaji: $_salaryFormatted\n\n'
+                        'Gaji: Rp ${NumberFormatHelper.formatSalaryRange(widget.job.salaryMin, widget.job.salaryMax)}\n\n'
                         'Lamar dan cek lowongan ini di aplikasi LSP Teknologi Digital:\n'
                         'https://play.google.com/store/apps/details?id=id.lspdigital.mobile';
                     Clipboard.setData(ClipboardData(text: shareText));
@@ -942,4 +731,26 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
       ),
     );
   }
+}
+class _DiagonalPlaceholderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+
+  const _DiagonalPlaceholderPainter({
+    this.color = const Color(0xFF475569),
+    this.strokeWidth = 1.2,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
 }

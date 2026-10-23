@@ -8,7 +8,8 @@ import 'career_expo_detail_screen.dart';
 
 /// Halaman Daftar Lowongan Favorit / Tersimpan di Career Expo
 class CareerExpoFavoritScreen extends StatefulWidget {
-  const CareerExpoFavoritScreen({super.key});
+  final bool showBackButton;
+  const CareerExpoFavoritScreen({super.key, this.showBackButton = true});
 
   @override
   State<CareerExpoFavoritScreen> createState() => _CareerExpoFavoritScreenState();
@@ -97,10 +98,13 @@ class _CareerExpoFavoritScreenState extends State<CareerExpoFavoritScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: widget.showBackButton,
+        leading: widget.showBackButton
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
       ),
       body: SafeArea(
         top: false,

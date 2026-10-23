@@ -27,4 +27,31 @@ class NumberFormatHelper {
       ..maximumFractionDigits = decimals;
     return fmt.format(value);
   }
+
+  /// Format ringkas jutaan/ribuan (misal: 3500000 -> "3,5jt", 4000000 -> "4jt")
+  static String formatCompactJt(int val) {
+    if (val <= 0) return '';
+    if (val >= 1000000) {
+      final inJt = val / 1000000;
+      final formatted = (inJt == inJt.roundToDouble())
+          ? inJt.toInt().toString()
+          : inJt.toStringAsFixed(1).replaceAll('.', ',');
+      return '${formatted}jt';
+    }
+    if (val >= 1000) {
+      return '${(val / 1000).toStringAsFixed(0)}rb';
+    }
+    return val.toString();
+  }
+
+  /// Format rentang gaji ringkas (misal: 3500000 & 4000000 -> "3,5jt - 4jt")
+  static String formatSalaryRange(int min, int max) {
+    if (min <= 0 && max <= 0) return 'Gaji Dirahasiakan';
+    final minStr = formatCompactJt(min);
+    final maxStr = formatCompactJt(max);
+    if (minStr.isNotEmpty && maxStr.isNotEmpty) {
+      return '$minStr - $maxStr';
+    }
+    return minStr.isNotEmpty ? minStr : maxStr;
+  }
 }

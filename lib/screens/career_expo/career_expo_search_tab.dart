@@ -4,9 +4,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/career_expo_models.dart';
 import '../../services/career_expo/career_expo_service.dart';
-import '../../widgets/career_expo/career_bouncy_tap.dart';
+import '../../utils/number_format_helper.dart';
 import '../../widgets/career_expo/career_filter_sheet.dart';
-import '../../widgets/career_expo/career_job_card.dart';
 import 'career_expo_detail_screen.dart';
 
 /// Tab Pencarian Lowongan Career Expo — filter dan sort dinamis dari API
@@ -38,12 +37,11 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
   bool _isLoading = true;
   String? _error;
   Timer? _debounce;
-
+  bool _isGridView = false;
   String _selectedSortChip = 'Paling Relevan';
   String _empTypeFilter = 'Semua';
   String _workplaceTypeFilter = 'Semua';
   String _locationFilter = 'Semua';
-
   CareerFilterOptions _filterOptions = const CareerFilterOptions();
 
   @override
@@ -209,32 +207,29 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
           children: [
             // Top Search Bar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               child: Row(
                 children: [
-                  if (widget.showBackButton) ...[
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                      onPressed: () {
-                        if (widget.onBack != null) {
-                          widget.onBack!();
-                        } else {
-                          Navigator.maybePop(context);
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                  ],
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF0F172A)),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    onPressed: () {
+                      if (widget.onBack != null) {
+                        widget.onBack!();
+                      } else {
+                        Navigator.maybePop(context);
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 4),
                   // Search field
                   Expanded(
                     child: Container(
-                      height: 46,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        color: const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: TextField(
                         controller: _searchController,
@@ -243,17 +238,17 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                         onSubmitted: (_) => _fetchJobs(),
                         style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
                         decoration: InputDecoration(
-                          hintText: 'Cari posisi, perusahaan, atau lokasi...',
-                          hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                          hintText: 'search',
+                          hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF64748B)),
                           prefixIcon: const Icon(
                             Icons.search_rounded,
                             size: 20,
-                            color: Color(0xFF64748B),
+                            color: Color(0xFF475569),
                           ),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.close_rounded, size: 18),
-                                  color: const Color(0xFF64748B),
+                                  color: const Color(0xFF475569),
                                   onPressed: _clearSearch,
                                 )
                               : null,
@@ -263,61 +258,66 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 6),
                   // Filter icon button
-                  CareerBouncyTap(
-                    onTap: _openFilterSheet,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 240),
-                      curve: Curves.easeOutCubic,
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: _hasActiveFilter ? const Color(0xFF0066F6) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _hasActiveFilter
-                              ? const Color(0xFF0066F6)
-                              : const Color(0xFFCBD5E1),
-                          width: _hasActiveFilter ? 1.5 : 1.0,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (_hasActiveFilter ? const Color(0xFF0066F6) : Colors.black)
-                                .withValues(alpha: _hasActiveFilter ? 0.25 : 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.tune_rounded,
-                        size: 20,
-                        color: _hasActiveFilter ? Colors.white : const Color(0xFF475569),
-                      ),
+                  IconButton(
+                    onPressed: _openFilterSheet,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                    icon: const Icon(
+                      Icons.tune_rounded,
+                      size: 22,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  // Grid view button
+                  IconButton(
+                    onPressed: () => setState(() => _isGridView = !_isGridView),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
+                    icon: Icon(
+                      _isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+                      size: 20,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Dynamic Filter Pills Row
-            _buildPillsRow(),
+            // 3 Sort/Filter Pills Row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: Row(
+                children: [
+                  _buildSortChip('Paling Relevan'),
+                  const SizedBox(width: 8),
+                  _buildSortChip('Terbaru'),
+                  const SizedBox(width: 8),
+                  _buildSortChip('Gaji'),
+                ],
+              ),
+            ),
+
+            // Divider Line
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+            const SizedBox(height: 10),
 
             // Results Count Text
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Text(
-                _searchController.text.isNotEmpty
-                    ? '${_jobs.length} lowongan ditemukan untuk "${_searchController.text}"'
-                    : '${_jobs.length} lowongan tersedia',
+                _searchController.text.trim().isNotEmpty
+                    ? '${_jobs.length} Lowongan Ditemukan Untuk ${_searchController.text.trim()}'
+                    : '${_jobs.length} Lowongan Ditemukan',
                 style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF475569),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
                 ),
               ),
             ),
+            const SizedBox(height: 6),
 
             // Job List Body
             Expanded(
@@ -328,221 +328,26 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
       ),
     );
   }
-
-  Widget _buildPillsRow() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          // Filter Sheet Button
-          CareerBouncyTap(
-            onTap: _openFilterSheet,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: _hasActiveFilter ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _hasActiveFilter
-                      ? const Color(0xFF0066F6)
-                      : const Color(0xFFCBD5E1),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.tune_rounded,
-                    size: 14,
-                    color: _hasActiveFilter
-                        ? const Color(0xFF0066F6)
-                        : const Color(0xFF475569),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _hasActiveFilter ? 'Filter (Aktif)' : 'Filter',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: _hasActiveFilter
-                          ? const Color(0xFF0066F6)
-                          : const Color(0xFF475569),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 16,
-                    color: _hasActiveFilter
-                        ? const Color(0xFF0066F6)
-                        : const Color(0xFF475569),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // Active Location Tag with clear button
-          if (_locationFilter != 'Semua') ...[
-            _buildActiveTagPill(
-              label: '📍 $_locationFilter',
-              onClear: () {
-                setState(() => _locationFilter = 'Semua');
-                _fetchJobs();
-              },
-            ),
-            const SizedBox(width: 8),
-          ],
-
-          // Sort Pills
-          _buildSortChip('Paling Relevan'),
-          const SizedBox(width: 8),
-          _buildSortChip('Terbaru'),
-          const SizedBox(width: 8),
-          _buildSortChip('Gaji'),
-          const SizedBox(width: 8),
-
-          // Dynamic Workplace Pills from API
-          ..._filterOptions.workplaceTypes
-              .where((wp) => wp != 'Semua')
-              .map((wp) {
-            final isSelected = _workplaceTypeFilter == wp;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _buildFilterPill(
-                label: wp,
-                isSelected: isSelected,
-                onTap: () {
-                  setState(() {
-                    _workplaceTypeFilter = isSelected ? 'Semua' : wp;
-                  });
-                  _fetchJobs();
-                },
-              ),
-            );
-          }),
-
-          // Dynamic Employment Type Pills from API
-          ..._filterOptions.employmentTypes
-              .where((emp) => emp != 'Semua')
-              .map((emp) {
-            final isSelected = _empTypeFilter == emp;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _buildFilterPill(
-                label: emp,
-                isSelected: isSelected,
-                onTap: () {
-                  setState(() {
-                    _empTypeFilter = isSelected ? 'Semua' : emp;
-                  });
-                  _fetchJobs();
-                },
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSortChip(String label) {
     final isSelected = _selectedSortChip == label;
-    return CareerBouncyTap(
+    return GestureDetector(
       onTap: () {
         setState(() => _selectedSortChip = label);
         _fetchJobs();
       },
-      scaleDown: 0.94,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFCBD5E1),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterPill({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return CareerBouncyTap(
-      onTap: onTap,
-      scaleDown: 0.94,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFCBD5E1),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActiveTagPill({
-    required String label,
-    required VoidCallback onClear,
-  }) {
-    return CareerBouncyTap(
-      onTap: onClear,
-      scaleDown: 0.94,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: const Color(0xFFEFF6FF),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF0066F6)),
+          color: isSelected ? const Color(0xFF94A3B8) : const Color(0xFFCBD5E1),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0066F6),
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.close_rounded,
-              size: 14,
-              color: Color(0xFF0066F6),
-            ),
-          ],
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A),
+          ),
         ),
       ),
     );
@@ -646,30 +451,380 @@ class _CareerExpoSearchTabState extends State<CareerExpoSearchTab> {
       );
     }
 
+    if (_isGridView) {
+      return RefreshIndicator(
+        onRefresh: _fetchJobs,
+        color: const Color(0xFF0066F6),
+        child: GridView.builder(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: 196,
+          ),
+          itemCount: _jobs.length,
+          itemBuilder: (context, index) {
+            final job = _jobs[index];
+            return _buildGridJobCard(job);
+          },
+        ),
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: _fetchJobs,
       color: const Color(0xFF0066F6),
       child: ListView.separated(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         itemCount: _jobs.length,
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final job = _jobs[index];
-          return CareerJobCard(
-            job: job,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CareerExpoDetailScreen(job: job),
-                ),
-              );
-            },
-            onBookmarkToggle: (val) => _toggleBookmark(job, val),
-          );
+          return _buildSearchJobCard(job);
         },
       ),
     );
   }
+
+  Widget _buildSearchJobCard(CareerJobItem job) {
+    final salaryText = NumberFormatHelper.formatSalaryRange(job.salaryMin, job.salaryMax);
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE2E8F0),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CareerExpoDetailScreen(job: job),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                // Logo placeholder with diagonal line
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: const CustomPaint(
+                    painter: _DiagonalPlaceholderPainter(
+                      color: Color(0xFF475569),
+                      strokeWidth: 1.2,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Center information
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        job.companyName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        job.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          _buildCardChip('+${job.employmentType}'),
+                          _buildCardChip('+${job.workplaceType}'),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: Color(0xFF334155),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              job.location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                color: Color(0xFF334155),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.account_balance_wallet_outlined,
+                            size: 13,
+                            color: Color(0xFF334155),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              salaryText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                color: Color(0xFF334155),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Right side: Bookmark & posted time
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => _toggleBookmark(job, !job.isBookmarked),
+                      child: Icon(
+                        job.isBookmarked
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_outline_rounded,
+                        color: const Color(0xFF0F172A),
+                        size: 22,
+                      ),
+                    ),
+                    if (job.postedAt.isNotEmpty)
+                      Text(
+                        job.postedAt,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
+                ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildGridJobCard(CareerJobItem job) {
+    final salaryRange = NumberFormatHelper.formatSalaryRange(job.salaryMin, job.salaryMax);
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE2E8F0),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CareerExpoDetailScreen(job: job),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: const CustomPaint(
+                        painter: _DiagonalPlaceholderPainter(
+                          color: Color(0xFF475569),
+                          strokeWidth: 1.2,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => _toggleBookmark(job, !job.isBookmarked),
+                      child: Icon(
+                        job.isBookmarked
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_outline_rounded,
+                        color: const Color(0xFF0F172A),
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  job.companyName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: Color(0xFF475569),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  job.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    _buildCardChip('+${job.employmentType}'),
+                    _buildCardChip('+${job.workplaceType}'),
+                  ],
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 13,
+                      color: Color(0xFF334155),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        job.location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: Color(0xFF334155),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 13,
+                      color: Color(0xFF334155),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        salaryRange,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: Color(0xFF334155),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFFCBD5E1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 9.5,
+          color: Color(0xFF334155),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _DiagonalPlaceholderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+
+  const _DiagonalPlaceholderPainter({
+    this.color = const Color(0xFF475569),
+    this.strokeWidth = 1.2,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
 }

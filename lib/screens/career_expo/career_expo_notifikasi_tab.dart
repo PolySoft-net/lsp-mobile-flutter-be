@@ -173,31 +173,24 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
                     padding: const EdgeInsets.only(right: 8),
                     child: InkWell(
                       onTap: () => _onSelectCategory(cat),
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 8,
+                          horizontal: 14,
+                          vertical: 7,
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFF0066F6)
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(20),
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFFCBD5E1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           cat,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : const Color(0xFF475569),
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            fontSize: 12.5,
+                          style: const TextStyle(
+                            color: Color(0xFF0F172A),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -206,8 +199,8 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
                 }).toList(),
               ),
             ),
-            const SizedBox(height: 6),
-            // Notifications List
+            const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            const SizedBox(height: 8),
             Expanded(
               child: _buildBody(),
             ),
@@ -322,32 +315,28 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
             onTap: () => _openNotification(item),
             borderRadius: BorderRadius.circular(14),
             child: Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: item.isRead ? Colors.white : const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: item.isRead
-                      ? const Color(0xFFE2E8F0)
-                      : const Color(0xFFBFDBFE),
-                  width: item.isRead ? 1 : 1.2,
-                ),
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon circle
+                  // Logo placeholder with diagonal line
                   Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: item.iconBgColor,
-                      shape: BoxShape.circle,
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      item.icon,
-                      color: item.iconColor,
-                      size: 20,
+                    clipBehavior: Clip.antiAlias,
+                    child: const CustomPaint(
+                      painter: _DiagonalPlaceholderPainter(
+                        color: Color(0xFF475569),
+                        strokeWidth: 1.2,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -356,40 +345,53 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                item.title,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: item.isRead
-                                      ? FontWeight.w600
-                                      : FontWeight.bold,
-                                  color: const Color(0xFF0F172A),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              item.time,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          item.title,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           item.message,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 12.5,
-                            height: 1.4,
+                            fontSize: 11,
+                            height: 1.35,
                             color: Color(0xFF475569),
                           ),
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        item.time,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      if (!item.isRead) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF0066F6),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -399,4 +401,26 @@ class _CareerExpoNotifikasiTabState extends State<CareerExpoNotifikasiTab> {
       ),
     );
   }
+}
+class _DiagonalPlaceholderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+
+  const _DiagonalPlaceholderPainter({
+    this.color = const Color(0xFF475569),
+    this.strokeWidth = 1.2,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
 }

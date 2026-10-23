@@ -57,22 +57,18 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
     if (filter == 'Semua') return true;
     final s = item.status.trim().toLowerCase();
     final f = filter.toLowerCase();
-    if (f == 'proses menunggu') {
-      return s == 'terkirim' || s == 'diproses' || s == 'menunggu' || s == 'proses menunggu';
+    if (f == 'diproses' || f == 'proses menunggu') {
+      return s == 'terkirim' || s == 'diproses' || s == 'menunggu' || s == 'proses menunggu' || s == 'wawancara';
     }
     return s == f;
   }
 
-  List<(String, int)> get _filterCategories {
-    int count(String filter) =>
-        _applications.where((a) => _matchesStatus(a, filter)).length;
-    return [
-      ('Semua', _applications.length),
-      ('Proses Menunggu', count('Proses Menunggu')),
-      ('Diterima', count('Diterima')),
-      ('Ditolak', count('Ditolak')),
-    ];
-  }
+  List<String> get _filterCategories => const [
+    'Semua',
+    'Diterima',
+    'Diproses',
+    'Ditolak',
+  ];
 
   List<CareerApplicationItem> get _filteredApplications {
     if (_selectedStatus == 'Semua') return _applications;
@@ -188,27 +184,24 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: _filterCategories.map((cat) {
-                final isSelected = _selectedStatus == cat.$1;
+                final isSelected = _selectedStatus == cat;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: InkWell(
-                    onTap: () => setState(() => _selectedStatus = cat.$1),
-                    splashColor: Colors.transparent,
-                    highlightColor: Colors.transparent,
-                    borderRadius: BorderRadius.circular(20),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    onTap: () => setState(() => _selectedStatus = cat),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(20),
+                        color: isSelected ? const Color(0xFF94A3B8) : const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${cat.$1} (${cat.$2})',
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : const Color(0xFF475569),
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          fontSize: 12.5,
+                        cat,
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -217,6 +210,7 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
               }).toList(),
             ),
           ),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
           const SizedBox(height: 8),
           // Applications List
           Expanded(
@@ -262,15 +256,13 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                       final item = filtered[index];
                       return Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Material(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          clipBehavior: Clip.antiAlias,
+                          color: Colors.transparent,
                           child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
                             onTap: () async {
                               await Navigator.push(
                                 context,
@@ -284,28 +276,22 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                               if (mounted) _loadApplications();
                             },
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              padding: const EdgeInsets.all(12),
                               child: Row(
                                 children: [
-                                  // Company logo emblem
+                                  // Logo placeholder with diagonal line
                                   Container(
-                                    width: 44,
-                                    height: 44,
+                                    width: 40,
+                                    height: 40,
                                     decoration: BoxDecoration(
-                                      color: item.job.logoBgColor,
-                                      shape: BoxShape.circle,
+                                      color: const Color(0xFFCBD5E1),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      item.job.logoText.isNotEmpty
-                                          ? item.job.logoText
-                                          : item.job.companyName.isNotEmpty
-                                              ? item.job.companyName.substring(0, 1)
-                                              : '?',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
+                                    clipBehavior: Clip.antiAlias,
+                                    child: const CustomPaint(
+                                      painter: _DiagonalPlaceholderPainter(
+                                        color: Color(0xFF475569),
+                                        strokeWidth: 1.2,
                                       ),
                                     ),
                                   ),
@@ -318,8 +304,8 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                                         Text(
                                           item.job.title,
                                           style: const TextStyle(
-                                            fontSize: 14.5,
-                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w800,
                                             color: Color(0xFF0F172A),
                                           ),
                                           maxLines: 1,
@@ -329,16 +315,17 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                                         Text(
                                           item.job.companyName,
                                           style: const TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 11,
                                             color: Color(0xFF64748B),
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           _dateLabel(item),
                                           style: const TextStyle(
-                                            fontSize: 11,
-                                            color: Color(0xFF94A3B8),
+                                            fontSize: 10.5,
+                                            color: Color(0xFF64748B),
                                           ),
                                         ),
                                       ],
@@ -346,12 +333,20 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
                                   ),
                                   const SizedBox(width: 8),
                                   // Status Badge
-                                  _buildStatusBadge(item.status),
-                                  const SizedBox(width: 8),
-                                  const Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    size: 13,
-                                    color: Color(0xFFCBD5E1),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFCBD5E1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      item.status,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -368,39 +363,26 @@ class _CareerExpoLamaranTabState extends State<CareerExpoLamaranTab> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
-    Color bg;
-    Color text;
-    String label = status;
-    final lower = status.trim().toLowerCase();
-    if (lower == 'diterima') {
-      bg = const Color(0xFFDCFCE7);
-      text = const Color(0xFF16A34A);
-      label = 'Diterima';
-    } else if (lower == 'ditolak') {
-      bg = const Color(0xFFFEE2E2);
-      text = const Color(0xFFDC2626);
-      label = 'Ditolak';
-    } else {
-      // Terkirim, Diproses, Menunggu
-      bg = const Color(0xFFFEF3C7);
-      text = const Color(0xFFD97706);
-      label = 'Proses Menunggu';
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: text,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
+}
+class _DiagonalPlaceholderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+
+  const _DiagonalPlaceholderPainter({
+    this.color = const Color(0xFF475569),
+    this.strokeWidth = 1.2,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, 0), paint);
   }
+
+  @override
+  bool shouldRepaint(covariant _DiagonalPlaceholderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
 }

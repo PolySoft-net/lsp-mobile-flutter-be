@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'career_expo_favorit_screen.dart';
 import 'career_expo_home_tab.dart';
 import 'career_expo_lamaran_tab.dart';
 import 'career_expo_notifikasi_tab.dart';
@@ -23,7 +24,7 @@ class CareerExpoScreen extends StatefulWidget {
 class _CareerExpoScreenState extends State<CareerExpoScreen> {
   late int _currentIndex;
   int _lamaranKeyCounter = 0;
-  int _notifikasiKeyCounter = 0;
+  int _favoritKeyCounter = 0;
   int _profileKeyCounter = 0;
   int _unreadNotifCount = 0;
   int _searchKeyCounter = 0;
@@ -51,10 +52,7 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
     setState(() {
       _currentIndex = index;
       if (index == 2) _lamaranKeyCounter++;
-      if (index == 3) {
-        _notifikasiKeyCounter++;
-        _unreadNotifCount = 0;
-      }
+      if (index == 3) _favoritKeyCounter++;
       if (index == 4) _profileKeyCounter++;
     });
   }
@@ -79,8 +77,17 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
   Widget build(BuildContext context) {
     final List<Widget> tabs = [
       CareerExpoHomeTab(
+        unreadNotifCount: _unreadNotifCount,
         onNavigateToSearch: _onNavigateToSearch,
-        onNavigateToNotification: () => _onTabTapped(3),
+        onNavigateToNotification: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CareerExpoNotifikasiTab(),
+            ),
+          );
+          _checkUnreadNotif();
+        },
       ),
       CareerExpoSearchTab(
         key: ValueKey('search_$_searchKeyCounter'),
@@ -95,12 +102,14 @@ class _CareerExpoScreenState extends State<CareerExpoScreen> {
         key: ValueKey('lamaran_$_lamaranKeyCounter'),
         onBack: () => _onTabTapped(0),
       ),
-      CareerExpoNotifikasiTab(
-        key: ValueKey('notifikasi_$_notifikasiKeyCounter'),
+      CareerExpoFavoritScreen(
+        key: ValueKey('favorit_$_favoritKeyCounter'),
+        showBackButton: false,
       ),
       CareerExpoProfileTab(
         key: ValueKey('profile_$_profileKeyCounter'),
         onNavigateToLamaran: () => _onTabTapped(2),
+        onNavigateToFavorit: () => _onTabTapped(3),
       ),
     ];
     return Scaffold(
@@ -147,14 +156,14 @@ class _CareerExpoBottomNav extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: SizedBox(
-            height: 52,
+            height: 58,
             child: Row(
               children: [
-                _buildNavItem(0, Icons.home_filled, Icons.home_outlined),
-                _buildNavItem(1, Icons.search_rounded, Icons.search_rounded),
-                _buildNavItem(2, Icons.work_rounded, Icons.work_outline_rounded),
-                _buildNavItem(3, Icons.notifications_rounded, Icons.notifications_none_rounded, hasBadge: unreadNotifCount > 0),
-                _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded),
+                _buildNavItem(0, Icons.home_filled, Icons.home_outlined, 'Home'),
+                _buildNavItem(1, Icons.search_rounded, Icons.search_rounded, 'Search'),
+                _buildNavItem(2, Icons.account_balance_rounded, Icons.account_balance_outlined, 'Lamaran'),
+                _buildNavItem(3, Icons.bookmark_rounded, Icons.bookmark_outline_rounded, 'Save'),
+                _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded, 'Profil'),
               ],
             ),
           ),
@@ -162,45 +171,57 @@ class _CareerExpoBottomNav extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildNavItem(
     int index,
     IconData activeIcon,
-    IconData inactiveIcon, {
+    IconData inactiveIcon,
+    String label, {
     bool hasBadge = false,
   }) {
     final isSelected = currentIndex == index;
-    final color = isSelected ? const Color(0xFF0066F6) : const Color(0xFF94A3B8);
+    final color = isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8);
 
     return Expanded(
       child: InkWell(
         onTap: () => onTabTapped(index),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
-        child: Center(
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(
-                isSelected ? activeIcon : inactiveIcon,
-                color: color,
-                size: 26,
-              ),
-              if (hasBadge)
-                Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFEF4444),
-                      shape: BoxShape.circle,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  isSelected ? activeIcon : inactiveIcon,
+                  color: color,
+                  size: 22,
+                ),
+                if (hasBadge)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEF4444),
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );

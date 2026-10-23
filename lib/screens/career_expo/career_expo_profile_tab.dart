@@ -2,21 +2,19 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/auth_models.dart';
 import '../../services/asesi/asesi_service.dart';
 import '../../services/auth/auth_repository.dart';
-import '../../utils/url_helper.dart';
 import '../dashboard/faq_screen.dart';
-import '../profile/data_diri_screen.dart';
-import '../profile/syarat_ketentuan_screen.dart';
-import '../profile/tentang_lsp_screen.dart';
-import 'asesor_lowongan_screen.dart';
 import 'career_expo_favorit_screen.dart';
 import 'career_expo_notification_settings_screen.dart';
+import 'career_expo_profile_edit_screen.dart';
 /// Tab Profil Pelamar Career Expo — mengambil data profil user yang sedang login
 class CareerExpoProfileTab extends StatefulWidget {
   final VoidCallback? onNavigateToLamaran;
+  final VoidCallback? onNavigateToFavorit;
 
   const CareerExpoProfileTab({
     super.key,
     this.onNavigateToLamaran,
+    this.onNavigateToFavorit,
   });
 
   @override
@@ -55,43 +53,35 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
     return 'Pengguna LSP';
   }
 
-  String get _displayTitle {
-    final pekerjaan = _asesiProfile?['nama_pekerjaan']?.toString().trim();
-    if (pekerjaan != null && pekerjaan.isNotEmpty) return pekerjaan;
-    final jabatan = _asesiProfile?['jabatan']?.toString().trim();
-    if (jabatan != null && jabatan.isNotEmpty) return jabatan;
-    final email = _authUser?.email?.trim();
-    if (email != null && email.isNotEmpty) return email;
-    return 'Talenta Digital';
-  }
-
-  String get _photoUrl {
-    final rawPhoto = _asesiProfile?['foto_profil_url']?.toString() ??
-        _authUser?.fotoProfilUrl ??
-        _authUser?.fotoProfil ??
-        '';
-    return rawPhoto.isNotEmpty ? UrlHelper.resolveUrl(rawPhoto) : '';
-  }
-
-  Widget _buildDefaultAvatar() {
-    return Container(
-      width: 62,
-      height: 62,
-      decoration: const BoxDecoration(
-        color: Color(0xFFBFDBFE),
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(
-        Icons.person_rounded,
-        size: 40,
-        color: Color(0xFF1D4ED8),
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Konfirmasi Keluar', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Apakah Anda yakin ingin keluar dari akun?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
+            child: const Text('Keluar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
-  }
+    if (confirm != true || !mounted) return;
 
+    try {
+      await AuthRepository.instance.logout();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
   @override
   Widget build(BuildContext context) {
-    final photoUrl = _photoUrl;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -118,30 +108,29 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             child: Column(
             children: [
-              // Profile Card
+              // Top User Card
               Container(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   children: [
-                    // Avatar
-                    ClipOval(
-                      child: photoUrl.isNotEmpty
-                          ? Image.network(
-                              photoUrl,
-                              width: 62,
-                              height: 62,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
-                            )
-                          : _buildDefaultAvatar(),
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFCBD5E1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 34,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(width: 14),
-                    // Name and title
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,178 +138,145 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
                           Text(
                             _displayName,
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
                               color: Color(0xFF0F172A),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _displayTitle,
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              color: Color(0xFF64748B),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 8),
-                          // Edit Profil Button
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const DataDiriScreen()),
-                              ).then((_) => _loadProfile());
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: const Color(0xFFCBD5E1)),
+                          if (_authUser?.email != null && _authUser!.email!.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              _authUser!.email!,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF64748B),
                               ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.edit_outlined, size: 13, color: Color(0xFF0066F6)),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    'Edit Profil',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF0066F6),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              // Menu Items List (matching Screen 4)
-              if (_authUser?.isAsesorOrAdmin == true)
-                _buildProfileMenuItem(
-                  icon: Icons.post_add_rounded,
-                  title: 'Kelola Lowongan (Asesor)',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AsesorLowonganScreen(),
-                      ),
-                    );
-                  },
-                ),
-              _buildProfileMenuItem(
-                icon: Icons.assignment_outlined,
-                title: 'Riwayat Lamaran',
-                onTap: widget.onNavigateToLamaran ?? () {},
-              ),
-              _buildProfileMenuItem(
-                icon: Icons.favorite_border_rounded,
-                title: 'Favorit',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CareerExpoFavoritScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildProfileMenuItem(
-                icon: Icons.notifications_none_rounded,
-                title: 'Pengaturan Notifikasi',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CareerExpoNotificationSettingsScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildProfileMenuItem(
-                icon: Icons.help_outline_rounded,
-                title: 'Pusat Bantuan',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const FaqScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildProfileMenuItem(
-                icon: Icons.info_outline_rounded,
-                title: 'Tentang LSP Teknologi Digital',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const TentangLspScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildProfileMenuItem(
-                icon: Icons.description_outlined,
-                title: 'Syarat & Ketentuan',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SyaratKetentuanScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildProfileMenuItem(
-                icon: Icons.verified_user_outlined,
-                title: 'Kebijakan Privasi',
-                onTap: () => UrlHelper.launchURL('https://mobile.lspdigital.id/privacy-policy'),
-              ),
               const SizedBox(height: 18),
+
+              // Section title "Informasi"
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Informasi',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Information Menu Card
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    _buildMenuItemRow(
+                      icon: Icons.account_circle_outlined,
+                      title: 'Pengaturan Profil',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CareerExpoProfileEditScreen(),
+                          ),
+                        ).then((_) => _loadProfile());
+                      },
+                    ),
+                    const Divider(height: 1, color: Color(0xFFCBD5E1)),
+                    _buildMenuItemRow(
+                      icon: Icons.notifications_none_rounded,
+                      title: 'Notifikasi',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CareerExpoNotificationSettingsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, color: Color(0xFFCBD5E1)),
+                    _buildMenuItemRow(
+                      icon: Icons.bookmark_outline_rounded,
+                      title: 'Koleksi',
+                      onTap: () {
+                        if (widget.onNavigateToFavorit != null) {
+                          widget.onNavigateToFavorit!();
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const CareerExpoFavoritScreen(),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const Divider(height: 1, color: Color(0xFFCBD5E1)),
+                    _buildMenuItemRow(
+                      icon: Icons.assignment_outlined,
+                      title: 'Lamaran',
+                      onTap: widget.onNavigateToLamaran ?? () {},
+                    ),
+                    const Divider(height: 1, color: Color(0xFFCBD5E1)),
+                    _buildMenuItemRow(
+                      icon: Icons.help_outline_rounded,
+                      title: 'Bantuan',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const FaqScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
               // Keluar Button
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 46,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (Navigator.of(context).canPop()) {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    }
-                  },
+                  onPressed: _handleLogout,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEFF6FF),
-                    foregroundColor: const Color(0xFF0066F6),
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    foregroundColor: const Color(0xFF0F172A),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      side: const BorderSide(color: Color(0xFFBFDBFE), width: 0.8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.logout_rounded, size: 18, color: Color(0xFF0066F6)),
+                      Icon(Icons.logout_rounded, size: 18, color: Color(0xFF0F172A)),
                       SizedBox(width: 8),
                       Text(
                         'Keluar',
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
                           color: Color(0xFF0F172A),
                         ),
                       ),
@@ -334,51 +290,33 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
         ),
       ),
     ),
-    );
-  }
+  );
+}
 
-  Widget _buildProfileMenuItem({
+  Widget _buildMenuItemRow({
     required IconData icon,
     required String title,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Icon(icon, color: const Color(0xFF0066F6), size: 20),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            Icon(icon, color: const Color(0xFF0F172A), size: 20),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF0F172A),
                 ),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 13,
-                  color: Color(0xFFCBD5E1),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
