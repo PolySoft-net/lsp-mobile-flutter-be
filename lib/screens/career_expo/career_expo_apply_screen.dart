@@ -12,8 +12,13 @@ import '../../widgets/common/custom_app_bar.dart';
 /// Halaman Multi-Step Lamar Pekerjaan sesuai Screen 1
 class CareerExpoApplyScreen extends StatefulWidget {
   final CareerJobItem job;
+  final bool isMagang;
 
-  const CareerExpoApplyScreen({super.key, required this.job});
+  const CareerExpoApplyScreen({
+    super.key,
+    required this.job,
+    this.isMagang = false,
+  });
 
   @override
   State<CareerExpoApplyScreen> createState() => _CareerExpoApplyScreenState();
@@ -25,10 +30,13 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _coverLetterController = TextEditingController();
   final TextEditingController _portfolioController = TextEditingController();
+  bool get _isMagang =>
+      widget.isMagang ||
+      widget.job.employmentType.toLowerCase().contains('magang') ||
+      widget.job.category.toLowerCase().contains('magang');
 
   String _selectedEducation = 'S1';
   final List<String> _educationOptions = const ['SMA/SMK', 'D3', 'D4', 'S1', 'S2', 'Lainnya'];
-
   final bool _attachLspCert = true;
   final bool _attachPortfolio = false;
   bool _isSubmitting = false;
@@ -258,7 +266,7 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
         child: SafeArea(
           bottom: false,
           child: CustomAppBar(
-            title: 'Buat Lamaran',
+            title: _isMagang ? 'Buat Lamaran Magang' : 'Buat Lamaran',
             onBack: () => Navigator.pop(context),
           ),
         ),
@@ -385,9 +393,9 @@ class _CareerExpoApplyScreenState extends State<CareerExpoApplyScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Posisi Pekerjaan',
-                      style: TextStyle(
+                    Text(
+                      _isMagang ? 'Posisi Magang' : 'Posisi Pekerjaan',
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF0F172A),

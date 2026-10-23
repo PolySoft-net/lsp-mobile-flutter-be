@@ -215,28 +215,28 @@ class _CareerExpoDetailScreenState extends State<CareerExpoDetailScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.access_time_rounded,
-                                    size: 14,
-                                    color: Color(0xFF334155),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      widget.job.postedAt.isNotEmpty
-                                          ? 'Berlaku sampai ${widget.job.postedAt}'
-                                          : 'Berlaku sampai 30 Juni 2026',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: Color(0xFF475569),
+                              if (widget.job.postedAt.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.access_time_rounded,
+                                      size: 14,
+                                      color: Color(0xFF334155),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        widget.job.postedAt,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF475569),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),

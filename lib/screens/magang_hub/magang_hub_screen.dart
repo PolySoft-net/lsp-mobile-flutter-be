@@ -4,8 +4,10 @@ import '../../models/magang_hub_models.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../services/career_expo/career_expo_service.dart';
 import '../../services/magang_hub/magang_hub_service.dart';
-import '../../widgets/common/custom_app_bar.dart';
-import '../profile/data_diri_screen.dart';
+import '../career_expo/career_expo_favorit_screen.dart';
+import '../career_expo/career_expo_lamaran_tab.dart';
+import '../career_expo/career_expo_notifikasi_tab.dart';
+import '../career_expo/career_expo_profile_tab.dart';
 import 'magang_detail_screen.dart';
 import 'magang_form_screen.dart';
 import 'magang_perusahaan_detail_screen.dart';
@@ -269,12 +271,27 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     }
   }
 
-  void _openProfile() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const DataDiriScreen()),
-    ).then((_) => _loadAllData());
+  Future<void> _toggleJobBookmark(CareerJobItem job) async {
+    final target = !job.isBookmarked;
+    setState(() {
+      final idx = _jobs.indexWhere((j) => j.id == job.id);
+      if (idx != -1) {
+        _jobs[idx] = _jobs[idx].copyWith(isBookmarked: target);
+      }
+    });
+    try {
+      await CareerExpoService.setTersimpan(job.id, target);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        final idx = _jobs.indexWhere((j) => j.id == job.id);
+        if (idx != -1) {
+          _jobs[idx] = _jobs[idx].copyWith(isBookmarked: !target);
+        }
+      });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -303,6 +320,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
           _loadJobs();
         },
         onOpenJob: _openJobDetail,
+        onToggleBookmark: _toggleJobBookmark,
         onCreate: () => _openForm(),
       ),
       MagangHubCompaniesTab(
@@ -329,6 +347,16 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         },
         onOpenCompany: _openCompanyDetail,
       ),
+      CareerExpoLamaranTab(
+        onBack: () => setState(() => _currentIndex = 0),
+      ),
+      const CareerExpoFavoritScreen(
+        showBackButton: false,
+      ),
+      CareerExpoProfileTab(
+        onNavigateToLamaran: () => setState(() => _currentIndex = 2),
+        onNavigateToFavorit: () => setState(() => _currentIndex = 3),
+      ),
       if (_isAsesor)
         MagangHubMyJobsTab(
           jobs: _myJobs,
@@ -353,7 +381,50 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         bottom: false,
         child: Column(
           children: [
-            const CustomAppBar(title: 'Magang Hub'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/logo.png',
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.verified_user_rounded,
+                      color: Color(0xFF0066F6),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'LSP Teknologi Digital',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CareerExpoNotifikasiTab(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Color(0xFF0F172A),
+                      size: 26,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: IndexedStack(index: _currentIndex, children: tabs),
             ),
@@ -374,54 +445,24 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
   }
 
   Widget _buildBottomBar() {
-    final items = <_NavItem>[
-      const _NavItem(
-        icon: Icons.work_outline_rounded,
-        activeIcon: Icons.work_rounded,
-        label: 'Lowongan',
-      ),
-      const _NavItem(
-        icon: Icons.business_outlined,
-        activeIcon: Icons.business_rounded,
-        label: 'Perusahaan',
-      ),
-      if (_isAsesor)
-        const _NavItem(
-          icon: Icons.assignment_outlined,
-          activeIcon: Icons.assignment_rounded,
-          label: 'Magang Saya',
-        ),
-    ];
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: hubLine)),
+        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 56,
+          height: 58,
           child: Row(
             children: [
-              for (var i = 0; i < items.length; i++)
-                Expanded(
-                  child: _navButton(
-                    items[i],
-                    selected: _currentIndex == i,
-                    onTap: () => setState(() => _currentIndex = i),
-                  ),
-                ),
-              Expanded(
-                child: _navButton(
-                  const _NavItem(
-                    icon: Icons.person_outline_rounded,
-                    activeIcon: Icons.person_rounded,
-                    label: 'Profil',
-                  ),
-                  selected: false,
-                  onTap: _openProfile,
-                ),
-              ),
+              _buildNavItem(0, Icons.home_filled, Icons.home_outlined, 'Home'),
+              _buildNavItem(1, Icons.search_rounded, Icons.search_rounded, 'Search'),
+              _buildNavItem(2, Icons.account_balance_rounded, Icons.account_balance_outlined, 'Lamaran'),
+              _buildNavItem(3, Icons.bookmark_rounded, Icons.bookmark_outline_rounded, 'Save'),
+              _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded, 'Profil'),
+              if (_isAsesor)
+                _buildNavItem(5, Icons.assignment_rounded, Icons.assignment_outlined, 'Kelola'),
             ],
           ),
         ),
@@ -429,39 +470,36 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     );
   }
 
-  Widget _navButton(_NavItem item, {required bool selected, required VoidCallback onTap}) {
-    final color = selected ? const Color(0xFF0F172A) : hubMuted;
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(selected ? item.activeIcon : item.icon, size: 22, color: color),
-          const SizedBox(height: 4),
-          Text(
-            item.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: color,
+  Widget _buildNavItem(
+    int index,
+    IconData activeIcon,
+    IconData inactiveIcon,
+    String label,
+  ) {
+    final isSelected = _currentIndex == index;
+    final color = isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8);
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _currentIndex = index),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(isSelected ? activeIcon : inactiveIcon, size: 22, color: color),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: color,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _NavItem {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-
-  const _NavItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-  });
-}
