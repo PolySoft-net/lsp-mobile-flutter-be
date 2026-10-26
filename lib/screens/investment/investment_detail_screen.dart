@@ -127,7 +127,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(50),
           child: ColoredBox(
             color: Colors.white,
             child: SafeArea(

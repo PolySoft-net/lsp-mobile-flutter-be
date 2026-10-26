@@ -141,21 +141,25 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(48),
-        child: SafeArea(
-          child: CustomAppBar(
-            title: 'Katalog Startup & Investasi',
-            onBack: () {
-              if (widget.onBackToHome != null) {
-                widget.onBackToHome!();
-              } else if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              }
-            },
-            rightWidget: IconButton(
-              icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
-              tooltip: 'Filter',
-              onPressed: _openFilterSheet,
+        preferredSize: const Size.fromHeight(50),
+        child: ColoredBox(
+          color: Colors.white,
+          child: SafeArea(
+            bottom: false,
+            child: CustomAppBar(
+              title: 'Katalog Startup & Investasi',
+              onBack: () {
+                if (widget.onBackToHome != null) {
+                  widget.onBackToHome!();
+                } else if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+              },
+              rightWidget: IconButton(
+                icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
+                tooltip: 'Filter',
+                onPressed: _openFilterSheet,
+              ),
             ),
           ),
         ),
