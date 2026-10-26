@@ -95,6 +95,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => InvestmentInterestModal(
         startup: _startup,

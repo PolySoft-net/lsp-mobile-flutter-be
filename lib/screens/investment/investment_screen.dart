@@ -95,6 +95,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => InvestmentFilterSheet(
         selectedCategory: _selectedCategory,

@@ -91,12 +91,15 @@ class _InvestmentInterestModalState extends State<InvestmentInterestModal> {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.only(
-        top: 20,
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -266,6 +269,8 @@ class _InvestmentInterestModalState extends State<InvestmentInterestModal> {
               ),
             ],
           ),
+        ),
+      ),
         ),
       ),
     );
