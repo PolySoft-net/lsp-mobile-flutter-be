@@ -34,6 +34,9 @@ import '../ai/asesor_ai_screen.dart';
 import '../digital_product/digital_product_screen.dart';
 import '../career_expo/career_expo_screen.dart';
 import '../magang_hub/magang_hub_screen.dart';
+import '../investment/investment_screen.dart';
+import '../profile/profile_screen.dart';
+import '../profile/profile_admin_screen.dart';
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onNavigateToJadwal;
   final Function(int tabIndex)? onNavigateToTab;
@@ -457,10 +460,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ],
                           if (!isGuest) ...[
-                            if (isAsesor) ...[
-                              _buildAsesorMenuDropdown(context),
-                              const SizedBox(width: 8),
-                            ],
+                            _buildAsesorMenuDropdown(context),
+                            const SizedBox(width: 8),
                             const NotificationBell(),
                           ],
                         ],
@@ -956,10 +957,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onSelected: (value) {
         if (value == 'profil') {
+          final role = AuthRepository.currentUserInstance?.role;
+          final Widget profileWidget;
+          if (role == 'asesor') {
+            profileWidget = const ProfileAsesorScreen();
+          } else if (role == 'asesi') {
+            profileWidget = const ProfileScreen();
+          } else {
+            profileWidget = const ProfileAdminScreen();
+          }
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const ProfileAsesorScreen(),
+              builder: (context) => profileWidget,
             ),
           );
         } else if (value == 'digital_product') {
@@ -984,11 +994,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         } else if (value == 'investment') {
-          _showComingSoonDialog(
+          Navigator.push(
             context,
-            'Investment',
-            Icons.trending_up_rounded,
-            const Color(0xFF059669),
+            MaterialPageRoute(
+              builder: (context) => const InvestmentScreen(),
+            ),
           );
         }
       },
@@ -1023,7 +1033,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           icon: Icons.trending_up_rounded,
           iconColor: const Color(0xFF059669),
           title: 'Investment',
-          badgeText: 'Segera Hadir',
         ),
       ],
       icon: const Icon(Icons.apps_rounded, color: Colors.white, size: 22),
@@ -1086,95 +1095,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showComingSoonDialog(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color iconColor,
-  ) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 8,
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(22.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 30),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Segera Hadir',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2563EB),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Layanan $title sedang dalam proses pengembangan untuk melengkapi ekosistem LSP Teknologi Digital. Nantikan pembaruan mendatang!',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF64748B),
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Mengerti',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

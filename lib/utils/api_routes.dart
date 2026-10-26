@@ -488,4 +488,16 @@ class ApiRoutes {
   static const String magangHubBanner = '/api/magang-hub/banner';
   static const String magangHubMyBanner = '/api/magang-hub/banner-saya';
   static String magangHubBannerDetail(dynamic id) => '/api/magang-hub/banner/$id';
+
+  // ============================================================================
+  // Investment / Startup Catalog Routes
+  // ============================================================================
+
+  static const String investmentStartups = '/api/investment/startups';
+  static String investmentStartupDetail(dynamic id) => '/api/investment/startups/$id';
+  static const String investmentMyStartups = '/api/investment/startups/mine';
+  static const String investmentFavorites = '/api/investment/favorites';
+  static String investmentFavoriteDetail(dynamic id) => '/api/investment/startups/$id/favorite';
+  static const String investmentInterest = '/api/investment/interest';
+  static const String investmentStats = '/api/investment/stats';
 }
