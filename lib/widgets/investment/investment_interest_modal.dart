@@ -85,192 +85,205 @@ class _InvestmentInterestModalState extends State<InvestmentInterestModal> {
   @override
   Widget build(BuildContext context) {
     final minTicketFormatted = NumberFormatHelper.formatWithDots(widget.startup.minimumTicket);
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.85;
 
     return Container(
+      constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: EdgeInsets.only(
-            top: 20,
-            left: 20,
-            right: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Ajukan Minat Investasi',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          widget.startup.nama,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF0D9488),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Color(0xFF94A3B8)),
-                  ),
-                ],
+        minimum: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 14,
+          bottom: keyboardInset > 0 ? keyboardInset + 16 : 16,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Grab handle
+            Center(
+              child: Container(
+                width: 38,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              const SizedBox(height: 16),
-
-              if (widget.startup.minimumTicket > 0)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDFA),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFCCFBF1)),
-                  ),
-                  child: Row(
+            ),
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.info_outline_rounded,
-                        color: Color(0xFF0D9488),
-                        size: 20,
+                      const Text(
+                        'Ajukan Minat Investasi',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Minimum tiket investasi pada startup ini adalah Rp $minTicketFormatted.',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF115E59),
-                          ),
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.startup.nama,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF0D9488),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-
-              // Form fields
-              _buildTextField(
-                controller: _nameController,
-                label: 'Nama Lengkap Calon Investor *',
-                hint: 'Masukkan nama lengkap Anda / entitas',
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Nama wajib diisi'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-
-              _buildTextField(
-                controller: _phoneController,
-                label: 'Nomor WhatsApp / HP *',
-                hint: 'Contoh: 081234567890',
-                keyboardType: TextInputType.phone,
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Nomor telepon wajib diisi'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-
-              _buildTextField(
-                controller: _emailController,
-                label: 'Alamat Email',
-                hint: 'Contoh: investor@example.com',
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 12),
-
-              _buildTextField(
-                controller: _amountController,
-                label: 'Nominal Minat Investasi (Rp) *',
-                hint: widget.startup.minimumTicket > 0
-                    ? 'Minimal Rp $minTicketFormatted'
-                    : 'Contoh: 50.000.000',
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) {
-                    return 'Nominal investasi wajib diisi';
-                  }
-                  final cleanStr = v.replaceAll(RegExp(r'[^0-9]'), '');
-                  final val = int.tryParse(cleanStr) ?? 0;
-                  if (val <= 0) return 'Nominal harus lebih dari 0';
-                  if (widget.startup.minimumTicket > 0 &&
-                      val < widget.startup.minimumTicket) {
-                    return 'Nominal kurang dari tiket minimum (Rp $minTicketFormatted)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-
-              _buildTextField(
-                controller: _notesController,
-                label: 'Catatan / Rencana Sinergi',
-                hint: 'Tuliskan pesan penawaran atau sinergi strategis yang diharapkan...',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 20),
-
-              // Submit button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D9488),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Color(0xFF94A3B8)),
+                ),
+              ],
+            ),
+            const Divider(height: 16, color: Color(0xFFF1F5F9)),
+            Flexible(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.startup.minimumTicket > 0)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDFA),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFCCFBF1)),
                           ),
-                        )
-                      : const Text(
-                          'Kirim Minat Investasi',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.info_outline_rounded,
+                                color: Color(0xFF0D9488),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Minimum tiket investasi pada startup ini adalah Rp $minTicketFormatted.',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF115E59),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      _buildTextField(
+                        controller: _nameController,
+                        label: 'Nama Lengkap Calon Investor *',
+                        hint: 'Masukkan nama lengkap Anda / entitas',
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Nama wajib diisi'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _phoneController,
+                        label: 'Nomor WhatsApp / HP *',
+                        hint: 'Contoh: 081234567890',
+                        keyboardType: TextInputType.phone,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Nomor telepon wajib diisi'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _emailController,
+                        label: 'Alamat Email',
+                        hint: 'Contoh: investor@example.com',
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _amountController,
+                        label: 'Nominal Minat Investasi (Rp) *',
+                        hint: widget.startup.minimumTicket > 0
+                            ? 'Minimal Rp $minTicketFormatted'
+                            : 'Contoh: 50.000.000',
+                        keyboardType: TextInputType.number,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Nominal investasi wajib diisi';
+                          }
+                          final cleanStr = v.replaceAll(RegExp(r'[^0-9]'), '');
+                          final val = int.tryParse(cleanStr) ?? 0;
+                          if (val <= 0) return 'Nominal harus lebih dari 0';
+                          if (widget.startup.minimumTicket > 0 &&
+                              val < widget.startup.minimumTicket) {
+                            return 'Nominal kurang dari tiket minimum (Rp $minTicketFormatted)';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _notesController,
+                        label: 'Catatan / Rencana Sinergi',
+                        hint: 'Tuliskan pesan penawaran atau sinergi strategis yang diharapkan...',
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+            const SizedBox(height: 12),
+            // Submit button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D9488),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Kirim Minat Investasi',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+              ),
+            ),
+          ],
         ),
       ),
     );

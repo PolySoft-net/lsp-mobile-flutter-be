@@ -95,7 +95,6 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => InvestmentInterestModal(
         startup: _startup,
@@ -129,14 +128,18 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
         backgroundColor: const Color(0xFFF8FAFC),
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(48),
-          child: SafeArea(
-            child: CustomAppBar(
-              title: 'Detail Startup',
-              onBack: () => Navigator.pop(context, _hasChanged),
-              rightWidget: IconButton(
-                icon: const Icon(Icons.share_outlined, color: Color(0xFF0F172A)),
-                tooltip: 'Bagikan',
-                onPressed: _shareStartup,
+          child: ColoredBox(
+            color: Colors.white,
+            child: SafeArea(
+              bottom: false,
+              child: CustomAppBar(
+                title: 'Detail Startup',
+                onBack: () => Navigator.pop(context, _hasChanged),
+                rightWidget: IconButton(
+                  icon: const Icon(Icons.share_outlined, color: Color(0xFF0F172A)),
+                  tooltip: 'Bagikan',
+                  onPressed: _shareStartup,
+                ),
               ),
             ),
           ),
@@ -685,77 +688,76 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
+        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, -3),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 12,
-        bottom: MediaQuery.of(context).padding.bottom + 12,
-      ),
-      child: Row(
-        children: [
-          // Favorite button
-          Container(
-            height: 48,
-            width: 48,
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: _isTogglingFavorite
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      _startup.isFavorite
-                          ? Icons.bookmark_rounded
-                          : Icons.bookmark_border_rounded,
-                      color: _startup.isFavorite
-                          ? const Color(0xFF0D9488)
-                          : const Color(0xFF64748B),
-                    ),
-              onPressed: _isTogglingFavorite ? null : _toggleFavorite,
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Main Action: Ajukan Minat Investasi
-          Expanded(
-            child: SizedBox(
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Row(
+          children: [
+            // Favorite button
+            Container(
               height: 48,
-              child: ElevatedButton.icon(
-                onPressed: _openInterestModal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D9488),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              width: 48,
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: _isTogglingFavorite
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        _startup.isFavorite
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        color: _startup.isFavorite
+                            ? const Color(0xFF0D9488)
+                            : const Color(0xFF64748B),
+                      ),
+                onPressed: _isTogglingFavorite ? null : _toggleFavorite,
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Main Action: Ajukan Minat Investasi
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: _openInterestModal,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0D9488),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
                   ),
-                  elevation: 0,
-                ),
-                icon: const Icon(Icons.handshake_outlined,
-                    color: Colors.white, size: 20),
-                label: const Text(
-                  'Ajukan Minat Investasi',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                  icon: const Icon(Icons.handshake_outlined,
+                      color: Colors.white, size: 20),
+                  label: const Text(
+                    'Ajukan Minat Investasi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
