@@ -51,10 +51,11 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
     final nextState = !_startup.isFavorite;
     try {
       await InvestmentService.toggleFavorite(_startup.id, _startup.isFavorite);
-        setState(() {
-          _startup = _startup.copyWith(isFavorite: nextState);
-          _hasChanged = true;
-        });
+      if (!mounted) return;
+      setState(() {
+        _startup = _startup.copyWith(isFavorite: nextState);
+        _hasChanged = true;
+      });
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
