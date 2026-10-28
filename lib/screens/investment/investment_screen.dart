@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/investment_models.dart';
 import '../../services/investment/investment_service.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/notification_bell.dart';
 import '../../widgets/investment/investment_filter_sheet.dart';
 import '../../widgets/investment/investment_startup_card.dart';
 import 'investment_detail_screen.dart';
@@ -24,7 +25,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
 
-  int _currentBottomNavIndex = 1; // 0: Beranda, 1: Investasi, 2: Portofolio, 3: Akun
+  int _currentBottomNavIndex = 0; // 0: Investasi, 1: Portofolio, 2: Akun
   int _selectedTab = 0; // 0: Jelajah, 1: Startup Saya, 2: Favorit
   String _selectedCategory = 'Semua';
   String _selectedStage = 'Semua';
@@ -140,7 +141,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: (_currentBottomNavIndex == 2 || _currentBottomNavIndex == 3)
+      appBar: (_currentBottomNavIndex == 1 || _currentBottomNavIndex == 2)
           ? null
           : PreferredSize(
               preferredSize: const Size.fromHeight(50),
@@ -160,11 +161,10 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                     rightWidget: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.notifications_none_rounded,
-                              color: Color(0xFF0F172A), size: 21),
-                          tooltip: 'Notifikasi',
-                          onPressed: () {
+                        NotificationBell(
+                          color: const Color(0xFF0F172A),
+                          size: 22,
+                          onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -173,10 +173,8 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                               ),
                             );
                           },
-                          padding: EdgeInsets.zero,
-                          constraints:
-                              const BoxConstraints(minWidth: 32, minHeight: 32),
                         ),
+                        const SizedBox(width: 4),
                         IconButton(
                           icon: const Icon(Icons.tune_rounded,
                               color: Color(0xFF0F172A), size: 20),
@@ -192,7 +190,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                 ),
               ),
             ),
-      floatingActionButton: (_currentBottomNavIndex == 0 || _currentBottomNavIndex == 1)
+      floatingActionButton: _currentBottomNavIndex == 0
           ? FloatingActionButton.extended(
               onPressed: () async {
                 final res = await Navigator.push<bool>(
@@ -227,10 +225,9 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildBottomNavItem(0, Icons.home_rounded, 'Beranda'),
-                _buildBottomNavItem(1, Icons.trending_up_rounded, 'Investasi'),
-                _buildBottomNavItem(2, Icons.business_center_rounded, 'Portofolio'),
-                _buildBottomNavItem(3, Icons.person_rounded, 'Akun'),
+                _buildBottomNavItem(0, Icons.trending_up_rounded, 'Investasi'),
+                _buildBottomNavItem(1, Icons.business_center_rounded, 'Portofolio'),
+                _buildBottomNavItem(2, Icons.person_rounded, 'Akun'),
               ],
             ),
           ),
@@ -241,18 +238,18 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 
   Widget _buildCurrentBody() {
-    if (_currentBottomNavIndex == 2) {
+    if (_currentBottomNavIndex == 1) {
       return InvestmentPortfolioScreen(
-        onBack: () => setState(() => _currentBottomNavIndex = 1),
-        onNavigateToCatalog: () => setState(() => _currentBottomNavIndex = 1),
+        onBack: () => setState(() => _currentBottomNavIndex = 0),
+        onNavigateToCatalog: () => setState(() => _currentBottomNavIndex = 0),
       );
     }
-    if (_currentBottomNavIndex == 3) {
+    if (_currentBottomNavIndex == 2) {
       return InvestmentAccountScreen(
-        onBack: () => setState(() => _currentBottomNavIndex = 1),
+        onBack: () => setState(() => _currentBottomNavIndex = 0),
         onNavigateToFavorites: () {
           setState(() {
-            _currentBottomNavIndex = 1;
+            _currentBottomNavIndex = 0;
             _selectedTab = 2;
           });
         },

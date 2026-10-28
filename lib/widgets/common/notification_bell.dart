@@ -9,11 +9,13 @@ import 'notification_panel.dart';
 class NotificationBell extends StatefulWidget {
   final Color color;
   final double size;
+  final VoidCallback? onTap;
 
   const NotificationBell({
     super.key,
     this.color = Colors.white,
     this.size = 28,
+    this.onTap,
   });
   @override
   State<NotificationBell> createState() => _NotificationBellState();
@@ -130,7 +132,7 @@ class _NotificationBellState extends State<NotificationBell>
       clipBehavior: Clip.none,
       children: [
         IconButton(
-          onPressed: _showNotificationPanel,
+          onPressed: widget.onTap ?? _showNotificationPanel,
           icon: Icon(
             Icons.notifications_none_rounded,
             color: widget.color,
