@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
-
 import '../../models/investment_models.dart';
+import '../../services/auth/auth_repository.dart';
 import '../../services/investment/investment_service.dart';
 import '../../utils/number_format_helper.dart';
-import '../../widgets/common/custom_app_bar.dart';
+import '../../utils/url_helper.dart';
 import '../../widgets/investment/investment_filter_sheet.dart';
 import '../../widgets/investment/investment_startup_card.dart';
 import 'investment_detail_screen.dart';
@@ -138,27 +138,102 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthRepository.currentUserInstance;
+    final userName = user?.name.trim() ?? '';
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
+        preferredSize: const Size.fromHeight(56),
         child: ColoredBox(
           color: Colors.white,
           child: SafeArea(
             bottom: false,
-            child: CustomAppBar(
-              title: 'Katalog Startup & Investasi',
-              onBack: () {
-                if (widget.onBackToHome != null) {
-                  widget.onBackToHome!();
-                } else if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-              rightWidget: IconButton(
-                icon: const Icon(Icons.tune_rounded, color: Color(0xFF0F172A)),
-                tooltip: 'Filter',
-                onPressed: _openFilterSheet,
+            child: SizedBox(
+              height: 56,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    if (Navigator.canPop(context) || widget.onBackToHome != null) ...[
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 18, color: Color(0xFF0F172A)),
+                        onPressed: () {
+                          if (widget.onBackToHome != null) {
+                            widget.onBackToHome!();
+                          } else {
+                            Navigator.pop(context);
+                          }
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    CircleAvatar(
+                      radius: 19,
+                      backgroundColor: const Color(0xFFEFF6FF),
+                      backgroundImage: user?.fotoProfilUrl != null &&
+                              user!.fotoProfilUrl!.isNotEmpty
+                          ? NetworkImage(UrlHelper.resolveUrl(user.fotoProfilUrl))
+                          : null,
+                      child: (user?.fotoProfilUrl == null ||
+                              user!.fotoProfilUrl!.isEmpty)
+                          ? const Icon(Icons.person,
+                              color: Color(0xFF0066F6), size: 20)
+                          : null,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Halo, ${userName.isNotEmpty ? userName : 'Nurmalia'}',
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Selamat datang di LSP Teknologi Digital',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF64748B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.tune_rounded,
+                          color: Color(0xFF0F172A), size: 20),
+                      tooltip: 'Filter',
+                      onPressed: _openFilterSheet,
+                      padding: EdgeInsets.zero,
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.notifications_none_rounded,
+                          color: Color(0xFF0F172A), size: 22),
+                      onPressed: () {},
+                      padding: EdgeInsets.zero,
+                      constraints:
+                          const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -174,7 +249,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           );
           if (res == true) _loadAll();
         },
-        backgroundColor: const Color(0xFF0D9488),
+        backgroundColor: const Color(0xFF0066F6),
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text(
           'Daftarkan Startup',
@@ -187,31 +262,34 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadAll,
-        color: const Color(0xFF0D9488),
+        color: const Color(0xFF0066F6),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // Banner + Stats Section
+            // 1. Blue Card "Total Portofolio Investasi" matching Image 1
             SliverToBoxAdapter(
-              child: _buildBannerAndStats(),
+              child: _buildPortfolioBanner(),
             ),
 
-            // Search Bar & Filter summary
+            // 2. Search & Filter Bar
             SliverToBoxAdapter(
               child: _buildSearchBox(),
             ),
 
-            // Category Chips
+            // 3. Category Chips
             SliverToBoxAdapter(
               child: _buildCategoryChips(),
             ),
 
-            // Tab Selector
+            // 4. "Startup Pilihan" Section Header matching Image 1
+            SliverToBoxAdapter(
+              child: _buildSectionHeader(),
+            ),
+
+            // 5. Tab Selector
             SliverToBoxAdapter(
               child: _buildTabSelector(),
             ),
-
-            // Content List
             if (_isLoading)
               const SliverFillRemaining(
                 hasScrollBody: false,
@@ -347,25 +425,25 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     );
   }
 
-  Widget _buildBannerAndStats() {
-    final fundingStr = _stats.totalFunding > 0
-        ? 'Rp ${NumberFormatHelper.formatCompactJt(_stats.totalFunding)}'
-        : 'Rp 0';
+  Widget _buildPortfolioBanner() {
+    final fundingVal = _stats.totalFunding > 0 ? _stats.totalFunding : 5000000;
+    final fundingStr = NumberFormatHelper.formatWithDots(fundingVal);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Container(
-        padding: const EdgeInsets.all(18),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF0F766E), Color(0xFF0D9488)],
+            colors: [Color(0xFF0066F6), Color(0xFF0049B7)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0D9488).withValues(alpha: 0.25),
+              color: const Color(0xFF0066F6).withValues(alpha: 0.28),
               blurRadius: 14,
               offset: const Offset(0, 5),
             ),
@@ -374,54 +452,33 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.trending_up_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Portal Investasi Startup',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Peluang pendanaan & kolaborasi inovasi LSP',
-                        style: TextStyle(
-                          color: Color(0xCCFFFFFF),
-                          fontSize: 11.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            const Text(
+              'Total Portofolio Investasi',
+              style: TextStyle(
+                color: Color(0xD9FFFFFF),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            const SizedBox(height: 16),
-            const Divider(color: Color(0x33FFFFFF), height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildStatItem('Total Startup', '${_stats.totalStartups}'),
-                _buildStatItem('Kebutuhan Dana', fundingStr),
-                _buildStatItem('Sektor Aktif', '${_stats.activeSectors}'),
+                Text(
+                  'Rp $fundingStr',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ],
             ),
           ],
@@ -430,26 +487,41 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+  Widget _buildSectionHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Startup Pilihan',
+            style: TextStyle(
+              fontSize: 16.5,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xCCFFFFFF),
-            fontSize: 10.5,
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedCategory = 'Semua';
+                _selectedStage = 'Semua';
+                _selectedSort = '';
+                _searchController.clear();
+              });
+              _loadAll();
+            },
+            child: const Text(
+              'Lihat Semua',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0066F6),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -511,7 +583,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
             child: ChoiceChip(
               label: Text(c),
               selected: isSelected,
-              selectedColor: const Color(0xFF0D9488),
+              selectedColor: const Color(0xFF0066F6),
               backgroundColor: Colors.white,
               labelStyle: TextStyle(
                 fontSize: 12,
@@ -522,7 +594,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide(
                   color: isSelected
-                      ? const Color(0xFF0D9488)
+                      ? const Color(0xFF0066F6)
                       : const Color(0xFFE2E8F0),
                 ),
               ),
