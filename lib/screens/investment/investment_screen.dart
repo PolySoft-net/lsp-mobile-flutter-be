@@ -173,19 +173,23 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                       ),
                       const SizedBox(width: 4),
                     ],
-                    CircleAvatar(
-                      radius: 19,
-                      backgroundColor: const Color(0xFFEFF6FF),
-                      backgroundImage: user?.fotoProfilUrl != null &&
-                              user!.fotoProfilUrl!.isNotEmpty
-                          ? NetworkImage(UrlHelper.resolveUrl(user.fotoProfilUrl))
-                          : null,
-                      child: (user?.fotoProfilUrl == null ||
-                              user!.fotoProfilUrl!.isEmpty)
-                          ? const Icon(Icons.person,
-                              color: Color(0xFF0066F6), size: 20)
-                          : null,
-                    ),
+                  CircleAvatar(
+                    radius: 19,
+                    backgroundColor: const Color(0xFFEFF6FF),
+                    backgroundImage: user?.fotoProfilUrl != null &&
+                            user!.fotoProfilUrl!.isNotEmpty
+                        ? NetworkImage(UrlHelper.resolveUrl(user.fotoProfilUrl))
+                        : null,
+                    onBackgroundImageError: user?.fotoProfilUrl != null &&
+                            user!.fotoProfilUrl!.isNotEmpty
+                        ? (_, _) {}
+                        : null,
+                    child: (user?.fotoProfilUrl == null ||
+                            user!.fotoProfilUrl!.isEmpty)
+                        ? const Icon(Icons.person,
+                            color: Color(0xFF0066F6), size: 20)
+                        : null,
+                  ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -423,7 +427,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 
   Widget _buildPortfolioBanner() {
-    final fundingVal = _stats.totalFunding > 0 ? _stats.totalFunding : 5000000;
+    final fundingVal = _stats.totalFunding;
     final fundingStr = NumberFormatHelper.formatWithDots(fundingVal);
 
     return Padding(
@@ -450,7 +454,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Total Portofolio Investasi',
+              'Total Kebutuhan Pendanaan',
               style: TextStyle(
                 color: Color(0xD9FFFFFF),
                 fontSize: 12.5,
@@ -501,6 +505,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           GestureDetector(
             onTap: () {
               setState(() {
+                _selectedTab = 0;
                 _selectedCategory = 'Semua';
                 _selectedStage = 'Semua';
                 _selectedSort = '';
