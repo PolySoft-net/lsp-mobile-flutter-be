@@ -28,6 +28,7 @@ class InvestmentStartupItem {
   final String status;
   final String createdAt;
   final bool isFavorite;
+  final String estimasiRoi;
 
   const InvestmentStartupItem({
     required this.id,
@@ -57,6 +58,7 @@ class InvestmentStartupItem {
     this.status = 'active',
     this.createdAt = '',
     this.isFavorite = false,
+    this.estimasiRoi = '',
   });
 
   factory InvestmentStartupItem.fromJson(Map<String, dynamic> json) {
@@ -88,6 +90,7 @@ class InvestmentStartupItem {
       status: JsonHelper.asString(json['status'], 'active'),
       createdAt: JsonHelper.asString(json['created_at']),
       isFavorite: JsonHelper.asBool(json['is_favorite']),
+      estimasiRoi: JsonHelper.asString(json['estimasi_roi']),
     );
   }
 
@@ -120,6 +123,7 @@ class InvestmentStartupItem {
       'status': status,
       'created_at': createdAt,
       'is_favorite': isFavorite,
+      'estimasi_roi': estimasiRoi,
     };
   }
 
@@ -151,6 +155,7 @@ class InvestmentStartupItem {
     String? status,
     String? createdAt,
     bool? isFavorite,
+    String? estimasiRoi,
   }) {
     return InvestmentStartupItem(
       id: id ?? this.id,
@@ -180,6 +185,7 @@ class InvestmentStartupItem {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       isFavorite: isFavorite ?? this.isFavorite,
+      estimasiRoi: estimasiRoi ?? this.estimasiRoi,
     );
   }
 }

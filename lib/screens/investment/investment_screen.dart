@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import '../../models/investment_models.dart';
-import '../../services/auth/auth_repository.dart';
 import '../../services/investment/investment_service.dart';
-import '../../utils/number_format_helper.dart';
-import '../../utils/url_helper.dart';
-import '../../widgets/common/notification_bell.dart';
+import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/investment/investment_filter_sheet.dart';
 import '../../widgets/investment/investment_startup_card.dart';
 import 'investment_detail_screen.dart';
@@ -34,7 +31,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   List<InvestmentStartupItem> _startups = [];
   List<InvestmentStartupItem> _myStartups = [];
   List<InvestmentStartupItem> _favoriteStartups = [];
-  InvestmentStats _stats = const InvestmentStats();
 
   @override
   void initState() {
@@ -65,15 +61,13 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         ),
         InvestmentService.getMyStartups().catchError((_) => <InvestmentStartupItem>[]),
         InvestmentService.getFavoriteStartups().catchError((_) => <InvestmentStartupItem>[]),
-        InvestmentService.getStats(),
       ]);
 
       if (!mounted) return;
       setState(() {
-        _startups = results[0] as List<InvestmentStartupItem>;
-        _myStartups = results[1] as List<InvestmentStartupItem>;
-        _favoriteStartups = results[2] as List<InvestmentStartupItem>;
-        _stats = results[3] as InvestmentStats;
+        _startups = results[0];
+        _myStartups = results[1];
+        _favoriteStartups = results[2];
         _isLoading = false;
       });
     } catch (e) {
@@ -139,102 +133,29 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthRepository.currentUserInstance;
-    final userName = user?.name.trim() ?? '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
+        preferredSize: const Size.fromHeight(50),
         child: ColoredBox(
           color: Colors.white,
           child: SafeArea(
             bottom: false,
-            child: SizedBox(
-              height: 56,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    if (Navigator.canPop(context) || widget.onBackToHome != null) ...[
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 18, color: Color(0xFF0F172A)),
-                        onPressed: () {
-                          if (widget.onBackToHome != null) {
-                            widget.onBackToHome!();
-                          } else {
-                            Navigator.pop(context);
-                          }
-                        },
-                        padding: EdgeInsets.zero,
-                        constraints:
-                            const BoxConstraints(minWidth: 32, minHeight: 32),
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                  CircleAvatar(
-                    radius: 19,
-                    backgroundColor: const Color(0xFFEFF6FF),
-                    backgroundImage: user?.fotoProfilUrl != null &&
-                            user!.fotoProfilUrl!.isNotEmpty
-                        ? NetworkImage(UrlHelper.resolveUrl(user.fotoProfilUrl))
-                        : null,
-                    onBackgroundImageError: user?.fotoProfilUrl != null &&
-                            user!.fotoProfilUrl!.isNotEmpty
-                        ? (_, _) {}
-                        : null,
-                    child: (user?.fotoProfilUrl == null ||
-                            user!.fotoProfilUrl!.isEmpty)
-                        ? const Icon(Icons.person,
-                            color: Color(0xFF0066F6), size: 20)
-                        : null,
-                  ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            userName.isNotEmpty ? 'Halo, $userName' : 'Halo,',
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Selamat datang di LSP Teknologi Digital',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF64748B),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.tune_rounded,
-                          color: Color(0xFF0F172A), size: 20),
-                      tooltip: 'Filter',
-                      onPressed: _openFilterSheet,
-                      padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints(minWidth: 36, minHeight: 36),
-                    ),
-                    const SizedBox(width: 4),
-                    const NotificationBell(
-                      color: Color(0xFF0F172A),
-                      size: 22,
-                    ),
-                  ],
-                ),
+            child: CustomAppBar(
+              title: 'Investasi',
+              onBack: () {
+                if (widget.onBackToHome != null) {
+                  widget.onBackToHome!();
+                } else if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+              },
+              rightWidget: IconButton(
+                icon: const Icon(Icons.tune_rounded,
+                    color: Color(0xFF0F172A), size: 20),
+                tooltip: 'Filter',
+                onPressed: _openFilterSheet,
               ),
             ),
           ),
@@ -267,27 +188,17 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            // 1. Blue Card "Total Portofolio Investasi" matching Image 1
-            SliverToBoxAdapter(
-              child: _buildPortfolioBanner(),
-            ),
-
-            // 2. Search & Filter Bar
+            // 1. Search Bar (Image 1)
             SliverToBoxAdapter(
               child: _buildSearchBox(),
             ),
 
-            // 3. Category Chips
+            // 2. Category Chips (Image 1)
             SliverToBoxAdapter(
               child: _buildCategoryChips(),
             ),
 
-            // 4. "Startup Pilihan" Section Header matching Image 1
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(),
-            ),
-
-            // 5. Tab Selector
+            // 3. Tab Selector
             SliverToBoxAdapter(
               child: _buildTabSelector(),
             ),
@@ -426,106 +337,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     );
   }
 
-  Widget _buildPortfolioBanner() {
-    final fundingVal = _stats.totalFunding;
-    final fundingStr = NumberFormatHelper.formatWithDots(fundingVal);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF0066F6), Color(0xFF0049B7)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0066F6).withValues(alpha: 0.28),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Total Kebutuhan Pendanaan',
-              style: TextStyle(
-                color: Color(0xD9FFFFFF),
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Rp $fundingStr',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Startup Pilihan',
-            style: TextStyle(
-              fontSize: 16.5,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedTab = 0;
-                _selectedCategory = 'Semua';
-                _selectedStage = 'Semua';
-                _selectedSort = '';
-                _searchController.clear();
-              });
-              _loadAll();
-            },
-            child: const Text(
-              'Lihat Semua',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF0066F6),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSearchBox() {
     return Padding(
@@ -549,7 +360,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           onChanged: _onSearchChanged,
           style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
           decoration: InputDecoration(
-            hintText: 'Cari startup, masalah, solusi, founder...',
+            hintText: 'Cari startup, kategori, atau nama...',
             hintStyle: const TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
             prefixIcon: const Icon(
               Icons.search_rounded,

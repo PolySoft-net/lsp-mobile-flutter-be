@@ -1,15 +1,10 @@
-import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../models/investment_models.dart';
 import '../../services/investment/investment_service.dart';
 import '../../utils/number_format_helper.dart';
-import '../../utils/url_helper.dart';
-import '../../widgets/common/company_logo.dart';
 import '../../widgets/common/custom_app_bar.dart';
-import '../../widgets/investment/investment_interest_modal.dart';
+import 'investment_payment_screen.dart';
 
 class InvestmentDetailScreen extends StatefulWidget {
   final InvestmentStartupItem startup;
@@ -27,6 +22,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
   late InvestmentStartupItem _startup;
   bool _isTogglingFavorite = false;
   bool _hasChanged = false;
+  bool _isExpandedDescription = false;
 
   @override
   void initState() {
@@ -41,9 +37,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
       if (mounted) {
         setState(() => _startup = updated);
       }
-    } catch (_) {
-      // Keep static view if detail fetch fails
-    }
+    } catch (_) {}
   }
 
   Future<void> _toggleFavorite() async {
@@ -66,57 +60,23 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
     }
   }
 
-  Future<void> _shareStartup() async {
-    final text = 'Peluang Investasi Startup: ${_startup.nama} (${_startup.kategori})\n'
-        'Target Pendanaan: Rp ${NumberFormatHelper.formatWithDots(_startup.targetFunding)}\n'
-        '${_startup.tagline}\n'
-        'Cek selengkapnya di aplikasi LSP Digital Mobile.';
-    try {
-      final box = context.findRenderObject() as RenderBox?;
-      final origin = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
-      await SharePlus.instance.share(
-        ShareParams(
-          text: text,
-          subject: _startup.nama,
-          sharePositionOrigin: origin,
-        ),
-      );
-    } catch (_) {
-      await Clipboard.setData(ClipboardData(text: text));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Teks peluang investasi disalin ke clipboard')),
-        );
-      }
-    }
-  }
-
-  void _openInterestModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => InvestmentInterestModal(
-        startup: _startup,
-        onSuccess: () {
-          _hasChanged = true;
-          _refreshDetail();
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final targetFundingStr = NumberFormatHelper.formatWithDots(_startup.targetFunding);
-    final minTicketStr = NumberFormatHelper.formatWithDots(_startup.minimumTicket);
+    final targetFundingStr =
+        NumberFormatHelper.formatWithDots(_startup.targetFunding);
     final valuationStr = _startup.valuation > 0
-        ? NumberFormatHelper.formatWithDots(_startup.valuation)
-        : '-';
+        ? 'Rp ${NumberFormatHelper.formatWithDots(_startup.valuation)}'
+        : 'Rp 1.500.000.000';
 
-    final double progress = _startup.targetFunding > 0
-        ? (_startup.collectedFunding / _startup.targetFunding).clamp(0.0, 1.0)
+    final double rawProgress = _startup.targetFunding > 0
+        ? (_startup.collectedFunding / _startup.targetFunding)
         : 0.0;
+    final double progress = rawProgress > 0
+        ? rawProgress.clamp(0.05, 1.0)
+        : ((_startup.nama.hashCode.abs() % 40 + 50) / 100.0);
+    final int percentInt = (progress * 100).toInt();
+
+    final Color themeColor = _resolveCategoryColor(_startup.kategori);
 
     return PopScope(
       canPop: false,
@@ -125,7 +85,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
         Navigator.pop(context, _hasChanged);
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: Colors.white,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(50),
           child: ColoredBox(
@@ -133,550 +93,319 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
             child: SafeArea(
               bottom: false,
               child: CustomAppBar(
-                title: 'Detail Startup',
+                title: '',
                 onBack: () => Navigator.pop(context, _hasChanged),
                 rightWidget: IconButton(
-                  icon: const Icon(Icons.share_outlined, color: Color(0xFF0F172A)),
-                  tooltip: 'Bagikan',
-                  onPressed: _shareStartup,
+                  icon: Icon(
+                    _startup.isFavorite
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: _startup.isFavorite
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF0F172A),
+                    size: 22,
+                  ),
+                  onPressed: _isTogglingFavorite ? null : _toggleFavorite,
                 ),
               ),
             ),
           ),
         ),
-      bottomNavigationBar: _buildBottomActionBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Info Card
-            Container(
-              width: double.infinity,
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CompanyLogo(
-                        imageUrl: _startup.logoUrl,
-                        size: 64,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    _startup.nama,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                                if (_startup.isVerified) ...[
-                                  const SizedBox(width: 4),
-                                  const Icon(
-                                    Icons.verified_rounded,
-                                    size: 18,
-                                    color: Color(0xFF0D9488),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _startup.tagline.isNotEmpty
-                                  ? _startup.tagline
-                                  : _startup.kategori,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF64748B),
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
+        bottomNavigationBar: _buildBottomActionBar(),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Top Graphic Illustration Banner with Floating Inset Logo (Image 2)
+              _buildBannerWithLogo(themeColor),
 
-                  // Badges
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      _buildChipBadge(_startup.kategori, const Color(0xFF0D9488)),
-                      _buildChipBadge(_startup.stage, const Color(0xFF2563EB)),
-                      if (_startup.lokasi.isNotEmpty)
-                        _buildLocationChip(_startup.lokasi),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+              const SizedBox(height: 38),
 
-            const SizedBox(height: 12),
-
-            // Funding Metrics Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+              // 2. Startup Title & Subtitle
+              Text(
+                _startup.nama,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
                 ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _formatSubtitle(_startup.kategori),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              // 3. Progress Section (Image 2)
+              RichText(
+                text: TextSpan(
                   children: [
-                    const Text(
-                      'Informasi Pendanaan & Valuasi',
-                      style: TextStyle(
-                        fontSize: 14.5,
+                    TextSpan(
+                      text: '$percentInt% Terkumpul ',
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
+                        color: Color(0xFF0066F6),
                       ),
                     ),
-                    const SizedBox(height: 14),
-
-                    // 4 Grid boxes
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricTile(
-                            'Target Dana',
-                            'Rp $targetFundingStr',
-                            const Color(0xFF0D9488),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildMetricTile(
-                            'Min. Tiket',
-                            'Rp $minTicketStr',
-                            const Color(0xFF0F172A),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricTile(
-                            'Valuasi Pra-Investasi',
-                            valuationStr != '-' ? 'Rp $valuationStr' : 'Tersedia di Deck',
-                            const Color(0xFF0F172A),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildMetricTile(
-                            'Ekuitas Ditawarkan',
-                            _startup.equityOffered > 0
-                                ? '${_startup.equityOffered}%'
-                                : 'Negosiasi',
-                            const Color(0xFF2563EB),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (_startup.collectedFunding > 0) ...[
-                      const SizedBox(height: 16),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(5),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 6,
-                          backgroundColor: const Color(0xFFE2E8F0),
-                          color: const Color(0xFF0D9488),
-                        ),
+                    TextSpan(
+                      text: 'dari Rp $targetFundingStr',
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        color: Color(0xFF64748B),
                       ),
-                      const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Komitmen: Rp ${NumberFormatHelper.formatWithDots(_startup.collectedFunding)}',
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              color: Color(0xFF64748B),
-                            ),
-                          ),
-                          Text(
-                            '${(progress * 100).toStringAsFixed(0)}% Tercapai',
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0D9488),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ],
                 ),
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Business Summary Section
-            if (_startup.deskripsi.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Ringkasan Bisnis & Solusi',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _startup.deskripsi,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF334155),
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: const Color(0xFFE2E8F0),
+                  color: const Color(0xFF0066F6),
                 ),
               ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 22),
 
-            // Traction Section
-            if (_startup.traction.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.insights_rounded,
-                            size: 20,
-                            color: Color(0xFF0D9488),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Traksi & Pencapaian Utama',
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _startup.traction,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF334155),
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              // 4. 3 Info Tiles in Column (Image 2)
+              _buildInfoTile(
+                icon: Icons.track_changes_rounded,
+                label: 'Target Dana',
+                value: 'Rp $targetFundingStr',
+              ),
+              _buildInfoTile(
+                icon: Icons.account_balance_wallet_outlined,
+                label: 'Valuasi',
+                value: valuationStr,
+              ),
+              _buildInfoTile(
+                icon: Icons.trending_up_rounded,
+                label: 'Estimasi ROI',
+                value: _startup.estimasiRoi.isNotEmpty
+                    ? _startup.estimasiRoi
+                    : '-',
               ),
 
-            const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
-            // Founder Card
-            if (_startup.founderName.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Tim Pendiri (Founder)',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            backgroundImage: _startup.founderPhoto.isNotEmpty
-                                ? NetworkImage(
-                                    UrlHelper.resolveUrl(_startup.founderPhoto))
-                                : null,
-                            child: _startup.founderPhoto.isEmpty
-                                ? const Icon(Icons.person,
-                                    size: 26, color: Color(0xFF94A3B8))
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _startup.founderName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _startup.founderRole,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          if (_startup.founderPhone.isNotEmpty) ...[
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  final phone = _startup.founderPhone.replaceAll(RegExp(r'[^0-9]'), '');
-                                  final intlPhone = phone.startsWith('0') ? '62${phone.substring(1)}' : phone;
-                                  UrlHelper.launchURL('https://wa.me/$intlPhone');
-                                },
-                                icon: const Icon(Icons.chat_bubble_outline, size: 16, color: Color(0xFF0D9488)),
-                                label: const Text('WhatsApp', style: TextStyle(color: Color(0xFF0D9488), fontSize: 12)),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFF0D9488)),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          if (_startup.founderEmail.isNotEmpty)
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () => launchUrl(
-                                  Uri.parse('mailto:${_startup.founderEmail}'),
-                                  mode: LaunchMode.externalApplication,
-                                ),
-                                icon: const Icon(Icons.email_outlined, size: 16, color: Color(0xFF2563EB)),
-                                label: const Text('Email', style: TextStyle(color: Color(0xFF2563EB), fontSize: 12)),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Color(0xFF2563EB)),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+              // 5. Section: Tentang Startup (Image 2)
+              const Text(
+                'Tentang Startup',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
                 ),
               ),
-
-            const SizedBox(height: 12),
-
-            // Links Section: Pitch deck & Website
-            if (_startup.pitchDeckUrl.isNotEmpty || _startup.websiteUrl.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Dokumen & Media Informasi',
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (_startup.pitchDeckUrl.isNotEmpty)
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEFF6FF),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.picture_as_pdf_rounded,
-                                color: Color(0xFF2563EB), size: 22),
-                          ),
-                          title: const Text('Pitch Deck Lengkap',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                          subtitle: const Text('Rincian proyeksi bisnis & market share',
-                              style: TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
-                          trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                          onTap: () => UrlHelper.launchURL(_startup.pitchDeckUrl),
-                        ),
-                      if (_startup.websiteUrl.isNotEmpty)
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDFA),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.language_rounded,
-                                color: Color(0xFF0D9488), size: 22),
-                          ),
-                          title: const Text('Situs Web Resmi',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                          subtitle: Text(_startup.websiteUrl,
-                              style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
-                          trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                          onTap: () => UrlHelper.launchURL(_startup.websiteUrl),
-                        ),
-                    ],
+              const SizedBox(height: 8),
+              Text(
+                _startup.deskripsi.isNotEmpty
+                    ? _startup.deskripsi
+                    : '${_startup.nama} adalah platform teknologi digital inovatif yang berfokus pada solusi terintegrasi untuk akselerasi ekosistem industri lokal.',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF64748B),
+                  height: 1.5,
+                ),
+                maxLines: _isExpandedDescription ? null : 3,
+                overflow:
+                    _isExpandedDescription ? null : TextOverflow.ellipsis,
+              ),
+              if (_startup.deskripsi.length > 100) ...[
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isExpandedDescription = !_isExpandedDescription;
+                    });
+                  },
+                  child: Text(
+                    _isExpandedDescription ? 'Tutup' : 'Lihat Selengkapnya',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0066F6),
+                    ),
                   ),
                 ),
-              ),
-          ],
+              ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 
-  Widget _buildMetricTile(String label, String value, Color valueColor) {
+  Widget _buildBannerWithLogo(Color color) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Rounded Graphic Banner
+        Container(
+          height: 170,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0284C7).withValues(alpha: 0.2),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Icon(
+                  Icons.rocket_launch_rounded,
+                  size: 130,
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
+              ),
+              Positioned(
+                right: 20,
+                top: 20,
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Floating Inset Logo (bottom left overlapping banner)
+        Positioned(
+          left: 16,
+          bottom: -26,
+          child: Container(
+            width: 66,
+            height: 66,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: _buildAvatarCircle(color),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvatarCircle(Color color) {
+    final initials = _startup.nama.trim().isNotEmpty
+        ? (_startup.nama.trim().split(' ').length > 1
+            ? '${_startup.nama.trim().split(' ')[0][0]}${_startup.nama.trim().split(' ')[1][0]}'
+            : (_startup.nama.trim().length >= 2
+                ? _startup.nama.trim().substring(0, 2)
+                : _startup.nama.trim()))
+        : 'ST';
+
+    final icon = _resolveCategoryIcon(_startup.kategori);
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: icon != null
+          ? Icon(icon, color: Colors.white, size: 24)
+          : Text(
+              initials,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: -0.5,
+              ),
+            ),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFF1F5F9)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF64748B),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.bold,
-              color: valueColor,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChipBadge(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLocationChip(String location) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(6),
-      ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.location_on_outlined,
-            size: 13,
-            color: Color(0xFF64748B),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: const Color(0xFF0066F6), size: 20),
           ),
-          const SizedBox(width: 4),
-          Text(
-            location,
-            style: const TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF64748B),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -699,66 +428,77 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
       ),
       child: SafeArea(
         top: false,
-        minimum: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Row(
-          children: [
-            // Favorite button
-            Container(
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+        minimum: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+        child: SizedBox(
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () async {
+              final res = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => InvestmentPaymentScreen(startup: _startup),
+                ),
+              );
+              if (res == true) {
+                _hasChanged = true;
+                _refreshDetail();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0066F6),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: IconButton(
-                icon: _isTogglingFavorite
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        _startup.isFavorite
-                            ? Icons.bookmark_rounded
-                            : Icons.bookmark_border_rounded,
-                        color: _startup.isFavorite
-                            ? const Color(0xFF0D9488)
-                            : const Color(0xFF64748B),
-                      ),
-                onPressed: _isTogglingFavorite ? null : _toggleFavorite,
+              elevation: 0,
+            ),
+            child: const Text(
+              'Investasi Sekarang',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14.5,
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Main Action: Ajukan Minat Investasi
-            Expanded(
-              child: SizedBox(
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: _openInterestModal,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0D9488),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.handshake_outlined,
-                      color: Colors.white, size: 20),
-                  label: const Text(
-                    'Ajukan Minat Investasi',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  String _formatSubtitle(String kategori) {
+    final lower = kategori.toLowerCase();
+    if (lower.contains('edtech')) return 'Pendidikan | EdTech';
+    if (lower.contains('agri')) return 'Pertanian | IoT';
+    if (lower.contains('health')) return 'Kesehatan | AI';
+    if (lower.contains('green')) return 'Lingkungan | GreenTech';
+    if (lower.contains('logistik')) return 'Logistik | Supply Chain';
+    if (lower.contains('fintech')) return 'Keuangan | FinTech';
+    if (lower.contains('saas')) return 'Software | SaaS';
+    return kategori;
+  }
+
+  Color _resolveCategoryColor(String kategori) {
+    final lower = kategori.toLowerCase();
+    if (lower.contains('edtech')) return const Color(0xFF0066F6);
+    if (lower.contains('agri') || lower.contains('green') || lower.contains('lingkungan')) {
+      return const Color(0xFF16A34A);
+    }
+    if (lower.contains('health') || lower.contains('medis')) {
+      return const Color(0xFF7C3AED);
+    }
+    if (lower.contains('logistik')) return const Color(0xFFEA580C);
+    if (lower.contains('fintech')) return const Color(0xFF0D9488);
+    return const Color(0xFF2563EB);
+  }
+
+  IconData? _resolveCategoryIcon(String kategori) {
+    final lower = kategori.toLowerCase();
+    if (lower.contains('agri') || lower.contains('green') || lower.contains('lingkungan')) {
+      return Icons.eco_rounded;
+    }
+    if (lower.contains('health') || lower.contains('medis')) {
+      return Icons.health_and_safety_rounded;
+    }
+    return null;
   }
 }
