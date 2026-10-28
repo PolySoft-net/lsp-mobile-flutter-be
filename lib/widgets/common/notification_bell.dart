@@ -7,8 +7,14 @@ import '../../services/auth/auth_repository.dart';
 import 'notification_panel.dart';
 
 class NotificationBell extends StatefulWidget {
-  const NotificationBell({super.key});
+  final Color color;
+  final double size;
 
+  const NotificationBell({
+    super.key,
+    this.color = Colors.white,
+    this.size = 28,
+  });
   @override
   State<NotificationBell> createState() => _NotificationBellState();
 }
@@ -125,10 +131,10 @@ class _NotificationBellState extends State<NotificationBell>
       children: [
         IconButton(
           onPressed: _showNotificationPanel,
-          icon: const Icon(
+          icon: Icon(
             Icons.notifications_none_rounded,
-            color: Colors.white,
-            size: 28,
+            color: widget.color,
+            size: widget.size,
           ),
         ),
         if (_notificationCount > 0)

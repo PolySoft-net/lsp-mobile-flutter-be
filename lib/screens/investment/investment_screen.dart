@@ -5,6 +5,7 @@ import '../../services/auth/auth_repository.dart';
 import '../../services/investment/investment_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../utils/url_helper.dart';
+import '../../widgets/common/notification_bell.dart';
 import '../../widgets/investment/investment_filter_sheet.dart';
 import '../../widgets/investment/investment_startup_card.dart';
 import 'investment_detail_screen.dart';
@@ -192,7 +193,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Halo, ${userName.isNotEmpty ? userName : 'Nurmalia'}',
+                            userName.isNotEmpty ? 'Halo, $userName' : 'Halo,',
                             style: const TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.bold,
@@ -224,13 +225,9 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                           const BoxConstraints(minWidth: 36, minHeight: 36),
                     ),
                     const SizedBox(width: 4),
-                    IconButton(
-                      icon: const Icon(Icons.notifications_none_rounded,
-                          color: Color(0xFF0F172A), size: 22),
-                      onPressed: () {},
-                      padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints(minWidth: 36, minHeight: 36),
+                    const NotificationBell(
+                      color: Color(0xFF0F172A),
+                      size: 22,
                     ),
                   ],
                 ),
