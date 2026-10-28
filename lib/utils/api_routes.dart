@@ -500,4 +500,7 @@ class ApiRoutes {
   static String investmentFavoriteDetail(dynamic id) => '/api/investment/startups/$id/favorite';
   static const String investmentInterest = '/api/investment/interest';
   static const String investmentStats = '/api/investment/stats';
+  static const String investmentCheckout = '/api/investment/checkout';
+  static const String investmentPortfolio = '/api/investment/portfolio';
+  static const String investmentNotifications = '/api/investment/notifications';
 }

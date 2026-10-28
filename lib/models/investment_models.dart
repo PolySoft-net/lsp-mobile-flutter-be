@@ -238,3 +238,142 @@ class InvestmentStats {
     );
   }
 }
+
+class InvestmentCheckoutResponse {
+  final String transactionCode;
+  final int startupId;
+  final String startupName;
+  final int nominal;
+  final double equityPercentage;
+  final String paymentMethod;
+  final String paymentChannel;
+  final String paymentStatus;
+  final String paymentUrl;
+  final String createdAt;
+
+  const InvestmentCheckoutResponse({
+    required this.transactionCode,
+    required this.startupId,
+    this.startupName = '',
+    required this.nominal,
+    required this.equityPercentage,
+    required this.paymentMethod,
+    this.paymentChannel = '',
+    required this.paymentStatus,
+    required this.paymentUrl,
+    required this.createdAt,
+  });
+
+  factory InvestmentCheckoutResponse.fromJson(Map<String, dynamic> json) {
+    return InvestmentCheckoutResponse(
+      transactionCode: JsonHelper.asString(json['transaction_code']),
+      startupId: JsonHelper.asInt(json['startup_id']),
+      startupName: JsonHelper.asString(json['startup_name']),
+      nominal: JsonHelper.asInt(json['nominal']),
+      equityPercentage: JsonHelper.asDouble(json['equity_percentage']),
+      paymentMethod:
+          JsonHelper.asString(json['payment_method'], 'transfer_bank'),
+      paymentChannel: JsonHelper.asString(json['payment_channel']),
+      paymentStatus: JsonHelper.asString(json['payment_status'], 'pending'),
+      paymentUrl: JsonHelper.asString(json['payment_url']),
+      createdAt: JsonHelper.asString(json['created_at']),
+    );
+  }
+}
+
+class InvestmentPortfolioItem {
+  final int id;
+  final int startupId;
+  final String startupName;
+  final String category;
+  final int investedAmount;
+  final double returnPct;
+  final int returnAmount;
+  final String status;
+  final String createdAt;
+
+  const InvestmentPortfolioItem({
+    required this.id,
+    required this.startupId,
+    required this.startupName,
+    required this.category,
+    required this.investedAmount,
+    this.returnPct = 0.0,
+    this.returnAmount = 0,
+    this.status = 'Aktif',
+    this.createdAt = '',
+  });
+
+  factory InvestmentPortfolioItem.fromJson(Map<String, dynamic> json) {
+    return InvestmentPortfolioItem(
+      id: JsonHelper.asInt(json['id']),
+      startupId: JsonHelper.asInt(json['startup_id']),
+      startupName: JsonHelper.asString(json['startup_name'], 'Startup'),
+      category: JsonHelper.asString(json['category']),
+      investedAmount: JsonHelper.asInt(json['invested_amount']),
+      returnPct: JsonHelper.asDouble(json['return_pct']),
+      returnAmount: JsonHelper.asInt(json['return_amount']),
+      status: JsonHelper.asString(json['status'], 'Aktif'),
+      createdAt: JsonHelper.asString(json['created_at']),
+    );
+  }
+}
+
+class InvestmentPortfolioResponse {
+  final int totalInvested;
+  final double totalReturnPct;
+  final List<InvestmentPortfolioItem> items;
+
+  const InvestmentPortfolioResponse({
+    this.totalInvested = 0,
+    this.totalReturnPct = 0.0,
+    this.items = const [],
+  });
+
+  factory InvestmentPortfolioResponse.fromJson(Map<String, dynamic> json) {
+    final list = json['items'] as List? ?? const [];
+    return InvestmentPortfolioResponse(
+      totalInvested: JsonHelper.asInt(json['total_invested']),
+      totalReturnPct: JsonHelper.asDouble(json['total_return_pct']),
+      items: list
+          .map((e) => InvestmentPortfolioItem.fromJson(
+              Map<String, dynamic>.from(e as Map)))
+          .toList(),
+    );
+  }
+}
+
+class InvestmentNotificationItem {
+  final int id;
+  final int userId;
+  final int startupId;
+  final String kategori;
+  final String judul;
+  final String pesan;
+  final bool isRead;
+  final String createdAt;
+
+  const InvestmentNotificationItem({
+    required this.id,
+    this.userId = 0,
+    this.startupId = 0,
+    this.kategori = 'investasi',
+    required this.judul,
+    required this.pesan,
+    this.isRead = false,
+    this.createdAt = '',
+  });
+
+  factory InvestmentNotificationItem.fromJson(Map<String, dynamic> json) {
+    return InvestmentNotificationItem(
+      id: JsonHelper.asInt(json['id']),
+      userId: JsonHelper.asInt(json['user_id']),
+      startupId: JsonHelper.asInt(json['startup_id']),
+      kategori: JsonHelper.asString(json['kategori'], 'investasi'),
+      judul: JsonHelper.asString(json['judul']),
+      pesan: JsonHelper.asString(json['pesan']),
+      isRead: JsonHelper.asBool(json['is_read']),
+      createdAt: JsonHelper.asString(json['created_at']),
+    );
+  }
+}

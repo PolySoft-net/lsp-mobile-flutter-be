@@ -24,10 +24,7 @@ class InvestmentStartupCard extends StatelessWidget {
     final double rawProgress = startup.targetFunding > 0
         ? (startup.collectedFunding / startup.targetFunding)
         : 0.0;
-    // Minimum 15% visual progress so progress bar is visible like mockup
-    final double progress = rawProgress > 0
-        ? rawProgress.clamp(0.05, 1.0)
-        : ((startup.nama.hashCode.abs() % 60 + 30) / 100.0);
+    final double progress = rawProgress.clamp(0.0, 1.0);
 
     final int percentInt = (progress * 100).toInt();
 

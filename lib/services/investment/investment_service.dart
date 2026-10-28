@@ -97,4 +97,50 @@ class InvestmentService {
       return const InvestmentStats();
     }
   }
+
+  static Future<InvestmentCheckoutResponse> checkout({
+    required int startupId,
+    required int nominal,
+    String paymentMethod = 'transfer_bank',
+    String paymentChannel = '',
+  }) async {
+    final response = await _dio.post(
+      ApiRoutes.investmentCheckout,
+      data: {
+        'startup_id': startupId,
+        'nominal': nominal,
+        'payment_method': paymentMethod,
+        if (paymentChannel.isNotEmpty) 'payment_channel': paymentChannel,
+      },
+    );
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    return InvestmentCheckoutResponse.fromJson(
+        Map<String, dynamic>.from(raw as Map? ?? const {}));
+  }
+
+  static Future<InvestmentPortfolioResponse> getPortfolio() async {
+    final response = await _dio.get(ApiRoutes.investmentPortfolio);
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    return InvestmentPortfolioResponse.fromJson(
+        Map<String, dynamic>.from(raw as Map? ?? const {}));
+  }
+
+  static Future<List<InvestmentNotificationItem>> getNotifications({
+    String kategori = 'semua',
+  }) async {
+    final query = <String, dynamic>{};
+    if (kategori.isNotEmpty && kategori != 'semua') {
+      query['kategori'] = kategori;
+    }
+    final response = await _dio.get(
+      ApiRoutes.investmentNotifications,
+      queryParameters: query,
+    );
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    final list = raw is List ? raw : const [];
+    return list
+        .map((e) => InvestmentNotificationItem.fromJson(
+            Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
 }

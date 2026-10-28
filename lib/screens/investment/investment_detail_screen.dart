@@ -428,9 +428,11 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
       ),
       child: SafeArea(
         top: false,
-        minimum: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-        child: SizedBox(
-          height: 48,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
           child: ElevatedButton(
             onPressed: () async {
               final res = await Navigator.push<bool>(
@@ -459,6 +461,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                 fontSize: 14.5,
               ),
             ),
+          ),
           ),
         ),
       ),

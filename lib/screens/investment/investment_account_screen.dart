@@ -6,6 +6,9 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../dashboard/faq_screen.dart';
 import '../dashboard/tentang_sistem_screen.dart';
 import '../profile/data_diri_screen.dart';
+import 'investment_favorite_screen.dart';
+import 'investment_my_startups_screen.dart';
+import 'investment_portfolio_screen.dart';
 
 class InvestmentAccountScreen extends StatelessWidget {
   final VoidCallback? onBack;
@@ -156,18 +159,44 @@ class InvestmentAccountScreen extends StatelessWidget {
                   _buildMenuItem(
                     icon: Icons.history_rounded,
                     title: 'Riwayat Transaksi',
-                    onTap: () => _showInfoSheet(
-                      context,
-                      'Riwayat Transaksi',
-                      'Seluruh riwayat pembayaran dan komitmen investasi Anda pada startup lokal tercatat aman di sistem LSP Digital.',
-                      Icons.receipt_long_rounded,
-                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const InvestmentPortfolioScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
+                    icon: Icons.business_center_outlined,
+                    title: 'Startup Saya',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const InvestmentMyStartupsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.favorite_border_rounded,
                     title: 'Favorit',
-                    onTap: onNavigateToFavorites,
+                    onTap: () {
+                      if (onNavigateToFavorites != null) {
+                        onNavigateToFavorites!();
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const InvestmentFavoriteScreen(),
+                          ),
+                        );
+                      }
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(

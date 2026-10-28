@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/investment_models.dart';
-import '../../services/auth/auth_repository.dart';
 import '../../services/investment/investment_service.dart';
 import '../../utils/number_format_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
@@ -65,24 +64,17 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
     }
 
     setState(() => _isProcessing = true);
-    final paymentMethods = const ['Transfer Bank', 'E-wallet', 'Virtual Account'];
+    final paymentMethods = const ['transfer_bank', 'ewallet', 'virtual_account'];
     final selectedMethod = paymentMethods[_selectedPaymentMethod];
-    final user = AuthRepository.currentUserInstance;
-    final userName = user?.name.isNotEmpty == true ? user!.name : 'Investor';
-    final userEmail = user?.email ?? '';
-
-    final submission = InvestmentInterestSubmission(
-      startupId: int.tryParse(widget.startup.id) ?? 0,
-      investorName: userName,
-      investorEmail: userEmail,
-      offeredAmount: _selectedNominal,
-      notes: 'Checkout Investasi via $selectedMethod (Simulasi Payment Gateway)',
-    );
 
     try {
-      await InvestmentService.submitInterest(submission);
+      final res = await InvestmentService.checkout(
+        startupId: int.tryParse(widget.startup.id) ?? 0,
+        nominal: _selectedNominal,
+        paymentMethod: selectedMethod,
+      );
       if (!mounted) return;
-      _showSuccessBottomSheet();
+      _showSuccessBottomSheet(res);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -96,11 +88,25 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
     }
   }
 
-  void _showSuccessBottomSheet() {
-    final nominalStr = NumberFormatHelper.formatWithDots(_selectedNominal);
-    final equityShare = _calculateEquityShare(_selectedNominal);
+  void _showSuccessBottomSheet(InvestmentCheckoutResponse res) {
+    final nominalStr = NumberFormatHelper.formatWithDots(
+        res.nominal > 0 ? res.nominal : _selectedNominal);
+    final equityShare = res.equityPercentage > 0
+        ? res.equityPercentage
+        : _calculateEquityShare(_selectedNominal);
     final equityStr = equityShare.toStringAsFixed(1);
-
+    final trxCode = res.transactionCode.isNotEmpty ? res.transactionCode : '-';
+    final isPaid = res.paymentStatus.toLowerCase() == 'paid';
+    final title = isPaid ? 'Investasi Berhasil!' : 'Order Investasi Dibuat!';
+    final subtitle = isPaid
+        ? 'Selamat! Anda telah resmi berinvestasi sebesar Rp $nominalStr (estimasi $equityStr% saham) pada ${widget.startup.nama}.'
+        : 'Order investasi sebesar Rp $nominalStr (estimasi $equityStr% saham) pada ${widget.startup.nama} berhasil dibuat. Silakan selesaikan pembayaran.';
+    final icon =
+        isPaid ? Icons.check_circle_rounded : Icons.receipt_long_rounded;
+    final iconColor =
+        isPaid ? const Color(0xFF16A34A) : const Color(0xFF0066F6);
+    final iconBg =
+        isPaid ? const Color(0xFFDCFCE7) : const Color(0xFFEFF6FF);
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -123,20 +129,20 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
             Container(
               width: 64,
               height: 64,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEFF6FF),
+              decoration: BoxDecoration(
+                color: iconBg,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.check_circle_rounded,
-                color: Color(0xFF0066F6),
+              child: Icon(
+                icon,
+                color: iconColor,
                 size: 38,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Investasi Berhasil!',
-              style: TextStyle(
+            Text(
+              title,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0F172A),
@@ -144,7 +150,7 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Selamat! Anda telah resmi berinvestasi sebesar Rp $nominalStr (estimasi $equityStr% saham) pada ${widget.startup.nama}.',
+              subtitle,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 13,
@@ -152,6 +158,25 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                 height: 1.4,
               ),
             ),
+            if (trxCode != '-') ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Kode: $trxCode',
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF475569),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,

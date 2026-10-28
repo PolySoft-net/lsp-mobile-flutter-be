@@ -1,8 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../services/common/app_notification_storage.dart';
+import '../../services/investment/investment_service.dart';
 import '../../widgets/common/custom_app_bar.dart';
-
 class InvestmentNotificationScreen extends StatefulWidget {
   const InvestmentNotificationScreen({super.key});
 
@@ -26,6 +26,29 @@ class _InvestmentNotificationScreenState
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
     try {
+      final backendNotifs = await InvestmentService.getNotifications();
+      if (backendNotifs.isNotEmpty) {
+        final list = backendNotifs
+            .map((e) => AppNotification(
+                  id: e.id.toString(),
+                  title: e.judul,
+                  body: e.pesan,
+                  timestamp: DateTime.tryParse(e.createdAt) ?? DateTime.now(),
+                  type: e.kategori,
+                  data: {'startup_id': e.startupId},
+                  isRead: e.isRead,
+                ))
+            .toList();
+        if (!mounted) return;
+        setState(() {
+          _notifications = list;
+          _isLoading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+
+    try {
       final notifs = await AppNotificationStorage.instance.getNotifications();
       if (!mounted) return;
       setState(() {
@@ -42,16 +65,16 @@ class _InvestmentNotificationScreenState
     if (_selectedFilter == 1) {
       return _notifications
           .where((n) =>
-              n.type.toLowerCase().contains('invest') ||
-              n.title.toLowerCase().contains('invest') ||
-              n.title.toLowerCase().contains('pembayaran'))
+              n.type.toLowerCase() == 'investasi' ||
+              n.title.toLowerCase().contains('order'))
           .toList();
     }
     if (_selectedFilter == 2) {
       return _notifications
           .where((n) =>
-              !n.type.toLowerCase().contains('invest') &&
-              !n.title.toLowerCase().contains('invest'))
+              n.type.toLowerCase() == 'pembayaran' ||
+              n.title.toLowerCase().contains('bayar') ||
+              n.title.toLowerCase().contains('transaksi'))
           .toList();
     }
     return _notifications;
@@ -92,7 +115,7 @@ class _InvestmentNotificationScreenState
                     const SizedBox(width: 8),
                     _buildFilterTab(1, 'Investasi'),
                     const SizedBox(width: 8),
-                    _buildFilterTab(2, 'Sistem'),
+                    _buildFilterTab(2, 'Transaksi'),
                   ],
                 ),
               ),
