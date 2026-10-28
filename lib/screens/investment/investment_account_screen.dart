@@ -3,6 +3,9 @@ import 'package:material_ui/material_ui.dart';
 import '../../services/auth/auth_repository.dart';
 import '../../utils/url_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
+import '../dashboard/faq_screen.dart';
+import '../dashboard/tentang_sistem_screen.dart';
+import '../profile/data_diri_screen.dart';
 
 class InvestmentAccountScreen extends StatelessWidget {
   final VoidCallback? onBack;
@@ -129,19 +132,36 @@ class InvestmentAccountScreen extends StatelessWidget {
                   _buildMenuItem(
                     icon: Icons.person_outline_rounded,
                     title: 'Informasi Akun',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DataDiriScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.credit_card_outlined,
                     title: 'Metode Pembayaran',
-                    onTap: () {},
+                    onTap: () => _showInfoSheet(
+                      context,
+                      'Metode Pembayaran',
+                      'Metode pembayaran aktif mencakup Transfer Bank, E-wallet (GoPay, OVO, DANA), dan Virtual Account (BCA, BNI, Mandiri, BRI).',
+                      Icons.credit_card_rounded,
+                    ),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.history_rounded,
                     title: 'Riwayat Transaksi',
-                    onTap: () {},
+                    onTap: () => _showInfoSheet(
+                      context,
+                      'Riwayat Transaksi',
+                      'Seluruh riwayat pembayaran dan komitmen investasi Anda pada startup lokal tercatat aman di sistem LSP Digital.',
+                      Icons.receipt_long_rounded,
+                    ),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
@@ -153,19 +173,38 @@ class InvestmentAccountScreen extends StatelessWidget {
                   _buildMenuItem(
                     icon: Icons.settings_outlined,
                     title: 'Pengaturan',
-                    onTap: () {},
+                    onTap: () => _showInfoSheet(
+                      context,
+                      'Pengaturan Portal',
+                      'Pengaturan notifikasi, preferensi sektor investasi, dan keamanan akun dapat disesuaikan pada pembaruan mendatang.',
+                      Icons.settings_outlined,
+                    ),
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.help_outline_rounded,
                     title: 'Bantuan & FAQ',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FaqScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _buildDivider(),
                   _buildMenuItem(
                     icon: Icons.info_outline_rounded,
                     title: 'Tentang LSP Teknologi Digital',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TentangSistemScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -198,6 +237,73 @@ class InvestmentAccountScreen extends StatelessWidget {
         size: 20,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+    );
+  }
+  void _showInfoSheet(BuildContext context, String title, String message, IconData icon) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.only(
+          top: 20,
+          left: 20,
+          right: 20,
+          bottom: MediaQuery.paddingOf(ctx).bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEFF6FF),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: const Color(0xFF0066F6), size: 26),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF64748B),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0066F6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text('Tutup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
