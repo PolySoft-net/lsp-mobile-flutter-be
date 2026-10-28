@@ -1,22 +1,22 @@
 # TODO Backend: Modul Investasi & Payment Gateway
 
-Dokumen ini mencatat rancangan kebutuhan database dan endpoint backend untuk mendukung alur transaksi investasi, pembayaran (payment gateway), dan portofolio pengguna yang saat ini masih disimulasikan di sisi Flutter Mobile.
+Dokumen ini mencatat rancangan kebutuhan database dan endpoint backend untuk mendukung alur transaksi investasi, pembayaran (payment gateway), portofolio pengguna, dan notifikasi yang saat ini disimulasikan di sisi Flutter Mobile.
 
 ---
 
 ### 1. Perubahan Tabel `investment_startups`
 
-Tambahkan kolom `estimasi_roi` untuk menyimpan perkiraan imbal hasil (ROI) tahunan startup:
+Tambahkan kolom `estimasi_roi` untuk menyimpan perkiraan imbal hasil (ROI) tahunan startup (default kosong, diisi spesifik per startup):
 ```sql
 ALTER TABLE `investment_startups`
-ADD COLUMN `estimasi_roi` VARCHAR(100) NOT NULL DEFAULT '12-18% / tahun' AFTER `equity_offered`;
+ADD COLUMN `estimasi_roi` VARCHAR(100) NOT NULL DEFAULT '' AFTER `equity_offered`;
 ```
 
 ---
 
-### 2. Tabel Baru: `investment_transactions` (Order / Checkout Investasi)
+### 2. Tabel Baru / Penyesuaian: `investment_transactions` (Order & Pembayaran)
 
-Tabel untuk mencatat order investasi pengguna yang diproses melalui payment gateway:
+Tabel untuk mencatat transaksi investasi pengguna yang diproses melalui payment gateway:
 ```sql
 CREATE TABLE IF NOT EXISTS `investment_transactions` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -43,7 +43,28 @@ CREATE TABLE IF NOT EXISTS `investment_transactions` (
 
 ---
 
-### 3. Endpoint API yang Perlu Diimplementasikan di Backend
+### 3. Tabel Notifikasi Investasi: `investment_notifications`
+
+Tabel untuk mencatat update perkembangan startup, pembayaran, laporan berkala, dan pengumuman untuk investor:
+```sql
+CREATE TABLE IF NOT EXISTS `investment_notifications` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` BIGINT UNSIGNED NOT NULL, -- 0 jika broadcast ke semua user
+  `startup_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `kategori` VARCHAR(50) NOT NULL DEFAULT 'investasi', -- 'investasi', 'sistem', 'update', 'pembayaran'
+  `judul` VARCHAR(255) NOT NULL,
+  `pesan` TEXT NOT NULL,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_inv_notif_user` (`user_id`),
+  KEY `idx_inv_notif_cat` (`kategori`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+---
+
+### 4. Endpoint API yang Perlu Diimplementasikan di Backend
 
 #### A. Checkout / Buat Order Investasi
 - **URL**: `POST /api/investment/checkout`
@@ -72,12 +93,36 @@ CREATE TABLE IF NOT EXISTS `investment_transactions` (
   }
   ```
 
-#### B. Riwayat Transaksi & Portofolio Pengguna
+#### B. Riwayat Portofolio Pengguna
 - **URL**: `GET /api/investment/portfolio`
 - **Auth**: `AuthMiddleware`
-- **Deskripsi**: Mengembalikan total portofolio riil pengguna (akumulasi nominal investasi dengan status `paid`) serta daftar startup yang didanai pengguna.
+- **Response**:
+  ```json
+  {
+    "data": {
+      "total_invested": 5000000,
+      "total_return_pct": 12.0,
+      "items": [
+        {
+          "id": 1,
+          "startup_id": 1,
+          "startup_name": "EduTech Plus",
+          "category": "Pendidikan | EdTech",
+          "invested_amount": 1000000,
+          "return_pct": 12.0,
+          "return_amount": 120000,
+          "status": "Aktif"
+        }
+      ]
+    }
+  }
+  ```
 
-#### C. Webhook / Callback Payment Gateway
+#### C. Daftar Notifikasi Investasi
+- **URL**: `GET /api/investment/notifications`
+- **Auth**: `AuthMiddleware`
+- **Query Params**: `?kategori=semua|investasi|sistem`
+
+#### D. Webhook / Callback Payment Gateway
 - **URL**: `POST /api/investment/payment/callback`
-- **Auth**: Publik / Verifikasi Signature Header Payment Gateway (Xendit / Midtrans / Duitku)
-- **Deskripsi**: Memperbarui status pembayaran transaksi (`pending` -> `paid`), mencatat `paid_at`, serta menambahkan `collected_funding` pada tabel `investment_startups`.
+- **Auth**: Publik / Verifikasi Signature Header Payment Gateway

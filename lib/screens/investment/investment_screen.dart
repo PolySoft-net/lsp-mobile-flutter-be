@@ -6,7 +6,10 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/investment/investment_filter_sheet.dart';
 import '../../widgets/investment/investment_startup_card.dart';
 import 'investment_detail_screen.dart';
+import 'investment_account_screen.dart';
 import 'investment_form_screen.dart';
+import 'investment_notification_screen.dart';
+import 'investment_portfolio_screen.dart';
 
 class InvestmentScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -21,6 +24,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
 
+  int _currentBottomNavIndex = 1; // 0: Beranda, 1: Investasi, 2: Portofolio, 3: Akun
   int _selectedTab = 0; // 0: Jelajah, 1: Startup Saya, 2: Favorit
   String _selectedCategory = 'Semua';
   String _selectedStage = 'Semua';
@@ -136,57 +140,130 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50),
-        child: ColoredBox(
-          color: Colors.white,
-          child: SafeArea(
-            bottom: false,
-            child: CustomAppBar(
-              title: 'Investasi',
-              onBack: () {
-                if (widget.onBackToHome != null) {
-                  widget.onBackToHome!();
-                } else if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-              rightWidget: IconButton(
-                icon: const Icon(Icons.tune_rounded,
-                    color: Color(0xFF0F172A), size: 20),
-                tooltip: 'Filter',
-                onPressed: _openFilterSheet,
+      appBar: (_currentBottomNavIndex == 2 || _currentBottomNavIndex == 3)
+          ? null
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(50),
+              child: ColoredBox(
+                color: Colors.white,
+                child: SafeArea(
+                  bottom: false,
+                  child: CustomAppBar(
+                    title: 'Investasi',
+                    onBack: () {
+                      if (widget.onBackToHome != null) {
+                        widget.onBackToHome!();
+                      } else if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      }
+                    },
+                    rightWidget: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.notifications_none_rounded,
+                              color: Color(0xFF0F172A), size: 21),
+                          tooltip: 'Notifikasi',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const InvestmentNotificationScreen(),
+                              ),
+                            );
+                          },
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.tune_rounded,
+                              color: Color(0xFF0F172A), size: 20),
+                          tooltip: 'Filter',
+                          onPressed: _openFilterSheet,
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
+      floatingActionButton: (_currentBottomNavIndex == 0 || _currentBottomNavIndex == 1)
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final res = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const InvestmentFormScreen(),
+                  ),
+                );
+                if (res == true) _loadAll();
+              },
+              backgroundColor: const Color(0xFF0066F6),
+              icon: const Icon(Icons.add_rounded, color: Colors.white),
+              label: const Text(
+                'Daftarkan Startup',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            )
+          : null,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final res = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const InvestmentFormScreen(),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildBottomNavItem(0, Icons.home_rounded, 'Beranda'),
+                _buildBottomNavItem(1, Icons.trending_up_rounded, 'Investasi'),
+                _buildBottomNavItem(2, Icons.business_center_rounded, 'Portofolio'),
+                _buildBottomNavItem(3, Icons.person_rounded, 'Akun'),
+              ],
             ),
-          );
-          if (res == true) _loadAll();
-        },
-        backgroundColor: const Color(0xFF0066F6),
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text(
-          'Daftarkan Startup',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
           ),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadAll,
-        color: const Color(0xFF0066F6),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+      body: _buildCurrentBody(),
+    );
+  }
+
+  Widget _buildCurrentBody() {
+    if (_currentBottomNavIndex == 2) {
+      return InvestmentPortfolioScreen(
+        onBack: () => setState(() => _currentBottomNavIndex = 1),
+        onNavigateToCatalog: () => setState(() => _currentBottomNavIndex = 1),
+      );
+    }
+    if (_currentBottomNavIndex == 3) {
+      return InvestmentAccountScreen(
+        onBack: () => setState(() => _currentBottomNavIndex = 1),
+        onNavigateToFavorites: () {
+          setState(() {
+            _currentBottomNavIndex = 1;
+            _selectedTab = 2;
+          });
+        },
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadAll,
+      color: const Color(0xFF0066F6),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             // 1. Search Bar (Image 1)
             SliverToBoxAdapter(
@@ -331,6 +408,34 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                   ),
                 ),
               ),
+          ],
+        ),
+      );
+  }
+
+  Widget _buildBottomNavItem(int index, IconData icon, String label) {
+    final isSelected = _currentBottomNavIndex == index;
+    final color =
+        isSelected ? const Color(0xFF0066F6) : const Color(0xFF94A3B8);
+
+    return InkWell(
+      onTap: () => setState(() => _currentBottomNavIndex = index),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),
