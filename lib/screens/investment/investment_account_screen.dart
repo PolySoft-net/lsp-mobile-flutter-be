@@ -200,17 +200,6 @@ class InvestmentAccountScreen extends StatelessWidget {
                   ),
                   _buildDivider(),
                   _buildMenuItem(
-                    icon: Icons.settings_outlined,
-                    title: 'Pengaturan',
-                    onTap: () => _showInfoSheet(
-                      context,
-                      'Pengaturan Portal',
-                      'Pengaturan notifikasi, preferensi sektor investasi, dan keamanan akun dapat disesuaikan pada pembaruan mendatang.',
-                      Icons.settings_outlined,
-                    ),
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
                     icon: Icons.help_outline_rounded,
                     title: 'Bantuan & FAQ',
                     onTap: () {
