@@ -128,16 +128,15 @@ class InvestmentStartupCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
 
-                // 3. Right Action: Favorite icon + "Investasi" Solid Button
-                Column(
+                // 3. Right: Bookmark and Chevron
+                Row(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (onToggleFavorite != null)
+                    if (onToggleFavorite != null) ...[
                       GestureDetector(
                         onTap: onToggleFavorite,
                         child: Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.all(4.0),
                           child: Icon(
                             startup.isFavorite
                                 ? Icons.bookmark_rounded
@@ -145,31 +144,16 @@ class InvestmentStartupCard extends StatelessWidget {
                             color: startup.isFavorite
                                 ? const Color(0xFF0066F6)
                                 : const Color(0xFF94A3B8),
-                            size: 20,
+                            size: 22,
                           ),
                         ),
                       ),
-                    SizedBox(
-                      height: 34,
-                      child: ElevatedButton(
-                        onPressed: onTap,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0066F6),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'Investasi',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFFCBD5E1),
+                      size: 22,
                     ),
                   ],
                 ),

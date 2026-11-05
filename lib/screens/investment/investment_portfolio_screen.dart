@@ -153,19 +153,23 @@ class _InvestmentPortfolioScreenState extends State<InvestmentPortfolioScreen> {
                 child: Container(
                   width: double.infinity,
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF0066F6), Color(0xFF0049B7)],
+                      colors: [Color(0xFF0066F6), Color(0xFF0F56D2)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF3B82F6).withValues(alpha: 0.35),
+                      width: 1.0,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF0066F6).withValues(alpha: 0.28),
-                        blurRadius: 14,
-                        offset: const Offset(0, 5),
+                        color: const Color(0xFF0066F6).withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),

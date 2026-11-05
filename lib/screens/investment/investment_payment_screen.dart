@@ -24,9 +24,11 @@ class InvestmentPaymentScreen extends StatefulWidget {
 class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
   late final List<int> _nominals;
   late int _selectedNominal;
+  bool _isCustomNominal = false;
+  final TextEditingController _nominalController = TextEditingController();
+  final TextEditingController _linkController = TextEditingController();
   int _proofType = 0; // 0: Upload Foto, 1: Link Gambar
   File? _selectedFile;
-  final TextEditingController _linkController = TextEditingController();
   bool _isProcessing = false;
 
   @override
@@ -42,10 +44,13 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
       min * 10,
     ];
     _selectedNominal = _nominals[0];
+    _nominalController.text =
+        NumberFormatHelper.formatWithDots(_selectedNominal);
   }
 
   @override
   void dispose() {
+    _nominalController.dispose();
     _linkController.dispose();
     super.dispose();
   }
@@ -118,6 +123,59 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
       return;
     }
 
+    // Dialog Konfirmasi: Apakah Anda Yakin?
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Konfirmasi Investasi',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Apakah Anda yakin data investasi dan bukti transfer sudah sesuai?',
+              style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 14),
+            _buildConfirmRow('Startup', widget.startup.nama),
+            const SizedBox(height: 6),
+            _buildConfirmRow('Nominal',
+                'Rp ${NumberFormatHelper.formatWithDots(_selectedNominal)}'),
+            const SizedBox(height: 6),
+            _buildConfirmRow('Estimasi Saham',
+                '≈ ${_calculateEquityShare(_selectedNominal).toStringAsFixed(1)}%'),
+            const SizedBox(height: 6),
+            _buildConfirmRow('Metode', 'Wajib Transfer Bank (BCA)'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('Periksa Lagi',
+                style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0066F6),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
+            child: const Text('Ya, Kirim Sekarang',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     setState(() => _isProcessing = true);
 
     try {
@@ -144,13 +202,41 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Gagal memproses transaksi investasi. Silakan coba lagi.'),
+          content:
+              Text('Gagal memproses transaksi investasi. Silakan coba lagi.'),
           backgroundColor: Color(0xFFEF4444),
         ),
       );
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
+  }
+
+  Widget _buildConfirmRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 95,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+          ),
+        ),
+        const Text(': ',
+            style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0F172A),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _showSuccessBottomSheet(InvestmentCheckoutResponse res) {
@@ -267,6 +353,8 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final equity = _calculateEquityShare(_selectedNominal);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: PreferredSize(
@@ -360,92 +448,167 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section 1: Pilih Nominal Investasi
+            // Section 1: Nominal Investasi (Input + Small Cards)
             const Text(
-              'Pilih Nominal Investasi',
+              'Nominal Investasi',
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.45,
+            // Input Field
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              itemCount: _nominals.length,
-              itemBuilder: (context, index) {
-                final nominal = _nominals[index];
-                final isSelected = _selectedNominal == nominal;
-                final nominalStr = NumberFormatHelper.formatWithDots(nominal);
-                final equity = _calculateEquityShare(nominal);
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: TextField(
+                controller: _nominalController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
+                decoration: const InputDecoration(
+                  prefixText: 'Rp ',
+                  prefixStyle: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0066F6),
+                  ),
+                  hintText: '0',
+                  hintStyle:
+                      TextStyle(fontSize: 18, color: Color(0xFF94A3B8)),
+                  border: InputBorder.none,
+                ),
+                onChanged: (val) {
+                  final clean = val.replaceAll(RegExp(r'[^0-9]'), '');
+                  final num = int.tryParse(clean) ?? 0;
+                  setState(() {
+                    _selectedNominal = num;
+                    _isCustomNominal = !_nominals.contains(num);
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
 
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedNominal = nominal),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFEFF6FF)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF0066F6)
-                            : const Color(0xFFE2E8F0),
-                        width: isSelected ? 1.5 : 1.0,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Rp $nominalStr',
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected
+            // Card / Chips kecil nominal & Custom di bawah input
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ..._nominals.map((nom) {
+                    final isSel =
+                        !_isCustomNominal && _selectedNominal == nom;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isCustomNominal = false;
+                            _selectedNominal = nom;
+                            _nominalController.text =
+                                NumberFormatHelper.formatWithDots(nom);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSel
                                 ? const Color(0xFF0066F6)
-                                : const Color(0xFF0F172A),
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSel
+                                  ? const Color(0xFF0066F6)
+                                  : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Text(
+                            'Rp ${NumberFormatHelper.formatWithDots(nom)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight:
+                                  isSel ? FontWeight.bold : FontWeight.w500,
+                              color: isSel
+                                  ? Colors.white
+                                  : const Color(0xFF475569),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '≈ ${equity.toStringAsFixed(1)}% saham',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
-                          ),
+                      ),
+                    );
+                  }),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isCustomNominal = true;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _isCustomNominal
+                            ? const Color(0xFF0066F6)
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _isCustomNominal
+                              ? const Color(0xFF0066F6)
+                              : const Color(0xFFE2E8F0),
                         ),
-                      ],
+                      ),
+                      child: Text(
+                        'Custom',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: _isCustomNominal
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: _isCustomNominal
+                              ? Colors.white
+                              : const Color(0xFF475569),
+                        ),
+                      ),
                     ),
                   ),
-                );
-              },
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Estimasi Saham Dinamis
+            Row(
+              children: [
+                const Icon(Icons.pie_chart_outline_rounded,
+                    size: 16, color: Color(0xFF0066F6)),
+                const SizedBox(width: 6),
+                Text(
+                  'Estimasi kepemilikan saham: ≈ ${equity.toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF0066F6),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 24),
 
-            // Section 2: Instruksi Transfer Bank Resmi
+            // Section 2: Instruksi Transfer Bank Resmi (Wajib Transfer)
             const Text(
-              'Instruksi Pembayaran Transfer Bank',
+              'Metode Pembayaran (Wajib Transfer Bank)',
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.bold,
