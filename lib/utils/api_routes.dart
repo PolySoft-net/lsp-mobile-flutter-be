@@ -506,4 +506,6 @@ class ApiRoutes {
   static const String investmentUpload = '/api/investment/upload';
   static String investmentTransactionDelete(dynamic id) =>
       '/api/investment/transactions/$id';
+  static String investmentTransactionVerify(dynamic id) =>
+      '/api/investment/transactions/$id/verify';
 }

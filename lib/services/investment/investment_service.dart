@@ -140,6 +140,10 @@ class InvestmentService {
     await _dio.delete(ApiRoutes.investmentTransactionDelete(id));
   }
 
+  static Future<void> verifyTransaction(int id) async {
+    await _dio.put(ApiRoutes.investmentTransactionVerify(id));
+  }
+
   static Future<InvestmentPortfolioResponse> getPortfolio() async {
     final response = await _dio.get(ApiRoutes.investmentPortfolio);
     final raw = response.data is Map ? response.data['data'] : response.data;

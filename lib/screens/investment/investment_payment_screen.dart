@@ -44,8 +44,11 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
       min * 10,
     ];
     _selectedNominal = _nominals[0];
-    _nominalController.text =
-        NumberFormatHelper.formatWithDots(_selectedNominal);
+    final initStr = _selectedNominal.toString();
+    _nominalController.value = TextEditingValue(
+      text: initStr,
+      selection: TextSelection.collapsed(offset: initStr.length),
+    );
   }
 
   @override
@@ -91,6 +94,16 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
   }
 
   Future<void> _handlePayment() async {
+    if (_selectedNominal <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nominal investasi harus lebih dari 0'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+      return;
+    }
+
     if (widget.startup.minimumTicket > 0 &&
         _selectedNominal < widget.startup.minimumTicket) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -515,8 +528,12 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                           setState(() {
                             _isCustomNominal = false;
                             _selectedNominal = nom;
-                            _nominalController.text =
-                                NumberFormatHelper.formatWithDots(nom);
+                            final nomStr = nom.toString();
+                            _nominalController.value = TextEditingValue(
+                              text: nomStr,
+                              selection: TextSelection.collapsed(
+                                  offset: nomStr.length),
+                            );
                           });
                         },
                         child: Container(
