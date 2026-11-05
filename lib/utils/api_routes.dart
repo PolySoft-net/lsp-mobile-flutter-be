@@ -503,4 +503,7 @@ class ApiRoutes {
   static const String investmentCheckout = '/api/investment/checkout';
   static const String investmentPortfolio = '/api/investment/portfolio';
   static const String investmentNotifications = '/api/investment/notifications';
+  static const String investmentUpload = '/api/investment/upload';
+  static String investmentTransactionDelete(dynamic id) =>
+      '/api/investment/transactions/$id';
 }

@@ -61,6 +61,63 @@ class _InvestmentPortfolioScreenState extends State<InvestmentPortfolioScreen> {
     return items;
   }
 
+  Future<void> _handleDelete(InvestmentPortfolioItem item) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Hapus Transaksi',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin membatalkan dan menghapus pesanan investasi untuk ${item.startupName}?',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF475569)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child:
+                const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+            ),
+            child: const Text('Hapus',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await InvestmentService.deleteTransaction(item.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Transaksi berhasil dihapus'),
+          backgroundColor: Color(0xFF16A34A),
+        ),
+      );
+      _loadPortfolio();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal menghapus transaksi'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final totalInvested = _portfolio?.totalInvested ?? 0;
@@ -415,6 +472,51 @@ class _InvestmentPortfolioScreenState extends State<InvestmentPortfolioScreen> {
               ),
             ],
           ),
+          if (!isAktif) ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (item.transactionCode.isNotEmpty)
+                  Text(
+                    item.transactionCode,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                else
+                  const SizedBox(),
+                InkWell(
+                  onTap: () => _handleDelete(item),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.delete_outline_rounded,
+                            size: 16, color: Color(0xFFEF4444)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Batalkan Pesanan',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFEF4444),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

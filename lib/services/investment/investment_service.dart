@@ -98,11 +98,28 @@ class InvestmentService {
     }
   }
 
+  static Future<String> uploadBuktiTransfer(String filePath) async {
+    final fileName = filePath.split(RegExp(r'[/\\]')).last;
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+    });
+    final response = await _dio.post(
+      ApiRoutes.investmentUpload,
+      data: formData,
+    );
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    if (raw is Map && raw['url'] != null) {
+      return raw['url'].toString();
+    }
+    return '';
+  }
+
   static Future<InvestmentCheckoutResponse> checkout({
     required int startupId,
     required int nominal,
     String paymentMethod = 'transfer_bank',
-    String paymentChannel = '',
+    String paymentChannel = 'BCA',
+    String buktiTransferUrl = '',
   }) async {
     final response = await _dio.post(
       ApiRoutes.investmentCheckout,
@@ -110,12 +127,17 @@ class InvestmentService {
         'startup_id': startupId,
         'nominal': nominal,
         'payment_method': paymentMethod,
-        if (paymentChannel.isNotEmpty) 'payment_channel': paymentChannel,
+        'payment_channel': paymentChannel,
+        if (buktiTransferUrl.isNotEmpty) 'bukti_transfer_url': buktiTransferUrl,
       },
     );
     final raw = response.data is Map ? response.data['data'] : response.data;
     return InvestmentCheckoutResponse.fromJson(
         Map<String, dynamic>.from(raw as Map? ?? const {}));
+  }
+
+  static Future<void> deleteTransaction(int id) async {
+    await _dio.delete(ApiRoutes.investmentTransactionDelete(id));
   }
 
   static Future<InvestmentPortfolioResponse> getPortfolio() async {

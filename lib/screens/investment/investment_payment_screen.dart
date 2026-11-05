@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/investment_models.dart';
@@ -21,7 +24,9 @@ class InvestmentPaymentScreen extends StatefulWidget {
 class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
   late final List<int> _nominals;
   late int _selectedNominal;
-  int _selectedPaymentMethod = 0; // 0: Transfer Bank, 1: E-wallet, 2: Virtual Account
+  int _proofType = 0; // 0: Upload Foto, 1: Link Gambar
+  File? _selectedFile;
+  final TextEditingController _linkController = TextEditingController();
   bool _isProcessing = false;
 
   @override
@@ -39,15 +44,45 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
     _selectedNominal = _nominals[0];
   }
 
+  @override
+  void dispose() {
+    _linkController.dispose();
+    super.dispose();
+  }
+
   double _calculateEquityShare(int nominal) {
     if (widget.startup.valuation > 0) {
       return (nominal / widget.startup.valuation * 100.0);
     }
     if (widget.startup.targetFunding > 0) {
-      final equity = widget.startup.equityOffered > 0 ? widget.startup.equityOffered : 10.0;
+      final equity = widget.startup.equityOffered > 0
+          ? widget.startup.equityOffered
+          : 10.0;
       return (nominal / widget.startup.targetFunding * equity);
     }
     return (nominal / 200000000.0 * 10.0);
+  }
+
+  Future<void> _pickProofFile() async {
+    try {
+      final res = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
+      );
+      if (res != null && res.path != null) {
+        setState(() {
+          _selectedFile = File(res.path!);
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal memilih file bukti transfer'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+    }
   }
 
   Future<void> _handlePayment() async {
@@ -63,15 +98,45 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
       return;
     }
 
+    final String linkUrl = _linkController.text.trim();
+    if (_proofType == 0 && _selectedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Harap unggah foto bukti transfer terlebih dahulu'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+      return;
+    }
+    if (_proofType == 1 && linkUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Harap masukkan link URL gambar bukti transfer'),
+          backgroundColor: Color(0xFFEF4444),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isProcessing = true);
-    final paymentMethods = const ['transfer_bank', 'ewallet', 'virtual_account'];
-    final selectedMethod = paymentMethods[_selectedPaymentMethod];
 
     try {
+      String finalBuktiUrl = linkUrl;
+      if (_proofType == 0 && _selectedFile != null) {
+        final uploaded =
+            await InvestmentService.uploadBuktiTransfer(_selectedFile!.path);
+        if (uploaded.isEmpty) {
+          throw Exception('Gagal mengunggah foto bukti transfer');
+        }
+        finalBuktiUrl = uploaded;
+      }
+
       final res = await InvestmentService.checkout(
         startupId: int.tryParse(widget.startup.id) ?? 0,
         nominal: _selectedNominal,
-        paymentMethod: selectedMethod,
+        paymentMethod: 'transfer_bank',
+        paymentChannel: 'BCA',
+        buktiTransferUrl: finalBuktiUrl,
       );
       if (!mounted) return;
       _showSuccessBottomSheet(res);
@@ -96,17 +161,7 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
         : _calculateEquityShare(_selectedNominal);
     final equityStr = equityShare.toStringAsFixed(1);
     final trxCode = res.transactionCode.isNotEmpty ? res.transactionCode : '-';
-    final isPaid = res.paymentStatus.toLowerCase() == 'paid';
-    final title = isPaid ? 'Investasi Berhasil!' : 'Order Investasi Dibuat!';
-    final subtitle = isPaid
-        ? 'Selamat! Anda telah resmi berinvestasi sebesar Rp $nominalStr (estimasi $equityStr% saham) pada ${widget.startup.nama}.'
-        : 'Order investasi sebesar Rp $nominalStr (estimasi $equityStr% saham) pada ${widget.startup.nama} berhasil dibuat. Silakan selesaikan pembayaran.';
-    final icon =
-        isPaid ? Icons.check_circle_rounded : Icons.receipt_long_rounded;
-    final iconColor =
-        isPaid ? const Color(0xFF16A34A) : const Color(0xFF0066F6);
-    final iconBg =
-        isPaid ? const Color(0xFFDCFCE7) : const Color(0xFFEFF6FF);
+
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -129,20 +184,20 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
             Container(
               width: 64,
               height: 64,
-              decoration: BoxDecoration(
-                color: iconBg,
+              decoration: const BoxDecoration(
+                color: Color(0xFFEFF6FF),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: iconColor,
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF0066F6),
                 size: 38,
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
+            const Text(
+              'Bukti Transfer Terkirim!',
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0F172A),
@@ -150,7 +205,7 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              subtitle,
+              'Order investasi sebesar Rp $nominalStr (estimasi $equityStr% saham) pada ${widget.startup.nama} berhasil dibuat. Bukti transfer telah diterima dan sedang dalam proses verifikasi tim.',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 13,
@@ -161,7 +216,8 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
             if (trxCode != '-') ...[
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
@@ -183,8 +239,8 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
               height: 48,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(ctx); // Close sheet
-                  Navigator.pop(context, true); // Return to detail / catalog
+                  Navigator.pop(ctx);
+                  Navigator.pop(context, true);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0066F6),
@@ -267,7 +323,7 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                           ),
                         )
                       : const Text(
-                          'Lanjutkan',
+                          'Kirim Bukti Pembayaran',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -287,7 +343,7 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                   ),
                   SizedBox(width: 5),
                   Text(
-                    'Pembayaran aman dan terpercaya',
+                    'Transfer Bank Resmi LSP Teknologi Digital',
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Color(0xFF94A3B8),
@@ -315,7 +371,6 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 2x2 Grid of Nominal Cards (Image 3)
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -331,14 +386,16 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                 final isSelected = _selectedNominal == nominal;
                 final nominalStr = NumberFormatHelper.formatWithDots(nominal);
                 final equity = _calculateEquityShare(nominal);
-                final equityStr = equity.toStringAsFixed(1).replaceAll('.', ',');
 
                 return GestureDetector(
                   onTap: () => setState(() => _selectedNominal = nominal),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
+                      color: isSelected
+                          ? const Color(0xFFEFF6FF)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
@@ -354,43 +411,27 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                         ),
                       ],
                     ),
-                    child: Stack(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (isSelected)
-                          const Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Icon(
-                              Icons.check_circle_rounded,
-                              size: 16,
-                              color: Color(0xFF0066F6),
-                            ),
+                        Text(
+                          'Rp $nominalStr',
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected
+                                ? const Color(0xFF0066F6)
+                                : const Color(0xFF0F172A),
                           ),
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Rp $nominalStr',
-                                style: TextStyle(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? const Color(0xFF0066F6)
-                                      : const Color(0xFF0F172A),
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                '(≈ $equityStr% saham)',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isSelected
-                                      ? const Color(0xFF0066F6)
-                                      : const Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '≈ ${equity.toStringAsFixed(1)}% saham',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -402,101 +443,243 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
 
             const SizedBox(height: 24),
 
-            // Section 2: Metode Pembayaran
+            // Section 2: Instruksi Transfer Bank Resmi
             const Text(
-              'Metode Pembayaran',
+              'Instruksi Pembayaran Transfer Bank',
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
-            _buildPaymentMethodTile(
-              index: 0,
-              icon: Icons.account_balance_rounded,
-              iconBgColor: const Color(0xFF0066F6),
-              title: 'Transfer Bank',
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'BANK BCA',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0066F6),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded,
+                            size: 18, color: Color(0xFF0066F6)),
+                        tooltip: 'Salin Rekening',
+                        onPressed: () {
+                          Clipboard.setData(
+                              const ClipboardData(text: '82201923819'));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Nomor rekening berhasil disalin!'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '822-0192-3819',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'a.n. PT LSP Teknologi Digital',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Section 3: Lampiran Bukti Pembayaran
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Bukti Pembayaran',
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildProofTypeChip(0, 'Unggah Foto'),
+                    const SizedBox(width: 6),
+                    _buildProofTypeChip(1, 'Link Gambar'),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 10),
-            _buildPaymentMethodTile(
-              index: 1,
-              icon: Icons.account_balance_wallet_rounded,
-              iconBgColor: const Color(0xFF334155),
-              title: 'E-wallet',
-            ),
-            const SizedBox(height: 10),
-            _buildPaymentMethodTile(
-              index: 2,
-              icon: Icons.receipt_long_rounded,
-              iconBgColor: const Color(0xFF0284C7),
-              title: 'Virtual Account',
-            ),
+
+            if (_proofType == 0) ...[
+              GestureDetector(
+                onTap: _pickProofFile,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _selectedFile != null
+                          ? const Color(0xFF0066F6)
+                          : const Color(0xFFCBD5E1),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.image_outlined,
+                          color: Color(0xFF0066F6),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _selectedFile != null
+                                  ? _selectedFile!.path
+                                      .split(RegExp(r'[/\\]'))
+                                      .last
+                                  : 'Pilih foto bukti transfer',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: _selectedFile != null
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: _selectedFile != null
+                                    ? const Color(0xFF0F172A)
+                                    : const Color(0xFF64748B),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              _selectedFile != null
+                                  ? 'Ketuk untuk mengganti foto'
+                                  : 'Format JPG, PNG, atau WEBP (Maks 10MB)',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_selectedFile != null)
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFF16A34A),
+                          size: 22,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else ...[
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: TextField(
+                  controller: _linkController,
+                  decoration: const InputDecoration(
+                    hintText: 'https://example.com/bukti-transfer.jpg',
+                    hintStyle:
+                        TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                    prefixIcon: Icon(Icons.link_rounded,
+                        size: 20, color: Color(0xFF64748B)),
+                    border: InputBorder.none,
+                  ),
+                  style:
+                      const TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPaymentMethodTile({
-    required int index,
-    required IconData icon,
-    required Color iconBgColor,
-    required String title,
-  }) {
-    final isSelected = _selectedPaymentMethod == index;
-
+  Widget _buildProofTypeChip(int type, String label) {
+    final isSelected = _proofType == type;
     return GestureDetector(
-      onTap: () => setState(() => _selectedPaymentMethod = index),
+      onTap: () => setState(() => _proofType = type),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFE2E8F0),
-            width: isSelected ? 1.5 : 1.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: iconBgColor,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              alignment: Alignment.center,
-              child: Icon(icon, color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-            ),
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_off_rounded,
-              color: isSelected ? const Color(0xFF0066F6) : const Color(0xFFCBD5E1),
-              size: 20,
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF64748B),
+          ),
         ),
       ),
     );

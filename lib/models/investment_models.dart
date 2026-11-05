@@ -249,6 +249,7 @@ class InvestmentCheckoutResponse {
   final String paymentChannel;
   final String paymentStatus;
   final String paymentUrl;
+  final String buktiTransferUrl;
   final String createdAt;
 
   const InvestmentCheckoutResponse({
@@ -260,10 +261,10 @@ class InvestmentCheckoutResponse {
     required this.paymentMethod,
     this.paymentChannel = '',
     required this.paymentStatus,
-    required this.paymentUrl,
+    this.paymentUrl = '',
+    this.buktiTransferUrl = '',
     required this.createdAt,
   });
-
   factory InvestmentCheckoutResponse.fromJson(Map<String, dynamic> json) {
     return InvestmentCheckoutResponse(
       transactionCode: JsonHelper.asString(json['transaction_code']),
@@ -276,6 +277,7 @@ class InvestmentCheckoutResponse {
       paymentChannel: JsonHelper.asString(json['payment_channel']),
       paymentStatus: JsonHelper.asString(json['payment_status'], 'pending'),
       paymentUrl: JsonHelper.asString(json['payment_url']),
+      buktiTransferUrl: JsonHelper.asString(json['bukti_transfer_url']),
       createdAt: JsonHelper.asString(json['created_at']),
     );
   }
@@ -290,6 +292,8 @@ class InvestmentPortfolioItem {
   final double returnPct;
   final int returnAmount;
   final String status;
+  final String buktiTransferUrl;
+  final String transactionCode;
   final String createdAt;
 
   const InvestmentPortfolioItem({
@@ -301,9 +305,10 @@ class InvestmentPortfolioItem {
     this.returnPct = 0.0,
     this.returnAmount = 0,
     this.status = 'Aktif',
+    this.buktiTransferUrl = '',
+    this.transactionCode = '',
     this.createdAt = '',
   });
-
   factory InvestmentPortfolioItem.fromJson(Map<String, dynamic> json) {
     return InvestmentPortfolioItem(
       id: JsonHelper.asInt(json['id']),
@@ -314,6 +319,8 @@ class InvestmentPortfolioItem {
       returnPct: JsonHelper.asDouble(json['return_pct']),
       returnAmount: JsonHelper.asInt(json['return_amount']),
       status: JsonHelper.asString(json['status'], 'Aktif'),
+      buktiTransferUrl: JsonHelper.asString(json['bukti_transfer_url']),
+      transactionCode: JsonHelper.asString(json['transaction_code']),
       createdAt: JsonHelper.asString(json['created_at']),
     );
   }
