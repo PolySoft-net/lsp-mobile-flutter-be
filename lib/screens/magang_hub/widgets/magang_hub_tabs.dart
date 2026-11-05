@@ -131,16 +131,27 @@ class MagangHubJobsTab extends StatelessWidget {
                         controller: searchController,
                         onSubmitted: onSearchSubmitted,
                         textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF0F172A),
+                        ),
                         decoration: InputDecoration(
                           isDense: true,
                           hintText: 'Cari disini',
-                          hintStyle: const TextStyle(fontSize: 13.5, color: Color(0xFF94A3B8)),
+                          hintStyle: const TextStyle(
+                            fontSize: 13.5,
+                            color: Color(0xFF94A3B8),
+                          ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                          ),
                           suffixIcon: searchQuery.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.close_rounded, size: 18),
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                  ),
                                   color: const Color(0xFF64748B),
                                   onPressed: onSearchCleared,
                                 )
@@ -159,7 +170,11 @@ class MagangHubJobsTab extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _buildCategoryCard('Semua Pekerjaan', Icons.laptop_chromebook_rounded, label: 'Semua\nPekerjaan'),
+                  _buildCategoryCard(
+                    'Semua Pekerjaan',
+                    Icons.laptop_chromebook_rounded,
+                    label: 'Semua\nPekerjaan',
+                  ),
                   _buildCategoryCard('Remote', Icons.laptop_chromebook_rounded),
                   _buildCategoryCard('Office', Icons.apartment_rounded),
                 ],
@@ -167,10 +182,7 @@ class MagangHubJobsTab extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            CareerPortalBanner(
-              isMagang: true,
-              onSeeMore: onSeeMore,
-            ),
+            CareerPortalBanner(isMagang: true, onSeeMore: onSeeMore),
             const SizedBox(height: 20),
 
             // Section Header: Pekerjaan Paling Populer / Lihat Lainnya
@@ -223,9 +235,14 @@ class MagangHubJobsTab extends StatelessWidget {
   }
 
   Widget _buildCategoryCard(String title, IconData icon, {String? label}) {
-    final wp = title == 'Office' ? 'On Site' : (title == 'Semua Pekerjaan' ? 'Semua' : title);
-    final isSelected = selectedWorkplace.toLowerCase() == wp.toLowerCase() ||
-        (title == 'Office' && (selectedWorkplace.toLowerCase() == 'office' || selectedWorkplace.toLowerCase() == 'on site'));
+    final wp = title == 'Office'
+        ? 'On Site'
+        : (title == 'Semua Pekerjaan' ? 'Semua' : title);
+    final isSelected =
+        selectedWorkplace.toLowerCase() == wp.toLowerCase() ||
+        (title == 'Office' &&
+            (selectedWorkplace.toLowerCase() == 'office' ||
+                selectedWorkplace.toLowerCase() == 'on site'));
     return Expanded(
       child: GestureDetector(
         onTap: () => onWorkplaceSelected(wp),
@@ -234,7 +251,9 @@ class MagangHubJobsTab extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 4),
           height: 72,
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF94A3B8) : const Color(0xFFCBD5E1),
+            color: isSelected
+                ? const Color(0xFF94A3B8)
+                : const Color(0xFFCBD5E1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Column(
@@ -311,7 +330,10 @@ class MagangHubJobsTab extends StatelessWidget {
   }
 
   Widget _buildGridCard(BuildContext context, CareerJobItem job) {
-    final salaryRange = NumberFormatHelper.formatSalaryRange(job.salaryMin, job.salaryMax);
+    final salaryRange = NumberFormatHelper.formatSalaryRange(
+      job.salaryMin,
+      job.salaryMax,
+    );
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFE2E8F0),
@@ -450,7 +472,6 @@ class MagangHubJobsTab extends StatelessWidget {
     );
   }
 }
-
 
 class MagangHubCompaniesTab extends StatelessWidget {
   final List<MagangPerusahaanItem> companies;
@@ -621,25 +642,22 @@ class MagangHubMyJobsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double statusBarHeight = MediaQuery.paddingOf(context).top;
+
     return RefreshIndicator(
       color: hubBlue,
       onRefresh: onRefresh,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            const CustomAppBar(
-              title: 'Info Magang Saya',
-              showBack: false,
-            ),
-            MagangHubSegmentedControl(
-              options: const ['Semua', 'Publish', 'Draft'],
-              selected: selectedStatus,
-              onSelected: onStatusSelected,
-            ),
-            Expanded(child: _buildBody()),
-          ],
-        ),
+      child: Column(
+        children: [
+          SizedBox(height: statusBarHeight + 8),
+          const CustomAppBar(title: 'Info Magang Saya', showBack: false),
+          MagangHubSegmentedControl(
+            options: const ['Semua', 'Publish', 'Draft'],
+            selected: selectedStatus,
+            onSelected: onStatusSelected,
+          ),
+          Expanded(child: _buildBody()),
+        ],
       ),
     );
   }

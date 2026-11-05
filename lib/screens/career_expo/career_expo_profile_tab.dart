@@ -9,6 +9,8 @@ import 'career_expo_favorit_screen.dart';
 import 'career_expo_notification_settings_screen.dart';
 import 'career_expo_profile_edit_screen.dart';
 import 'portal_banner_manage_screen.dart';
+import '../../widgets/common/custom_app_bar.dart';
+
 /// Tab Profil portal — asesi melihat profil pelamar, asesor melihat menu kelola.
 class CareerExpoProfileTab extends StatefulWidget {
   final VoidCallback? onNavigateToLamaran;
@@ -64,10 +66,7 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
   }
 
   Future<void> _openKelola(Widget screen) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => screen),
-    );
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
     if (!mounted) return;
     widget.onPortalDataChanged?.call();
   }
@@ -81,7 +80,8 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
   }
 
   String get _photoUrl {
-    final raw = _asesiProfile?['foto_profil_url']?.toString() ??
+    final raw =
+        _asesiProfile?['foto_profil_url']?.toString() ??
         _authUser?.fotoProfilUrl ??
         _authUser?.fotoProfil ??
         '';
@@ -93,8 +93,23 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.isMagang) {
+      final double statusBarHeight = MediaQuery.paddingOf(context).top;
+
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F6F8),
+        body: Column(
+          children: [
+            SizedBox(height: statusBarHeight + 8),
+            const CustomAppBar(title: 'Profil', showBack: false),
+            Expanded(child: _buildProfileContent()),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -111,109 +126,113 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      body: SafeArea(
-        top: false,
-        child: RefreshIndicator(
-          onRefresh: _loadProfile,
-          color: const Color(0xFF0066F6),
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-            child: Column(
-            children: [
-              // Top User Card
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFCBD5E1),
-                        shape: BoxShape.circle,
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: _photoUrl.isNotEmpty
-                          ? Image.network(
-                              _photoUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (ctx, err, stack) => const Icon(
-                                Icons.person,
-                                size: 34,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(
+      body: SafeArea(top: false, child: _buildProfileContent()),
+    );
+  }
+
+  Widget _buildProfileContent() {
+    return RefreshIndicator(
+      onRefresh: _loadProfile,
+      color: const Color(0xFF0066F6),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+        child: Column(
+          children: [
+            // Top User Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFCBD5E1),
+                      shape: BoxShape.circle,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: _photoUrl.isNotEmpty
+                        ? Image.network(
+                            _photoUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (ctx, err, stack) => const Icon(
                               Icons.person,
                               size: 34,
                               color: Colors.white,
                             ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                          )
+                        : const Icon(
+                            Icons.person,
+                            size: 34,
+                            color: Colors.white,
+                          ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _displayName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (_authUser?.email != null &&
+                            _authUser!.email!.isNotEmpty) ...[
+                          const SizedBox(height: 3),
                           Text(
-                            _displayName,
+                            _authUser!.email!,
                             style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
+                              fontSize: 12,
+                              color: Color(0xFF64748B),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (_authUser?.email != null && _authUser!.email!.isNotEmpty) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              _authUser!.email!,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF64748B),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
                         ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Section title
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  _isAsesor ? 'Kelola Portal' : 'Informasi',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // Section title
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                _isAsesor ? 'Kelola Portal' : 'Informasi',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
                 ),
               ),
-              const SizedBox(height: 8),
+            ),
+            const SizedBox(height: 8),
 
-              // Information Menu Card
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    if (_isAsesor)
-                      ..._buildProviderMenuRows()
-                    else ...[
+            // Information Menu Card
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  if (_isAsesor)
+                    ..._buildProviderMenuRows()
+                  else ...[
                     _buildMenuItemRow(
                       icon: Icons.account_circle_outlined,
                       title: 'Pengaturan Profil',
@@ -234,7 +253,8 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CareerExpoNotificationSettingsScreen(),
+                            builder: (_) =>
+                                const CareerExpoNotificationSettingsScreen(),
                           ),
                         );
                       },
@@ -269,57 +289,57 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const FaqScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const FaqScreen()),
                         );
                       },
                     ),
-                    ],
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Keluar Button
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                onPressed: _handleKeluar,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE2E8F0),
+                  foregroundColor: const Color(0xFF0F172A),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.logout_rounded,
+                      size: 18,
+                      color: Color(0xFF0F172A),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Keluar',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // Keluar Button
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: ElevatedButton(
-                  onPressed: _handleKeluar,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE2E8F0),
-                    foregroundColor: const Color(0xFF0F172A),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.logout_rounded, size: 18, color: Color(0xFF0F172A)),
-                      SizedBox(width: 8),
-                      Text(
-                        'Keluar',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-            ],
-          ),
+            ),
+            const SizedBox(height: 28),
+          ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   /// Menu khusus asesor: kelola lowongan/info magang dan banner portalnya.
   List<Widget> _buildProviderMenuRows() {
@@ -327,12 +347,14 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
       _buildMenuItemRow(
         icon: Icons.business_center_outlined,
         title: widget.isMagang ? 'Kelola Info Magang' : 'Kelola Lowongan Kerja',
-        onTap: () => _openKelola(AsesorLowonganScreen(isMagang: widget.isMagang)),
+        onTap: () =>
+            _openKelola(AsesorLowonganScreen(isMagang: widget.isMagang)),
       ),
       _buildMenuItemRow(
         icon: Icons.image_outlined,
         title: 'Kelola Banner',
-        onTap: () => _openKelola(PortalBannerManageScreen(isMagang: widget.isMagang)),
+        onTap: () =>
+            _openKelola(PortalBannerManageScreen(isMagang: widget.isMagang)),
       ),
       _buildMenuItemRow(
         icon: Icons.notifications_none_rounded,
@@ -352,9 +374,7 @@ class _CareerExpoProfileTabState extends State<CareerExpoProfileTab> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const FaqScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const FaqScreen()),
           );
         },
       ),

@@ -10,10 +10,16 @@ import 'career_expo_detail_screen.dart';
 /// Halaman Daftar Lowongan Favorit / Tersimpan di Career Expo
 class CareerExpoFavoritScreen extends StatefulWidget {
   final bool showBackButton;
-  const CareerExpoFavoritScreen({super.key, this.showBackButton = true});
+  final bool isMagang;
+  const CareerExpoFavoritScreen({
+    super.key,
+    this.showBackButton = true,
+    this.isMagang = false,
+  });
 
   @override
-  State<CareerExpoFavoritScreen> createState() => _CareerExpoFavoritScreenState();
+  State<CareerExpoFavoritScreen> createState() =>
+      _CareerExpoFavoritScreenState();
 }
 
 class _CareerExpoFavoritScreenState extends State<CareerExpoFavoritScreen> {
@@ -85,6 +91,25 @@ class _CareerExpoFavoritScreenState extends State<CareerExpoFavoritScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isMagang) {
+      final double statusBarHeight = MediaQuery.paddingOf(context).top;
+
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F6F8),
+        body: Column(
+          children: [
+            SizedBox(height: statusBarHeight + 8),
+            CustomAppBar(
+              title: 'Lowongan Favorit',
+              showBack: widget.showBackButton,
+              onBack: () => Navigator.pop(context),
+            ),
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: PreferredSize(
@@ -101,19 +126,14 @@ class _CareerExpoFavoritScreenState extends State<CareerExpoFavoritScreen> {
           ),
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: _buildBody(),
-      ),
+      body: SafeArea(top: false, child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF0066F6),
-        ),
+        child: CircularProgressIndicator(color: Color(0xFF0066F6)),
       );
     }
 
@@ -133,10 +153,7 @@ class _CareerExpoFavoritScreenState extends State<CareerExpoFavoritScreen> {
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF64748B),
-                ),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 14),
               ElevatedButton(
@@ -186,10 +203,7 @@ class _CareerExpoFavoritScreenState extends State<CareerExpoFavoritScreen> {
                   Text(
                     'Simpan lowongan pekerjaan yang kamu minati untuk memantau atau melamarnya nanti.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF64748B),
-                    ),
+                    style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                   ),
                 ],
               ),

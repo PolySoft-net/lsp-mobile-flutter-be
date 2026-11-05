@@ -33,7 +33,12 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
   List<CareerJobItem> _jobs = [];
   String _searchJobQuery = '';
   String _selectedWorkplace = 'Semua';
-  List<String> _workplaceFilterOptions = ['Semua', 'On Site', 'Remote', 'Hybrid'];
+  List<String> _workplaceFilterOptions = [
+    'Semua',
+    'On Site',
+    'Remote',
+    'Hybrid',
+  ];
   final TextEditingController _searchJobController = TextEditingController();
 
   // Tab 2: Perusahaan Mitra
@@ -43,7 +48,8 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
   String _searchCompanyQuery = '';
   String _selectedCompanyLocation = 'Semua';
   List<String> _companyLocationOptions = ['Semua'];
-  final TextEditingController _searchCompanyController = TextEditingController();
+  final TextEditingController _searchCompanyController =
+      TextEditingController();
 
   // Tab 3: Magang Saya (Khusus Asesor)
   bool _isLoadingMyJobs = true;
@@ -153,7 +159,8 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         _companies = items;
         _isLoadingCompanies = false;
         // Isi opsi lokasi sekali dari muatan penuh (belum terfilter), agar tetap stabil.
-        if (_companyLocationOptions.length == 1 && _selectedCompanyLocation == 'Semua') {
+        if (_companyLocationOptions.length == 1 &&
+            _selectedCompanyLocation == 'Semua') {
           final options = <String>['Semua'];
           for (final c in items) {
             final loc = c.lokasi.trim();
@@ -197,9 +204,7 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
   void _openForm({CareerJobItem? job}) async {
     final updated = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => MagangFormScreen(initialJob: job),
-      ),
+      MaterialPageRoute(builder: (_) => MagangFormScreen(initialJob: job)),
     );
     if (!mounted) return;
     if (updated == true) {
@@ -333,7 +338,6 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final tabs = <Widget>[
@@ -397,12 +401,8 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         },
         onOpenCompany: _openCompanyDetail,
       ),
-      CareerExpoLamaranTab(
-        onBack: () => setState(() => _currentIndex = 0),
-      ),
-      const CareerExpoFavoritScreen(
-        showBackButton: false,
-      ),
+      CareerExpoLamaranTab(onBack: () => setState(() => _currentIndex = 0)),
+      const CareerExpoFavoritScreen(showBackButton: false, isMagang: true),
       CareerExpoProfileTab(
         isMagang: true,
         onNavigateToLamaran: () => setState(() => _currentIndex = 2),
@@ -456,14 +456,39 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
           child: Row(
             children: [
               _buildNavItem(0, Icons.home_filled, Icons.home_outlined, 'Home'),
-              _buildNavItem(1, Icons.search_rounded, Icons.search_rounded, 'Search'),
+              _buildNavItem(
+                1,
+                Icons.search_rounded,
+                Icons.search_rounded,
+                'Search',
+              ),
               // Asesor tidak punya lamaran; item disembunyikan tanpa mengubah index.
               if (!_isAsesor)
-                _buildNavItem(2, Icons.account_balance_rounded, Icons.account_balance_outlined, 'Lamaran'),
-              _buildNavItem(3, Icons.bookmark_rounded, Icons.bookmark_outline_rounded, 'Save'),
-              _buildNavItem(4, Icons.person_rounded, Icons.person_outline_rounded, 'Profil'),
+                _buildNavItem(
+                  2,
+                  Icons.account_balance_rounded,
+                  Icons.account_balance_outlined,
+                  'Lamaran',
+                ),
+              _buildNavItem(
+                3,
+                Icons.bookmark_rounded,
+                Icons.bookmark_outline_rounded,
+                'Save',
+              ),
+              _buildNavItem(
+                4,
+                Icons.person_rounded,
+                Icons.person_outline_rounded,
+                'Profil',
+              ),
               if (_isAsesor)
-                _buildNavItem(5, Icons.assignment_rounded, Icons.assignment_outlined, 'Kelola'),
+                _buildNavItem(
+                  5,
+                  Icons.assignment_rounded,
+                  Icons.assignment_outlined,
+                  'Kelola',
+                ),
             ],
           ),
         ),
@@ -478,7 +503,9 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     String label,
   ) {
     final isSelected = _currentIndex == index;
-    final color = isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8);
+    final color = isSelected
+        ? const Color(0xFF0F172A)
+        : const Color(0xFF94A3B8);
     return Expanded(
       child: InkWell(
         onTap: () => _onTabSelected(index),
@@ -487,7 +514,11 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isSelected ? activeIcon : inactiveIcon, size: 22, color: color),
+            Icon(
+              isSelected ? activeIcon : inactiveIcon,
+              size: 22,
+              color: color,
+            ),
             const SizedBox(height: 3),
             Text(
               label,
@@ -503,4 +534,3 @@ class _MagangHubScreenState extends State<MagangHubScreen> {
     );
   }
 }
-
