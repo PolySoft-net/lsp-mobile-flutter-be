@@ -1,30 +1,30 @@
 name: lsp_digital_mobile
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.2.1-build.209+232
+version: 1.2.1-build.210+233
 environment:
   sdk: ^3.11.1
 
 dependencies:
   dio: ^5.11.1
-  firebase_core: ^4.15.0
-  firebase_messaging: ^16.7.0
+  firebase_core: ^4.15.2
+  firebase_messaging: ^16.7.1
   flutter:
     sdk: flutter
   flutter_dotenv: ^6.0.1
-  flutter_lucide: ^1.57.0
+  flutter_lucide: 1.61.0
   januscaler_flutter_ringtone_player: ^1.0.2
   flutter_secure_storage: ^11.2.0
   intl: 0.20.3
   syncfusion_flutter_maps: ^34.2.8
-  file_picker: ^13.1.0
+  file_picker: ^13.3.2
   google_sign_in: ^6.2.2
   url_launcher: ^6.3.2
   in_app_update_flutter: ^3.0.0
   qr_flutter: ^4.1.0
   webview_flutter: ^4.10.0
 
-  material_ui: ^1.7.0
+  material_ui: ^1.10.0
   google_maps_flutter: ^2.19.0
   geolocator: ^14.0.3
   geocoding: ^4.0.0
