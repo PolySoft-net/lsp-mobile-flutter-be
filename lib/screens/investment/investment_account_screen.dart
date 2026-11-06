@@ -146,17 +146,6 @@ class InvestmentAccountScreen extends StatelessWidget {
                   ),
                   _buildDivider(),
                   _buildMenuItem(
-                    icon: Icons.credit_card_outlined,
-                    title: 'Metode Pembayaran',
-                    onTap: () => _showInfoSheet(
-                      context,
-                      'Metode Pembayaran',
-                      'Metode pembayaran aktif mencakup Transfer Bank, E-wallet (GoPay, OVO, DANA), dan Virtual Account (BCA, BNI, Mandiri, BRI).',
-                      Icons.credit_card_rounded,
-                    ),
-                  ),
-                  _buildDivider(),
-                  _buildMenuItem(
                     icon: Icons.history_rounded,
                     title: 'Riwayat Transaksi',
                     onTap: () {

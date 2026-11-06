@@ -44,7 +44,7 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
       min * 10,
     ];
     _selectedNominal = _nominals[0];
-    final initStr = _selectedNominal.toString();
+    final initStr = NumberFormatHelper.formatWithDots(_selectedNominal);
     _nominalController.value = TextEditingValue(
       text: initStr,
       selection: TextSelection.collapsed(offset: initStr.length),
@@ -483,7 +483,10 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
               child: TextField(
                 controller: _nominalController,
                 keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  _ThousandsSeparatorInputFormatter(),
+                ],
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -528,7 +531,7 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                           setState(() {
                             _isCustomNominal = false;
                             _selectedNominal = nom;
-                            final nomStr = nom.toString();
+                            final nomStr = NumberFormatHelper.formatWithDots(nom);
                             _nominalController.value = TextEditingValue(
                               text: nomStr,
                               selection: TextSelection.collapsed(
@@ -634,18 +637,22 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
             ),
             const SizedBox(height: 10),
 
+            // Card ATM / Bank Style Container
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0066F6), Color(0xFF0F56D2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.02),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: const Color(0xFF0066F6).withValues(alpha: 0.28),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
@@ -653,58 +660,97 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(6),
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
                         ),
                         child: const Text(
                           'BANK BCA',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0066F6),
+                            letterSpacing: 0.8,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.copy_rounded,
-                            size: 18, color: Color(0xFF0066F6)),
-                        tooltip: 'Salin Rekening',
-                        onPressed: () {
-                          Clipboard.setData(
-                              const ClipboardData(text: '82201923819'));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content:
-                                  Text('Nomor rekening berhasil disalin!'),
-                              duration: Duration(seconds: 2),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            Clipboard.setData(
+                                const ClipboardData(text: '82201923819'));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('Nomor rekening berhasil disalin!'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                          );
-                        },
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.copy_rounded,
+                                    size: 14, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Salin',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 18),
                   const Text(
-                    '822-0192-3819',
+                    'Nomor Rekening',
                     style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
-                      color: Color(0xFF0F172A),
+                      fontSize: 11.5,
+                      color: Color(0xD9FFFFFF),
+                      letterSpacing: 0.3,
                     ),
                   ),
                   const SizedBox(height: 4),
                   const Text(
+                    '822-0192-3819',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.8,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
                     'a.n. PT LSP Teknologi Digital',
                     style: TextStyle(
-                      fontSize: 12.5,
-                      color: Color(0xFF64748B),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xF2FFFFFF),
                     ),
                   ),
                 ],
@@ -816,20 +862,27 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
               ),
             ] else ...[
               Container(
+                height: 52,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 14),
+                alignment: Alignment.center,
                 child: TextField(
                   controller: _linkController,
+                  textAlignVertical: TextAlignVertical.center,
                   decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 12),
                     hintText: 'https://example.com/bukti-transfer.jpg',
                     hintStyle:
                         TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
                     prefixIcon: Icon(Icons.link_rounded,
                         size: 20, color: Color(0xFF64748B)),
+                    prefixIconConstraints:
+                        BoxConstraints(minWidth: 32, minHeight: 20),
                     border: InputBorder.none,
                   ),
                   style:
@@ -862,6 +915,33 @@ class _InvestmentPaymentScreenState extends State<InvestmentPaymentScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Formatter untuk menambahkan pemisah ribuan titik pada input angka secara dinamis.
+class _ThousandsSeparatorInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    final cleanDigits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleanDigits.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+
+    final parsed = int.tryParse(cleanDigits) ?? 0;
+    final formatted = NumberFormatHelper.formatWithDots(parsed);
+
+    // Hitung posisi kursor baru agar nyaman saat mengetik/menghapus
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }
