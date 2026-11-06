@@ -295,7 +295,7 @@ class _TukJadwalListScreenState extends State<TukJadwalListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(LucideIcons.circle_alert, size: 42, color: Color(0xFFEF4444)),
+              const Icon(LucideIcons.circle_exclamation_point, size: 42, color: Color(0xFFEF4444)),
               const SizedBox(height: 12),
               Text(
                 _errorMessage,

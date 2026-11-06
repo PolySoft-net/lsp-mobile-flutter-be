@@ -24,7 +24,7 @@ void showJadwalEditPermissionDeniedDialog(BuildContext context) {
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
-              LucideIcons.shield_alert,
+              LucideIcons.shield_exclamation_point,
               color: Color(0xFFE53935),
               size: 24,
             ),
@@ -82,7 +82,7 @@ Future<bool?> showJadwalEditConfirmationDialog(
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                LucideIcons.circle_alert,
+                LucideIcons.circle_exclamation_point,
                 color: Color(0xFFFF9800),
                 size: 32,
               ),

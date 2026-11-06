@@ -235,7 +235,7 @@ class AsesiErrorWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(
-              LucideIcons.circle_alert,
+              LucideIcons.circle_exclamation_point,
               size: 48,
               color: Colors.redAccent,
             ),

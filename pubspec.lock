@@ -367,10 +367,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_lucide
-      sha256: ad0f2fc5c683a42c85528b25b9938c8833e437d36f965c4bbc8587f32af2622b
+      sha256: "8be93e3ef38827dafd0e58c33512ef74d68778dcf7bda84295c24d1649b94cfb"
       url: "https://pub.dev"
     source: hosted
-    version: "1.61.0"
+    version: "1.69.0"
   flutter_markdown_plus:
     dependency: "direct main"
     description:

@@ -229,7 +229,7 @@ class JadwalAdminCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                LucideIcons.circle_alert,
+                                LucideIcons.circle_exclamation_point,
                                 size: 12,
                                 color: const Color(0xFFFF6B6B),
                               ),

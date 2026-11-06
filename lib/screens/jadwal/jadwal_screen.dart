@@ -743,7 +743,7 @@ class _JadwalScreenState extends State<JadwalScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
-              LucideIcons.triangle_alert,
+              LucideIcons.triangle_exclamation_point,
               size: 18,
               color: Color(0xFFD97706),
             ),
