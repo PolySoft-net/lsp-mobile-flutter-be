@@ -68,14 +68,12 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
         NumberFormatHelper.formatWithDots(_startup.targetFunding);
     final valuationStr = _startup.valuation > 0
         ? 'Rp ${NumberFormatHelper.formatWithDots(_startup.valuation)}'
-        : 'Rp 1.500.000.000';
+        : '-';
 
     final double rawProgress = _startup.targetFunding > 0
         ? (_startup.collectedFunding / _startup.targetFunding)
         : 0.0;
-    final double progress = rawProgress > 0
-        ? rawProgress.clamp(0.05, 1.0)
-        : ((_startup.nama.hashCode.abs() % 40 + 50) / 100.0);
+    final double progress = rawProgress.clamp(0.0, 1.0);
     final int percentInt = (progress * 100).toInt();
 
     final Color themeColor = _resolveCategoryColor(_startup.kategori);
@@ -213,7 +211,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
               Text(
                 _startup.deskripsi.isNotEmpty
                     ? _startup.deskripsi
-                    : '${_startup.nama} adalah platform teknologi digital inovatif yang berfokus pada solusi terintegrasi untuk akselerasi ekosistem industri lokal.',
+                    : '-',
                 style: const TextStyle(
                   fontSize: 13,
                   color: Color(0xFF64748B),
@@ -420,7 +418,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: 170,
-                        errorBuilder: (_, __, ___) => _buildFallbackBanner(),
+                        errorBuilder: (_, _, _) => _buildFallbackBanner(),
                         loadingBuilder: (context, child, progress) {
                           if (progress == null) return child;
                           return _buildFallbackBanner();
@@ -528,7 +526,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
           child: Image.network(
             logoUrl,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildAvatarFallback(color),
+            errorBuilder: (_, _, _) => _buildAvatarFallback(color),
             loadingBuilder: (context, child, progress) {
               if (progress == null) return child;
               return _buildAvatarFallback(color);

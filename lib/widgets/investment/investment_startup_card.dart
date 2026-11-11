@@ -189,7 +189,7 @@ class InvestmentStartupCard extends StatelessWidget {
           child: Image.network(
             logoUrl,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildAvatarFallback(color),
+            errorBuilder: (_, _, _) => _buildAvatarFallback(color),
             loadingBuilder: (context, child, progress) {
               if (progress == null) return child;
               return _buildAvatarFallback(color);

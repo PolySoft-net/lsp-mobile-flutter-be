@@ -688,7 +688,7 @@ class _InvestmentFormScreenState extends State<InvestmentFormScreen> {
                           fit: BoxFit.cover,
                           width: width,
                           height: height,
-                          errorBuilder: (_, __, ___) => const Icon(
+                          errorBuilder: (_, _, _) => const Icon(
                             Icons.broken_image_outlined,
                             color: Color(0xFF94A3B8),
                             size: 28,
