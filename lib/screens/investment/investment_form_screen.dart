@@ -1,7 +1,9 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/investment_models.dart';
 import '../../services/investment/investment_service.dart';
+import '../../utils/url_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/investment/investment_filter_sheet.dart';
 
@@ -34,6 +36,83 @@ class _InvestmentFormScreenState extends State<InvestmentFormScreen> {
   String _kategori = 'EdTech & AI';
   String _stage = 'Seed';
   bool _isSubmitting = false;
+
+  String _logoUrl = '';
+  String _bannerUrl = '';
+  bool _isUploadingLogo = false;
+  bool _isUploadingBanner = false;
+
+  Future<void> _pickAndUploadLogo() async {
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
+      );
+      if (!mounted || file == null || file.path == null) return;
+      setState(() => _isUploadingLogo = true);
+
+      final url = await InvestmentService.uploadStartupImage(file.path!);
+      if (!mounted) return;
+      setState(() {
+        _isUploadingLogo = false;
+        if (url.isNotEmpty) _logoUrl = url;
+      });
+      if (url.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Foto profil/logo berhasil diunggah!'),
+            backgroundColor: Color(0xFF16A34A),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploadingLogo = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengunggah logo: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickAndUploadBanner() async {
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
+      );
+      if (!mounted || file == null || file.path == null) return;
+      setState(() => _isUploadingBanner = true);
+
+      final url = await InvestmentService.uploadStartupImage(file.path!);
+      if (!mounted) return;
+      setState(() {
+        _isUploadingBanner = false;
+        if (url.isNotEmpty) _bannerUrl = url;
+      });
+      if (url.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Foto background/banner berhasil diunggah!'),
+            backgroundColor: Color(0xFF16A34A),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploadingBanner = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengunggah background banner: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -72,6 +151,8 @@ class _InvestmentFormScreenState extends State<InvestmentFormScreen> {
       kategori: _kategori,
       stage: _stage,
       lokasi: _lokasiController.text.trim(),
+      logoUrl: _logoUrl,
+      bannerUrl: _bannerUrl,
       targetFunding: _parseAmount(_targetFundingController.text),
       minimumTicket: _parseAmount(_minTicketController.text),
       valuation: _parseAmount(_valuationController.text),
@@ -240,6 +321,30 @@ class _InvestmentFormScreenState extends State<InvestmentFormScreen> {
                     controller: _lokasiController,
                     label: 'Kota / Domisili Operasional',
                     hint: 'Contoh: Jakarta Selatan, Bandung, Yogyakarta',
+                  ),
+                  const SizedBox(height: 14),
+                  _buildImageUploadField(
+                    label: 'Foto Profil / Logo Startup',
+                    hint: 'Tampil pada kartu katalog dan profil startup (Maks. 10MB)',
+                    imageUrl: _logoUrl,
+                    isUploading: _isUploadingLogo,
+                    aspectRatio: 1.0,
+                    width: 70,
+                    height: 70,
+                    onPick: _pickAndUploadLogo,
+                    onClear: () => setState(() => _logoUrl = ''),
+                  ),
+                  const SizedBox(height: 14),
+                  _buildImageUploadField(
+                    label: 'Foto Background / Banner Startup',
+                    hint: 'Tampil sebagai header banner di detail startup (Maks. 10MB)',
+                    imageUrl: _bannerUrl,
+                    isUploading: _isUploadingBanner,
+                    aspectRatio: 16 / 9,
+                    width: 120,
+                    height: 70,
+                    onPick: _pickAndUploadBanner,
+                    onClear: () => setState(() => _bannerUrl = ''),
                   ),
                 ],
               ),
@@ -516,6 +621,121 @@ class _InvestmentFormScreenState extends State<InvestmentFormScreen> {
               icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageUploadField({
+    required String label,
+    required String hint,
+    required String imageUrl,
+    required bool isUploading,
+    required double aspectRatio,
+    required double width,
+    required double height,
+    required VoidCallback onPick,
+    required VoidCallback onClear,
+  }) {
+    final hasImage = imageUrl.trim().isNotEmpty;
+    final resolvedUrl = UrlHelper.resolveUrl(imageUrl);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF334155),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          hint,
+          style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: width,
+              height: height,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              alignment: Alignment.center,
+              child: isUploading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0D9488)),
+                      ),
+                    )
+                  : hasImage
+                      ? Image.network(
+                          resolvedUrl,
+                          fit: BoxFit.cover,
+                          width: width,
+                          height: height,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.broken_image_outlined,
+                            color: Color(0xFF94A3B8),
+                            size: 28,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.image_outlined,
+                          color: Color(0xFF94A3B8),
+                          size: 28,
+                        ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: isUploading ? null : onPick,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF0D9488),
+                      side: const BorderSide(color: Color(0xFF99F6E4)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    icon: const Icon(Icons.upload_file_rounded, size: 16),
+                    label: Text(
+                      hasImage ? 'Ganti Foto' : 'Pilih Foto',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  if (hasImage)
+                    TextButton.icon(
+                      onPressed: isUploading ? null : onClear,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFEF4444),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                      label: const Text(
+                        'Hapus',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );

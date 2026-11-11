@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../models/investment_models.dart';
 import '../../services/investment/investment_service.dart';
 import '../../utils/number_format_helper.dart';
+import '../../utils/url_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'investment_payment_screen.dart';
 
@@ -247,6 +248,8 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
   }
 
   Widget _buildBannerWithLogo(Color color) {
+    final bannerUrl = UrlHelper.resolveUrl(_startup.bannerUrl);
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -255,11 +258,6 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
           height: 170,
           width: double.infinity,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -269,35 +267,38 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Icon(
-                  Icons.rocket_launch_rounded,
-                  size: 130,
-                  color: Colors.white.withValues(alpha: 0.15),
-                ),
-              ),
-              Positioned(
-                right: 20,
-                top: 20,
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.favorite_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ],
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: bannerUrl.isNotEmpty
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        bannerUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: 170,
+                        errorBuilder: (_, __, ___) => _buildFallbackBanner(),
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return _buildFallbackBanner();
+                        },
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.1),
+                              Colors.black.withValues(alpha: 0.35),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : _buildFallbackBanner(),
           ),
         ),
 
@@ -313,7 +314,7 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -327,7 +328,77 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
     );
   }
 
+  Widget _buildFallbackBanner() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Icon(
+              Icons.rocket_launch_rounded,
+              size: 130,
+              color: Colors.white.withValues(alpha: 0.15),
+            ),
+          ),
+          Positioned(
+            right: 20,
+            top: 20,
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.favorite_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAvatarCircle(Color color) {
+    final logoUrl = UrlHelper.resolveUrl(_startup.logoUrl);
+    if (logoUrl.isNotEmpty) {
+      return Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(13),
+          child: Image.network(
+            logoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildAvatarFallback(color),
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return _buildAvatarFallback(color);
+            },
+          ),
+        ),
+      );
+    }
+    return _buildAvatarFallback(color);
+  }
+
+  Widget _buildAvatarFallback(Color color) {
     final initials = _startup.nama.trim().isNotEmpty
         ? (_startup.nama.trim().split(' ').length > 1
             ? '${_startup.nama.trim().split(' ')[0][0]}${_startup.nama.trim().split(' ')[1][0]}'

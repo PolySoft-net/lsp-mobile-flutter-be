@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../models/investment_models.dart';
 import '../../utils/number_format_helper.dart';
+import '../../utils/url_helper.dart';
 
 class InvestmentStartupCard extends StatelessWidget {
   final InvestmentStartupItem startup;
@@ -166,7 +167,41 @@ class InvestmentStartupCard extends StatelessWidget {
   }
 
   Widget _buildStartupAvatar(Color color) {
-    // If startup has image URL, show it or fallback to styled circle
+    final logoUrl = UrlHelper.resolveUrl(startup.logoUrl);
+    if (logoUrl.isNotEmpty) {
+      return Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(11),
+          child: Image.network(
+            logoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildAvatarFallback(color),
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return _buildAvatarFallback(color);
+            },
+          ),
+        ),
+      );
+    }
+    return _buildAvatarFallback(color);
+  }
+
+  Widget _buildAvatarFallback(Color color) {
     final initials = startup.nama.trim().isNotEmpty
         ? (startup.nama.trim().split(' ').length > 1
             ? '${startup.nama.trim().split(' ')[0][0]}${startup.nama.trim().split(' ')[1][0]}'

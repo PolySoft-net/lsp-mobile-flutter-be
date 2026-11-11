@@ -98,6 +98,22 @@ class InvestmentService {
     }
   }
 
+  static Future<String> uploadStartupImage(String filePath) async {
+    final fileName = filePath.split(RegExp(r'[/\\]')).last;
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath, filename: fileName),
+    });
+    final response = await _dio.post(
+      ApiRoutes.investmentStartupUploadImage,
+      data: formData,
+    );
+    final raw = response.data is Map ? response.data['data'] : response.data;
+    if (raw is Map && raw['url'] != null) {
+      return raw['url'].toString();
+    }
+    return '';
+  }
+
   static Future<String> uploadBuktiTransfer(String filePath) async {
     final fileName = filePath.split(RegExp(r'[/\\]')).last;
     final formData = FormData.fromMap({
