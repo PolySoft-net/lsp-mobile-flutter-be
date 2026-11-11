@@ -6,6 +6,7 @@ import '../../utils/number_format_helper.dart';
 import '../../utils/url_helper.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import 'investment_payment_screen.dart';
+import 'investment_webview_screen.dart';
 
 class InvestmentDetailScreen extends StatefulWidget {
   final InvestmentStartupItem startup;
@@ -240,7 +241,148 @@ class _InvestmentDetailScreenState extends State<InvestmentDetailScreen> {
                   ),
                 ),
               ],
+
+              const SizedBox(height: 22),
+
+              // 6. Section: Tautan & Dokumen Startup (Website & Pitch Deck)
+              _buildLinksSection(),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLinksSection() {
+    final hasWebsite = _startup.websiteUrl.trim().isNotEmpty;
+    final hasPitchDeck = _startup.pitchDeckUrl.trim().isNotEmpty;
+
+    if (!hasWebsite && !hasPitchDeck) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tautan & Dokumen',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (hasWebsite)
+          _buildLinkTile(
+            icon: Icons.language_rounded,
+            iconBg: const Color(0xFFEFF6FF),
+            iconColor: const Color(0xFF0066F6),
+            title: 'Website Resmi',
+            subtitle: _startup.websiteUrl,
+            url: _startup.websiteUrl,
+            screenTitle: 'Website - ${_startup.nama}',
+          ),
+        if (hasPitchDeck)
+          _buildLinkTile(
+            icon: Icons.description_rounded,
+            iconBg: const Color(0xFFFEF3C7),
+            iconColor: const Color(0xFFD97706),
+            title: 'Pitch Deck & Dokumen Bisnis',
+            subtitle: 'Lihat proposal investasi & performa bisnis startup',
+            url: _startup.pitchDeckUrl,
+            screenTitle: 'Pitch Deck - ${_startup.nama}',
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLinkTile({
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required String url,
+    required String screenTitle,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => InvestmentWebViewScreen(
+                  title: screenTitle,
+                  url: url,
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: Color(0xFF64748B),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.open_in_browser_rounded,
+                    size: 20,
+                    color: Color(0xFF0066F6),
+                  ),
+                  tooltip: 'Buka di Browser',
+                  onPressed: () => UrlHelper.launchURL(context, url),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Color(0xFFCBD5E1),
+                  size: 20,
+                ),
+              ],
+            ),
           ),
         ),
       ),
