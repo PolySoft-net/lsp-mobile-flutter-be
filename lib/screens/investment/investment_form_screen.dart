@@ -228,39 +228,42 @@ class _InvestmentFormScreenState extends State<InvestmentFormScreen> {
         ),
         child: SafeArea(
           top: false,
-          minimum: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: SizedBox(
-            height: 48,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D9488),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          bottom: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: SizedBox(
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D9488),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
                 ),
-                elevation: 0,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'Simpan & Publikasikan Startup',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
               ),
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Text(
-                      'Simpan & Publikasikan Startup',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
             ),
-          ),
         ),
       ),
+    ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
